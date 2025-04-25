@@ -1,0 +1,911 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>股票交易明细</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.7.2/font/bootstrap-icons.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #1a1a2e;
+            --secondary-color: #16213e;
+            --accent-color: #4361ee;
+            --success-color: #2ecc71;
+            --danger-color: #e74c3c;
+            --warning-color: #f1c40f;
+            --text-color: #ffffff;
+            --border-color: #2a2a3a;
+            --gold-color: #ffd700;
+        }
+        
+        body {
+            background-color: var(--primary-color);
+            color: var(--text-color);
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+        }
+
+        .navbar {
+            background-color: var(--secondary-color);
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+            padding: 0.5rem 0;
+            border-bottom: 1px solid var(--gold-color);
+        }
+
+        .navbar-brand {
+            font-weight: 600;
+            font-size: 1rem;
+            color: var(--gold-color);
+        }
+
+        .card {
+            background-color: var(--secondary-color);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+            transition: all 0.3s ease;
+            margin-bottom: 15px;
+            overflow: hidden;
+        }
+
+        .card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            border-color: var(--gold-color);
+        }
+
+        .trade-screenshot {
+            width: 100%;
+            height: 150px;
+            object-fit: cover;
+            border-bottom: 1px solid var(--border-color);
+            cursor: pointer;
+            transition: opacity 0.2s ease;
+        }
+
+        .trade-screenshot:hover {
+            opacity: 0.9;
+        }
+
+        .stock-info {
+            padding: 0.75rem 1rem;
+            background: var(--primary-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .stock-symbol {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: var(--gold-color);
+        }
+
+        .stock-name {
+            font-size: 0.85rem;
+            color: #a0a0a0;
+        }
+
+        .status-badge {
+            padding: 0.4rem 0.8rem;
+            border-radius: 15px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            border: 1px solid;
+        }
+
+        .secondary-info {
+            padding: 1rem;
+            background: linear-gradient(90deg, var(--secondary-color) 0%, var(--primary-color) 100%);
+            border-bottom: 1px solid var(--border-color);
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.75rem;
+        }
+
+        .secondary-info-item {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .secondary-info-label {
+            font-size: 0.75rem;
+            color: #a0a0a0;
+        }
+
+        .secondary-info-value {
+            font-size: 0.9rem;
+            color: var(--gold-color);
+        }
+
+        .main-stats {
+            padding: 1rem;
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1rem;
+            background: var(--primary-color);
+        }
+
+        .main-stat-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            padding: 0.75rem;
+            background: rgba(255,215,0,0.03);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            transition: all 0.3s ease;
+        }
+
+        .main-stat-item:hover {
+            border-color: var(--gold-color);
+            background: rgba(255,215,0,0.05);
+        }
+
+        .main-stat-label {
+            font-size: 0.8rem;
+            color: #a0a0a0;
+            margin-bottom: 0.4rem;
+            font-weight: 500;
+        }
+
+        .main-stat-value {
+            font-size: 1.25rem;
+            font-weight: 800;
+            color: var(--gold-color);
+            line-height: 1.2;
+        }
+
+        .profit-positive {
+            color: var(--success-color);
+            position: relative;
+        }
+
+        .profit-negative {
+            color: var(--danger-color);
+            position: relative;
+        }
+
+        .profit-positive::before,
+        .profit-negative::before {
+            content: '';
+            position: absolute;
+            left: -1.2rem;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 0.5rem;
+            height: 0.5rem;
+            border-radius: 50%;
+        }
+
+        .profit-positive::before {
+            background-color: var(--success-color);
+        }
+
+        .profit-negative::before {
+            background-color: var(--danger-color);
+        }
+
+        .bg-success {
+            background: rgba(46, 204, 113, 0.1) !important;
+            border-color: var(--success-color) !important;
+            color: var(--success-color) !important;
+        }
+
+        .bg-danger {
+            background: rgba(231, 76, 60, 0.1) !important;
+            border-color: var(--danger-color) !important;
+            color: var(--danger-color) !important;
+        }
+
+        .bg-info {
+            background: rgba(67, 97, 238, 0.1) !important;
+            border-color: var(--accent-color) !important;
+            color: var(--accent-color) !important;
+        }
+
+        .modal-content {
+            background-color: var(--primary-color);
+            border: 1px solid var(--border-color);
+        }
+
+        .modal-header {
+            border-bottom: 1px solid var(--border-color);
+            padding: 1rem;
+        }
+
+        .modal-body {
+            padding: 0;
+        }
+
+        .modal-footer {
+            border-top: 1px solid var(--border-color);
+        }
+
+        .modal-title {
+            color: var(--gold-color);
+        }
+
+        .btn-close {
+            filter: invert(1) grayscale(100%) brightness(200%);
+        }
+
+        .modal-image {
+            width: 100%;
+            height: auto;
+            max-height: 80vh;
+            object-fit: contain;
+        }
+
+        /* 个人简介区域样式 */
+        .profile-section {
+            margin-top: 2rem;
+        }
+
+        .profile-header {
+            background: var(--secondary-color);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .profile-header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 300px;
+            height: 300px;
+            background: radial-gradient(circle, rgba(255,215,0,0.1) 0%, rgba(255,215,0,0) 70%);
+            z-index: 0;
+        }
+
+        .profile-main {
+            display: flex;
+            align-items: center;
+            gap: 2.5rem;
+            position: relative;
+            z-index: 1;
+        }
+
+        .profile-avatar {
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            overflow: hidden;
+            border: 3px solid var(--gold-color);
+            position: relative;
+            box-shadow: 0 0 20px rgba(255,215,0,0.2);
+        }
+
+        .avatar-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .online-status {
+            position: absolute;
+            bottom: 10px;
+            right: 10px;
+            width: 20px;
+            height: 20px;
+            background: var(--success-color);
+            border: 3px solid var(--secondary-color);
+            border-radius: 50%;
+        }
+
+        .profile-details {
+            flex: 1;
+        }
+
+        .profile-name {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--gold-color);
+            margin-bottom: 0.5rem;
+            text-shadow: 0 0 10px rgba(255,215,0,0.2);
+        }
+
+        .profile-title {
+            font-size: 1.1rem;
+            color: #a0a0a0;
+            margin-bottom: 1.5rem;
+        }
+
+        .profile-stats {
+            display: flex;
+            gap: 2rem;
+        }
+
+        .profile-stats .stat-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background: rgba(255,215,0,0.05);
+            padding: 0.75rem 1.25rem;
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+        }
+
+        .profile-stats .stat-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--gold-color);
+        }
+
+        .profile-stats .stat-label {
+            font-size: 0.9rem;
+            color: #a0a0a0;
+        }
+
+        .profile-performance {
+            display: flex;
+            gap: 1.5rem;
+            margin-top: 2rem;
+        }
+
+        .performance-card {
+            flex: 1;
+            background: rgba(255,215,0,0.03);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 1.25rem;
+            transition: all 0.3s ease;
+        }
+
+        .performance-card:hover {
+            transform: translateY(-3px);
+            border-color: var(--gold-color);
+            background: rgba(255,215,0,0.05);
+        }
+
+        .performance-header {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: #a0a0a0;
+            margin-bottom: 0.75rem;
+        }
+
+        .performance-header i {
+            font-size: 1.25rem;
+            color: var(--gold-color);
+        }
+
+        .performance-value {
+            font-size: 1.75rem;
+            font-weight: 700;
+            color: var(--gold-color);
+        }
+
+        .performance-value.positive {
+            color: var(--success-color);
+        }
+
+        /* 交易策略更新区域样式 */
+        .strategy-update {
+            background: var(--secondary-color);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 2rem;
+        }
+
+        .strategy-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .strategy-header h3 {
+            font-size: 1.5rem;
+            color: var(--gold-color);
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .strategy-header h3 i {
+            color: var(--gold-color);
+        }
+
+        .update-time {
+            color: #a0a0a0;
+            font-size: 0.9rem;
+        }
+
+        .strategy-content {
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr;
+            gap: 2rem;
+        }
+
+        .strategy-content h4 {
+            color: var(--gold-color);
+            font-size: 1.1rem;
+            margin-bottom: 1rem;
+        }
+
+        .strategy-content p {
+            color: #a0a0a0;
+            line-height: 1.6;
+            margin: 0;
+        }
+
+        .trading-focus ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .trading-focus li {
+            color: #a0a0a0;
+            padding: 0.5rem 0;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .trading-focus li:last-child {
+            border-bottom: none;
+        }
+
+        .risk-warning {
+            background: rgba(231, 76, 60, 0.05);
+            border: 1px solid var(--danger-color);
+            border-radius: 12px;
+            padding: 1.25rem;
+        }
+
+        .risk-warning h4 {
+            color: var(--danger-color);
+        }
+
+        /* 交易记录分隔区域样式 */
+        .trading-record-divider {
+            margin: 2rem 0;
+        }
+
+        .trading-record-divider h3 {
+            font-size: 1.2rem;
+            color: var(--gold-color);
+            margin: 0 0 0.8rem 0;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .trading-record-divider h3 i {
+            color: var(--gold-color);
+            font-size: 1.1rem;
+        }
+
+        .trading-record-divider .divider-line {
+            width: 100%;
+            height: 2px;
+            background: var(--border-color);
+        }
+
+        /* 联系方式按钮样式 */
+        .contact-button {
+            position: fixed;
+            right: 30px;
+            bottom: 30px;
+            background: var(--gold-color);
+            color: var(--primary-color);
+            padding: 15px 25px;
+            border-radius: 50px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            z-index: 1000;
+            transition: all 0.3s ease;
+        }
+
+        .contact-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+        }
+
+        .contact-button i {
+            font-size: 1.2rem;
+        }
+
+        .contact-popup {
+            position: fixed;
+            right: 30px;
+            bottom: 90px;
+            background: var(--secondary-color);
+            border: 1px solid var(--gold-color);
+            border-radius: 15px;
+            padding: 20px;
+            width: 300px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+            z-index: 1000;
+            display: none;
+        }
+
+        .contact-popup.show {
+            display: block;
+            animation: slideUp 0.3s ease;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .contact-popup h4 {
+            color: var(--gold-color);
+            margin: 0 0 15px 0;
+            font-size: 1.2rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .contact-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 0;
+            border-bottom: 1px solid var(--border-color);
+            color: var(--text-color);
+        }
+
+        .contact-item:last-child {
+            border-bottom: none;
+        }
+
+        .contact-item i {
+            color: var(--gold-color);
+            font-size: 1.2rem;
+            width: 24px;
+            text-align: center;
+        }
+
+        @media (max-width: 768px) {
+            .profile-main {
+                flex-direction: column;
+                text-align: center;
+                gap: 1.5rem;
+            }
+
+            .profile-stats {
+                justify-content: center;
+            }
+
+            .profile-performance {
+                flex-direction: column;
+            }
+
+            .strategy-content {
+                grid-template-columns: 1fr;
+            }
+
+            .profile-avatar {
+                width: 120px;
+                height: 120px;
+            }
+
+            .profile-name {
+                font-size: 2rem;
+            }
+
+            .contact-popup {
+                width: calc(100% - 60px);
+                right: 15px;
+                bottom: 90px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark mb-3">
+        <div class="container">
+            <a class="navbar-brand" href="#">
+                <i class="bi bi-graph-up me-2"></i>
+                股票交易系统
+            </a>
+        </div>
+    </nav>
+
+    <div class="container">
+        <!-- 个人简介区域 -->
+        <div class="profile-section mb-5">
+            <div class="profile-header">
+                <div class="profile-main">
+                    <div class="profile-avatar">
+                        <img src="https://via.placeholder.com/200" alt="头像" class="avatar-img">
+                        <div class="online-status"></div>
+                    </div>
+                    <div class="profile-details">
+                        <h1 class="profile-name">{{ trader_info.trader_name }}</h1>
+                        <div class="profile-title">{{ trader_info.professional_title }}</div>
+                        <div class="profile-stats">
+                            <div class="stat-item">
+                                <span class="stat-value">5</span>
+                                <span class="stat-label">年经验</span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-value">1000+</span>
+                                <span class="stat-label">交易次数</span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-value">85%</span>
+                                <span class="stat-label">胜率</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="profile-performance">
+                    <div class="performance-card">
+                        <div class="performance-header">
+                            <i class="bi bi-briefcase"></i>
+                            <span>持仓中</span>
+                        </div>
+                        <div class="performance-value">
+                            {{ trader_info.active_trades }}
+                        </div>
+                    </div>
+                    <div class="performance-card">
+                        <div class="performance-header">
+                            <i class="bi bi-calendar-check"></i>
+                            <span>本月盈亏</span>
+                        </div>
+                        <div class="performance-value {% if trader_info.monthly_profit >= 0 %}positive{% endif %}">
+                            ${{ "%.2f"|format(trader_info.monthly_profit) }}
+                        </div>
+                    </div>
+                    <div class="performance-card">
+                        <div class="performance-header">
+                            <i class="bi bi-graph-up"></i>
+                            <span>总盈亏</span>
+                        </div>
+                        <div class="performance-value {% if trader_info.total_profit >= 0 %}positive{% endif %}">
+                            ${{ "%.2f"|format(trader_info.total_profit|default(0)) }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 交易策略更新区域 -->
+            <div class="strategy-update">
+                <div class="strategy-header">
+                    <h3><i class="bi bi-lightbulb"></i> 今日交易策略</h3>
+                    <span class="update-time">更新于: {{ trader_info.strategy_info.formatted_time }}</span>
+                </div>
+                <div class="strategy-content">
+                    <div class="market-analysis">
+                        <h4>市场分析</h4>
+                        <p>{{ trader_info.strategy_info.market_analysis }}</p>
+                    </div>
+                    <div class="trading-focus">
+                        <h4>重点关注</h4>
+                        <ul>
+                            {% for focus in trader_info.strategy_info.trading_focus %}
+                            <li>{{ focus }}</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                    <div class="risk-warning">
+                        <h4>风险提示</h4>
+                        <p>{{ trader_info.strategy_info.risk_warning }}</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 交易记录分隔区域 -->
+            <div class="trading-record-divider">
+                <h3><i class="bi bi-clipboard-data"></i>近三个月交易记录</h3>
+                <div class="divider-line"></div>
+            </div>
+        </div>
+
+        <!-- 股票交易卡片 -->
+        <div class="row">
+            {% for trade in trades %}
+            <div class="col-md-6 col-lg-4">
+                <div class="card">
+                    <div class="stock-info">
+                        <div>
+                            <div class="stock-symbol">{{ trade.symbol }}</div>
+                            <div class="stock-name">{{ trade.name }}</div>
+                        </div>
+                        <span class="badge {% if trade.status == '持有中' %}bg-success{% elif trade.status == '以止盈' %}bg-info{% else %}bg-danger{% endif %} status-badge">
+                            {{ trade.status }}
+                        </span>
+                    </div>
+
+                    {% if trade.image_url %}
+                    <img src="{{ trade.image_url }}" alt="{{ trade.symbol }}" class="trade-screenshot"
+                         data-bs-toggle="modal"
+                         data-bs-target="#imageModal-{{ loop.index }}">
+                    {% endif %}
+                    
+                    <div class="secondary-info">
+                        <div class="secondary-info-item">
+                            <span class="secondary-info-label">买入时间</span>
+                            <span class="secondary-info-value">{{ trade.entry_date[:10] }}</span>
+                        </div>
+                        <div class="secondary-info-item">
+                            <span class="secondary-info-label">买入价格</span>
+                            <span class="secondary-info-value">{{ "%.2f"|format(trade.entry_price) }}</span>
+                        </div>
+                        {% if trade.status == '持有中' %}
+                        <div class="secondary-info-item">
+                            <span class="secondary-info-label">当前价格</span>
+                            <span class="secondary-info-value">{{ "%.2f"|format(trade.current_price) }}</span>
+                        </div>
+                        <div class="secondary-info-item">
+                            <span class="secondary-info-label">交易数量</span>
+                            <span class="secondary-info-value">{{ trade.size }}</span>
+                        </div>
+                        {% elif trade.status in ['以止盈', '以止损'] %}
+                        <div class="secondary-info-item">
+                            <span class="secondary-info-label">退出时间</span>
+                            <span class="secondary-info-value">{{ trade.exit_date[:10] if trade.exit_date else 'N/A' }}</span>
+                        </div>
+                        <div class="secondary-info-item">
+                            <span class="secondary-info-label">退出价格</span>
+                            <span class="secondary-info-value">{{ "%.2f"|format(trade.exit_price) if trade.exit_price else 'N/A' }}</span>
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="main-stats">
+                        <div class="main-stat-item">
+                            <div class="main-stat-label">买入金额</div>
+                            <div class="main-stat-value">{{ "%.2f"|format(trade.entry_amount) }}</div>
+                        </div>
+                        <div class="main-stat-item">
+                            <div class="main-stat-label">总市值</div>
+                            <div class="main-stat-value">{{ "%.2f"|format(trade.current_amount) }}</div>
+                        </div>
+                        <div class="main-stat-item">
+                            <div class="main-stat-label">盈亏比例</div>
+                            <div class="main-stat-value {% if trade.profit_ratio >= 0 %}profit-positive{% else %}profit-negative{% endif %}">
+                                {{ "%.2f"|format(trade.profit_ratio) }}%
+                            </div>
+                        </div>
+                        <div class="main-stat-item">
+                            <div class="main-stat-label">盈亏金额</div>
+                            <div class="main-stat-value {% if trade.profit_amount >= 0 %}profit-positive{% else %}profit-negative{% endif %}">
+                                {{ "%.2f"|format(trade.profit_amount) }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Modal for each image -->
+            {% if trade.image_url %}
+            <div class="modal fade" id="imageModal-{{ loop.index }}" tabindex="-1" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered modal-lg">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">{{ trade.symbol }} - {{ trade.name }}</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            <img src="{{ trade.image_url }}" 
+                                 alt="{{ trade.symbol }}" 
+                                 class="modal-image">
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- 联系方式按钮 -->
+    <div class="contact-button" id="contactButton">
+        <i class="bi bi-whatsapp"></i>
+        联系客服
+    </div>
+
+    <div class="contact-popup" id="contactPopup">
+        <h4><i class="bi bi-person-lines-fill"></i>联系我们</h4>
+        <div class="contact-item">
+            <i class="bi bi-telephone"></i>
+            <span>电话：123-4567-8900</span>
+        </div>
+        <div class="contact-item">
+            <i class="bi bi-envelope"></i>
+            <span>邮箱：contact@example.com</span>
+        </div>
+        <div class="contact-item">
+            <i class="bi bi-wechat"></i>
+            <span>微信：trading_pro</span>
+        </div>
+        <div class="contact-item">
+            <i class="bi bi-geo-alt"></i>
+            <span>地址：上海市浦东新区XX大厦</span>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // 加载个人资料
+        async function loadProfile() {
+            try {
+                const response = await fetch('/api/trader-profile');
+                const data = await response.json();
+                
+                if (data.success) {
+                    const profile = data.data;
+                    document.querySelector('.profile-name').textContent = profile.trader_name;
+                    document.querySelector('.profile-title').textContent = profile.professional_title;
+                    
+                    // 更新统计数据
+                    const stats = document.querySelectorAll('.profile-stats .stat-item');
+                    stats[0].querySelector('.stat-value').textContent = profile.years_of_experience;
+                    stats[1].querySelector('.stat-value').textContent = profile.total_trades;
+                    stats[2].querySelector('.stat-value').textContent = profile.win_rate + '%';
+                }
+            } catch (error) {
+                console.error('加载个人资料失败:', error);
+            }
+        }
+
+        // 页面加载时获取个人资料
+        document.addEventListener('DOMContentLoaded', loadProfile);
+
+        // 联系客服按钮点击事件
+        document.getElementById('contactButton').addEventListener('click', function() {
+            // 记录点击时间
+            const clickTime = new Date().toISOString();
+            
+            fetch('/api/get-whatsapp-link', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    click_time: clickTime
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // 直接尝试打开WhatsApp应用
+                    window.location.href = data.app_link;
+                } else {
+                    alert(data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('连接客服失败，请稍后再试');
+            });
+        });
+
+        // 点击其他地方关闭联系方式弹窗
+        document.addEventListener('click', function(event) {
+            const popup = document.getElementById('contactPopup');
+            const button = document.querySelector('.contact-button');
+            if (!popup.contains(event.target) && !button.contains(event.target)) {
+                popup.classList.remove('show');
+            }
+        });
+    </script>
+</body>
+</html> 
