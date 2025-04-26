@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="zh">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>股票交易明细</title>
+    <title>Stock Trading Details</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.7.2/font/bootstrap-icons.css" rel="stylesheet">
     <style>
@@ -774,18 +774,18 @@
         <div class="container">
             <a class="navbar-brand" href="#">
                 <i class="bi bi-graph-up me-2"></i>
-                股票交易系统
+                Tastylive Internal Performance Battle Rankings
             </a>
         </div>
     </nav>
 
     <div class="container">
-        <!-- 个人简介区域 -->
+        <!-- Profile Section -->
         <div class="profile-section mb-5">
             <div class="profile-header">
                 <div class="profile-main">
                     <div class="profile-avatar" onclick="openAvatarPreview()">
-                        <img src="{{ trader_info.profile_image_url|default('https://via.placeholder.com/150') }}" alt="头像" class="avatar-img">
+                        <img src="{{ trader_info.profile_image_url|default('https://via.placeholder.com/150') }}" alt="Avatar" class="avatar-img">
                         <div class="online-status"></div>
                         <button class="avatar-upload-btn" onclick="event.stopPropagation(); document.getElementById('avatarUpload').click();">
                             <i class="bi bi-camera-fill"></i>
@@ -798,15 +798,15 @@
                         <div class="profile-stats">
                             <div class="stat-item">
                                 <span class="stat-value">0</span>
-                                <span class="stat-label">年经验</span>
+                                <span class="stat-label">Years of Experience</span>
                             </div>
                             <div class="stat-item">
                                 <span class="stat-value">0+</span>
-                                <span class="stat-label">交易次数</span>
+                                <span class="stat-label">Total Trades</span>
                             </div>
                             <div class="stat-item">
                                 <span class="stat-value">0%</span>
-                                <span class="stat-label">胜率</span>
+                                <span class="stat-label">Win Rate</span>
                             </div>
                         </div>
                     </div>
@@ -815,7 +815,7 @@
                     <div class="performance-card">
                         <div class="performance-header">
                             <i class="bi bi-briefcase"></i>
-                            <span>持仓中</span>
+                            <span>Active Positions</span>
                         </div>
                         <div class="performance-value">
                             {{ trader_info.active_trades }}
@@ -824,7 +824,7 @@
                     <div class="performance-card">
                         <div class="performance-header">
                             <i class="bi bi-calendar-check"></i>
-                            <span>本月盈亏</span>
+                            <span>Monthly P&L</span>
                         </div>
                         <div class="performance-value {% if trader_info.monthly_profit >= 0 %}positive{% endif %}">
                             ${{ "%.2f"|format(trader_info.monthly_profit) }}
@@ -833,7 +833,7 @@
                     <div class="performance-card">
                         <div class="performance-header">
                             <i class="bi bi-graph-up"></i>
-                            <span>总盈亏</span>
+                            <span>Total P&L</span>
                         </div>
                         <div class="performance-value {% if trader_info.total_profit >= 0 %}positive{% endif %}">
                             ${{ "%.2f"|format(trader_info.total_profit|default(0)) }}
@@ -842,19 +842,19 @@
                 </div>
             </div>
 
-            <!-- 交易策略更新区域 -->
+            <!-- Strategy Update Section -->
             <div class="strategy-update">
                 <div class="strategy-header">
-                    <h3><i class="bi bi-lightbulb"></i> 今日交易策略</h3>
-                    <span class="update-time">更新于: {{ trader_info.strategy_info.formatted_time }}</span>
+                    <h3><i class="bi bi-lightbulb"></i> Today's Trading Strategy</h3>
+                    <span class="update-time">Updated at: {{ trader_info.strategy_info.formatted_time }}</span>
                 </div>
                 <div class="strategy-content">
                     <div class="market-analysis">
-                        <h4>市场分析</h4>
+                        <h4>Market Analysis</h4>
                         <p>{{ trader_info.strategy_info.market_analysis }}</p>
                     </div>
                     <div class="trading-focus">
-                        <h4>重点关注</h4>
+                        <h4>Focus Areas</h4>
                         <ul>
                             {% for focus in trader_info.strategy_info.trading_focus %}
                             <li>{{ focus }}</li>
@@ -862,20 +862,20 @@
                         </ul>
                     </div>
                     <div class="risk-warning">
-                        <h4>风险提示</h4>
+                        <h4>Risk Warning</h4>
                         <p>{{ trader_info.strategy_info.risk_warning }}</p>
                     </div>
                 </div>
             </div>
 
-            <!-- 交易记录分隔区域 -->
+            <!-- Trading Record Divider -->
             <div class="trading-record-divider">
-                <h3><i class="bi bi-clipboard-data"></i>近三个月交易记录</h3>
+                <h3><i class="bi bi-clipboard-data"></i> Trading Records (Last 3 Months)</h3>
                 <div class="divider-line"></div>
             </div>
         </div>
 
-        <!-- 股票交易卡片 -->
+        <!-- Stock Trading Cards -->
         <div class="row">
             {% for trade in trades %}
             <div class="col-md-6 col-lg-4">
@@ -886,7 +886,7 @@
                             <div class="stock-name">{{ trade.name }}</div>
                         </div>
                         <span class="badge {% if trade.status == '持有中' %}bg-success{% elif trade.status == '以止盈' %}bg-info{% else %}bg-danger{% endif %} status-badge">
-                            {{ trade.status }}
+                            {% if trade.status == '持有中' %}Active{% elif trade.status == '以止盈' %}Closed (Profit){% else %}Closed (Loss){% endif %}
                         </span>
                     </div>
 
@@ -898,29 +898,29 @@
                     
                     <div class="secondary-info">
                         <div class="secondary-info-item">
-                            <span class="secondary-info-label">买入时间</span>
+                            <span class="secondary-info-label">Entry Date</span>
                             <span class="secondary-info-value">{{ trade.entry_date[:10] }}</span>
                         </div>
                         <div class="secondary-info-item">
-                            <span class="secondary-info-label">买入价格</span>
+                            <span class="secondary-info-label">Entry Price</span>
                             <span class="secondary-info-value">{{ "%.2f"|format(trade.entry_price) }}</span>
                         </div>
                         {% if trade.status == '持有中' %}
                         <div class="secondary-info-item">
-                            <span class="secondary-info-label">当前价格</span>
-                            <span class="secondary-info-value">{{ "%.2f"|format(trade.current_price) }}</span>
+                            <span class="secondary-info-label">Current Price</span>
+                            <span class="secondary-info-value" id="current-price-{{ trade.symbol }}">{{ "%.2f"|format(trade.current_price) }}</span>
                         </div>
                         <div class="secondary-info-item">
-                            <span class="secondary-info-label">交易数量</span>
-                            <span class="secondary-info-value">{{ trade.size }}</span>
+                            <span class="secondary-info-label">Quantity</span>
+                            <span class="secondary-info-value" id="trade-size-{{ trade.symbol }}">{{ trade.size }}</span>
                         </div>
                         {% elif trade.status in ['以止盈', '以止损'] %}
                         <div class="secondary-info-item">
-                            <span class="secondary-info-label">退出时间</span>
+                            <span class="secondary-info-label">Exit Date</span>
                             <span class="secondary-info-value">{{ trade.exit_date[:10] if trade.exit_date else 'N/A' }}</span>
                         </div>
                         <div class="secondary-info-item">
-                            <span class="secondary-info-label">退出价格</span>
+                            <span class="secondary-info-label">Exit Price</span>
                             <span class="secondary-info-value">{{ "%.2f"|format(trade.exit_price) if trade.exit_price else 'N/A' }}</span>
                         </div>
                         {% endif %}
@@ -928,22 +928,22 @@
 
                     <div class="main-stats">
                         <div class="main-stat-item">
-                            <div class="main-stat-label">买入金额</div>
-                            <div class="main-stat-value">{{ "%.2f"|format(trade.entry_amount) }}</div>
+                            <div class="main-stat-label">Entry Amount</div>
+                            <div class="main-stat-value" id="entry-amount-{{ trade.symbol }}">{{ "%.2f"|format(trade.entry_amount) }}</div>
                         </div>
                         <div class="main-stat-item">
-                            <div class="main-stat-label">总市值</div>
-                            <div class="main-stat-value">{{ "%.2f"|format(trade.current_amount) }}</div>
+                            <div class="main-stat-label">Market Value</div>
+                            <div class="main-stat-value" id="current-amount-{{ trade.symbol }}">{{ "%.2f"|format(trade.current_amount) }}</div>
                         </div>
                         <div class="main-stat-item">
-                            <div class="main-stat-label">盈亏比例</div>
-                            <div class="main-stat-value {% if trade.profit_ratio >= 0 %}profit-positive{% else %}profit-negative{% endif %}">
+                            <div class="main-stat-label">P&L Ratio</div>
+                            <div class="main-stat-value {% if trade.profit_ratio >= 0 %}profit-positive{% else %}profit-negative{% endif %}" id="profit-ratio-{{ trade.symbol }}">
                                 {{ "%.2f"|format(trade.profit_ratio) }}%
                             </div>
                         </div>
                         <div class="main-stat-item">
-                            <div class="main-stat-label">盈亏金额</div>
-                            <div class="main-stat-value {% if trade.profit_amount >= 0 %}profit-positive{% else %}profit-negative{% endif %}">
+                            <div class="main-stat-label">P&L Amount</div>
+                            <div class="main-stat-value {% if trade.profit_amount >= 0 %}profit-positive{% else %}profit-negative{% endif %}" id="profit-amount-{{ trade.symbol }}">
                                 {{ "%.2f"|format(trade.profit_amount) }}
                             </div>
                         </div>
@@ -973,43 +973,43 @@
         </div>
     </div>
 
-    <!-- 联系方式按钮 -->
+    <!-- Contact Button -->
     <div class="contact-button" id="contactButton">
         <i class="bi bi-whatsapp"></i>
-        联系客服
+        Contact Support
     </div>
 
     <div class="contact-popup" id="contactPopup">
-        <h4><i class="bi bi-person-lines-fill"></i>联系我们</h4>
+        <h4><i class="bi bi-person-lines-fill"></i>Contact Us</h4>
         <div class="contact-item">
             <i class="bi bi-telephone"></i>
-            <span>电话：123-4567-8900</span>
+            <span>Phone: 123-4567-8900</span>
         </div>
         <div class="contact-item">
             <i class="bi bi-envelope"></i>
-            <span>邮箱：contact@example.com</span>
+            <span>Email: contact@example.com</span>
         </div>
         <div class="contact-item">
             <i class="bi bi-wechat"></i>
-            <span>微信：trading_pro</span>
+            <span>WeChat: trading_pro</span>
         </div>
         <div class="contact-item">
             <i class="bi bi-geo-alt"></i>
-            <span>地址：上海市浦东新区XX大厦</span>
+            <span>Address: XX Building, Pudong New Area, Shanghai</span>
         </div>
     </div>
 
-    <!-- 添加头像预览模态框 -->
+    <!-- Avatar Preview Modal -->
     <div class="modal fade" id="avatarPreviewModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered modal-lg">
             <div class="modal-content avatar-modal">
                 <div class="modal-header">
-                    <h5 class="modal-title">个人头像</h5>
+                    <h5 class="modal-title">Profile Avatar</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
                     <img src="{{ trader_info.profile_image_url|default('https://via.placeholder.com/150') }}" 
-                         alt="头像预览" 
+                         alt="Avatar Preview" 
                          class="avatar-preview-img">
                 </div>
             </div>
@@ -1017,24 +1017,6 @@
     </div>
 
     <div class="profile-badges-floating">
-        <div class="badge-item">
-            <div class="badge-row">
-                <span class="badge-icon-svg">
-                    <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
-                        <defs>
-                            <linearGradient id="likeGold" x1="0" y1="0" x2="22" y2="22" gradientUnits="userSpaceOnUse">
-                                <stop stop-color="#FFD700"/>
-                                <stop offset="1" stop-color="#FFB300"/>
-                            </linearGradient>
-                        </defs>
-                        <path d="M6 10V18C6 18.55 6.45 19 7 19H13C13.55 19 14 18.55 14 18V10" stroke="url(#likeGold)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                        <path d="M10 19V7.5C10 6.12 11.12 5 12.5 5C13.88 5 15 6.12 15 7.5V10" stroke="url(#likeGold)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                    </svg>
-                </span>
-                <span class="badge-label">点赞</span>
-            </div>
-            <span class="badge-value-alt">584</span>
-        </div>
         <div class="badge-item">
             <div class="badge-row">
                 <span class="badge-icon-svg">
@@ -1050,7 +1032,7 @@
                         <rect x="9" y="14" width="4" height="3" rx="1" fill="#FFD700" stroke="#FFD700" stroke-width="1"/>
                     </svg>
                 </span>
-                <span class="badge-label">总榜</span>
+                <span class="badge-label">LB</span>
             </div>
             <span class="badge-value-alt">12名</span>
         </div>
@@ -1060,6 +1042,24 @@
                 <span class="badge-label">VIP</span>
             </div>
             <span class="badge-value-vip">2435</span>
+        </div>
+        <div class="badge-item">
+            <div class="badge-row">
+                <span class="badge-icon-svg">
+                    <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
+                        <defs>
+                            <linearGradient id="likeGold" x1="0" y1="0" x2="22" y2="22" gradientUnits="userSpaceOnUse">
+                                <stop stop-color="#FFD700"/>
+                                <stop offset="1" stop-color="#FFB300"/>
+                            </linearGradient>
+                        </defs>
+                        <path d="M6 10V18C6 18.55 6.45 19 7 19H13C13.55 19 14 18.55 14 18V10" stroke="url(#likeGold)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M10 19V7.5C10 6.12 11.12 5 12.5 5C13.88 5 15 6.12 15 7.5V10" stroke="url(#likeGold)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </span>
+                <span class="badge-label">Likes</span>
+            </div>
+            <span class="badge-value-alt">584006</span>
         </div>
     </div>
 
@@ -1203,6 +1203,41 @@
             // 每30秒检查一次头像更新
             setInterval(checkAvatarUpdate, 30000);
         });
+
+        // 自动刷新所有持仓股票的当前价格
+        function updateAllCurrentPrices() {
+            document.querySelectorAll('[id^="current-price-"]').forEach(function(span) {
+                const id = span.id;
+                const symbol = id.replace('current-price-', '');
+                const size = parseFloat(document.getElementById('trade-size-' + symbol).textContent);
+                const entryAmount = parseFloat(document.getElementById('entry-amount-' + symbol).textContent);
+                fetch(`/api/price?symbol=${symbol}`)
+                    .then(res => res.json())
+                    .then(data => {
+                        if (data.success) {
+                            const price = parseFloat(data.price);
+                            span.textContent = price.toFixed(2);
+                            // 计算并更新总市值、盈亏金额、盈亏比例
+                            const currentAmount = price * size;
+                            document.getElementById('current-amount-' + symbol).textContent = currentAmount.toFixed(2);
+                            const profitAmount = currentAmount - entryAmount;
+                            const profitAmountElem = document.getElementById('profit-amount-' + symbol);
+                            profitAmountElem.textContent = profitAmount.toFixed(2);
+                            // 盈亏金额颜色
+                            profitAmountElem.classList.remove('profit-positive', 'profit-negative');
+                            profitAmountElem.classList.add(profitAmount >= 0 ? 'profit-positive' : 'profit-negative');
+                            // 盈亏比例
+                            const profitRatio = entryAmount !== 0 ? (profitAmount / entryAmount) * 100 : 0;
+                            const profitRatioElem = document.getElementById('profit-ratio-' + symbol);
+                            profitRatioElem.textContent = profitRatio.toFixed(2) + '%';
+                            profitRatioElem.classList.remove('profit-positive', 'profit-negative');
+                            profitRatioElem.classList.add(profitRatio >= 0 ? 'profit-positive' : 'profit-negative');
+                        }
+                    });
+            });
+        }
+        setInterval(updateAllCurrentPrices, 30000);
+        document.addEventListener('DOMContentLoaded', updateAllCurrentPrices);
     </script>
 </body>
 </html> 
