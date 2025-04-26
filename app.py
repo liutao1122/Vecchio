@@ -7,6 +7,7 @@ import pytz
 import hashlib
 import json
 import os
+import uuid
 
 app = Flask(__name__)
 
@@ -222,7 +223,8 @@ def index():
         
         # 为每个交易添加图片URL
         for trade in trades:
-            trade['image_url'] = STOCK_IMAGES.get(trade['symbol'], '')
+            # 优先使用数据库中的 image_url，否则用 STOCK_IMAGES
+            trade['image_url'] = trade.get('image_url') or STOCK_IMAGES.get(trade['symbol'], '')
             
             # 如果没有current_price，获取实时价格
             if 'current_price' not in trade or not trade['current_price']:
@@ -252,9 +254,9 @@ def index():
         profile_response = supabase.table('trader_profiles').select("*").limit(1).execute()
         trader_info = profile_response.data[0] if profile_response.data else {
             'trader_name': '专业交易员',
-            'professional_title': '股票交易专家 | 技术分析大师',
+            'professional_title': '金融交易专家 | 技术分析大师',
             'bio': '专注于美股市场的技术分析和量化交易',
-            'profile_image_url': 'https://via.placeholder.com/100'
+            'profile_image_url': 'https://rwlziuinlbazgoajkcme.supabase.co/storage/v1/object/public/images/1920134_331262340400234_2042663349514343562_n.jpg'
         }
         
         # 获取最新的交易策略
@@ -270,14 +272,28 @@ def index():
         if strategy_info.get('updated_at'):
             strategy_info['formatted_time'] = format_datetime(strategy_info['updated_at'])
         
-        # 添加新的收益指标
-        trader_info.update({
+        # 设置个人信息
+        trader_info = {
+            'trader_name': '专业交易员',
+            'professional_title': '金融交易专家 | 技术分析大师',
+            'bio': '专注于美股市场的技术分析和量化交易',
             'positions': positions,
-            'monthly_profit': round(monthly_profit, 2),  # 本月平仓盈亏
+            'monthly_profit': round(monthly_profit, 2),
             'active_trades': len(positions),
-            'total_profit': round(3000000 + sum(t.get('profit_amount', 0) for t in trades), 2),  # 总盈亏（基础300万 + 交易盈亏）
-            'strategy_info': strategy_info  # 添加策略信息
-        })
+            'total_profit': round(3000000 + sum(t.get('profit_amount', 0) for t in trades), 2),
+            'strategy_info': strategy_info
+        }
+
+        # 从数据库获取头像URL
+        profile_response = supabase.table('trader_profiles').select('profile_image_url').limit(1).execute()
+        if profile_response.data:
+            trader_info['profile_image_url'] = profile_response.data[0].get('profile_image_url')
+
+        # 添加调试日志
+        print("=== Debug Info ===")
+        print(f"Profile Image URL: {trader_info.get('profile_image_url')}")
+        print("=== Trader Info ===")
+        print(trader_info)
         
         return render_template('index.html', 
                             trades=trades,
@@ -324,6 +340,110 @@ def trader_profile():
         return jsonify({
             'success': False,
             'message': str(e)
+        }), 500
+
+@app.route('/api/upload-avatar', methods=['POST'])
+def upload_avatar():
+    try:
+        if 'avatar' not in request.files:
+            return jsonify({'success': False, 'message': '没有上传文件'}), 400
+
+        file = request.files['avatar']
+        if file.filename == '':
+            return jsonify({'success': False, 'message': '没有选择文件'}), 400
+
+        # 检查文件类型
+        if not file.content_type.startswith('image/'):
+            return jsonify({'success': False, 'message': '请上传图片文件'}), 400
+
+        # 获取文件信息
+        file_size = len(file.read())
+        file.seek(0)  # 重置文件指针
+        
+        # 检查文件大小（限制为5MB）
+        if file_size > 5 * 1024 * 1024:
+            return jsonify({'success': False, 'message': '文件大小不能超过5MB'}), 400
+
+        # 生成唯一的文件名
+        file_extension = os.path.splitext(file.filename)[1].lower()
+        unique_filename = f"avatars/{str(uuid.uuid4())}{file_extension}"
+
+        # 上传到Supabase存储
+        file_bytes = file.read()
+        result = supabase.storage.from_('avatars').upload(
+            unique_filename,
+            file_bytes,
+            file_options={"content-type": file.content_type}
+        )
+
+        # 获取文件URL
+        file_url = supabase.storage.from_('avatars').get_public_url(unique_filename)
+
+        # 获取第一个交易员的ID（因为目前是单用户系统）
+        profile_response = supabase.table('trader_profiles').select('id').limit(1).execute()
+        if not profile_response.data:
+            # 如果没有找到交易员记录，创建一个新记录
+            trader_data = {
+                'trader_name': '专业交易员',
+                'professional_title': '金融交易专家',
+                'created_at': datetime.now(pytz.UTC).isoformat(),
+                'updated_at': datetime.now(pytz.UTC).isoformat()
+            }
+            profile_response = supabase.table('trader_profiles').insert(trader_data).execute()
+        
+        trader_id = profile_response.data[0]['id']
+
+        # 将之前的头像标记为非当前
+        supabase.table('avatar_history').update({
+            'is_current': False
+        }).eq('user_id', trader_id).execute()
+
+        # 插入新的头像记录
+        avatar_data = {
+            'user_id': trader_id,
+            'image_url': file_url,
+            'storage_path': unique_filename,
+            'file_name': file.filename,
+            'file_size': file_size,
+            'mime_type': file.content_type,
+            'is_current': True
+        }
+        supabase.table('avatar_history').insert(avatar_data).execute()
+
+        # 更新用户个人资料
+        supabase.table('trader_profiles').update({
+            'profile_image_url': file_url,
+            'updated_at': datetime.now(pytz.UTC).isoformat()
+        }).eq('id', trader_id).execute()
+
+        return jsonify({
+            'success': True,
+            'url': file_url
+        })
+
+    except Exception as e:
+        print(f"上传失败: {str(e)}")
+        return jsonify({'success': False, 'message': '上传失败，请稍后重试'}), 500
+
+@app.route('/api/get-avatar', methods=['GET'])
+def get_avatar():
+    try:
+        # 获取当前交易员的头像URL
+        profile_response = supabase.table('trader_profiles').select('profile_image_url').limit(1).execute()
+        if profile_response.data:
+            return jsonify({
+                'success': True,
+                'url': profile_response.data[0]['profile_image_url']
+            })
+        return jsonify({
+            'success': False,
+            'message': '未找到头像'
+        })
+    except Exception as e:
+        print(f"获取头像失败: {str(e)}")
+        return jsonify({
+            'success': False,
+            'message': '获取头像失败'
         }), 500
 
 if __name__ == '__main__':

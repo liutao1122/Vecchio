@@ -281,6 +281,7 @@
             border: 3px solid var(--gold-color);
             position: relative;
             box-shadow: 0 0 20px rgba(255,215,0,0.2);
+            cursor: pointer;
         }
 
         .avatar-img {
@@ -324,9 +325,14 @@
         }
 
         .profile-stats .stat-item {
+            flex: 1 1 0;
+            min-width: 120px;
+            max-width: 200px;
+            text-align: center;
             display: flex;
             flex-direction: column;
             align-items: center;
+            justify-content: center;
             background: rgba(255,215,0,0.05);
             padding: 0.75rem 1.25rem;
             border-radius: 12px;
@@ -614,6 +620,153 @@
                 bottom: 90px;
             }
         }
+
+        /* 头像上传和预览相关样式 */
+        .avatar-upload-btn {
+            position: absolute;
+            bottom: 0;
+            right: 0;
+            background: var(--gold-color);
+            border: none;
+            border-radius: 50%;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .avatar-upload-btn:hover {
+            transform: scale(1.1);
+        }
+
+        .avatar-upload-input {
+            display: none;
+        }
+
+        /* 头像预览模态框样式 */
+        .avatar-modal .modal-content {
+            background: var(--primary-color);
+            border: 1px solid var(--gold-color);
+        }
+
+        .avatar-preview-img {
+            width: 100%;
+            height: auto;
+            border-radius: 8px;
+        }
+
+        .profile-badges-floating {
+            position: fixed;
+            top: 100px;
+            right: 30px;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            z-index: 1100;
+        }
+        .badge-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background: rgba(34,34,34,0.92);
+            border-radius: 18px;
+            box-shadow: 0 4px 18px rgba(0,0,0,0.18);
+            padding: 0.7rem 1.1rem 0.4rem 1.1rem;
+            min-width: 80px;
+            transition: box-shadow 0.2s, transform 0.2s;
+        }
+        .badge-item:hover {
+            box-shadow: 0 8px 28px rgba(0,0,0,0.22);
+            transform: translateY(-2px) scale(1.04);
+        }
+        .badge-row {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.3em;
+            margin-bottom: 0.2em;
+        }
+        .badge-icon {
+            width: 22px;
+            height: 22px;
+            object-fit: contain;
+            border-radius: 5px;
+            box-shadow: 0 1px 4px #ffd70033;
+            background: #111;
+        }
+        .badge-label {
+            color: #FFD700;
+            font-weight: 600;
+            font-size: 1.05rem;
+            letter-spacing: 1px;
+        }
+        .badge-value {
+            color: #FFD700;
+            font-weight: 700;
+            font-size: 1.08rem;
+            letter-spacing: 1px;
+            text-shadow: 0 1px 2px #fff5;
+            margin-top: 0.2rem;
+        }
+        .badge-value-alt {
+            color: #fff;
+            font-weight: 700;
+            font-size: 1.08rem;
+            letter-spacing: 1px;
+            text-shadow: 0 1px 2px #FFD70055;
+            margin-top: 0.2rem;
+        }
+        .badge-value-vip {
+            color: #B0C4DE;
+            font-weight: 700;
+            font-size: 1.08rem;
+            letter-spacing: 1px;
+            text-shadow: 0 1px 2px #FFD70055;
+            margin-top: 0.2rem;
+        }
+        .badge-art-text {
+            background: linear-gradient(90deg, #222 60%, #444 100%);
+            box-shadow: 0 4px 18px rgba(0,0,0,0.18);
+            border-radius: 18px;
+            padding: 0.7rem 1.1rem 0.4rem 1.1rem;
+            min-width: 80px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .art-text {
+            font-family: 'STXingkai', 'FZShuTi', 'Arial Black', cursive, sans-serif;
+            font-size: 1.18rem;
+            font-weight: bold;
+            background: linear-gradient(90deg, #FFD700 60%, #fffbe6 100%);
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 0 2px 8px #ffd70055, 0 1px 2px #fff5;
+            letter-spacing: 2px;
+            padding: 0.1em 0.2em;
+        }
+        @media (max-width: 768px) {
+            .profile-badges-floating {
+                top: 75px;
+                right: 10px;
+                gap: 0.5rem;
+            }
+            .badge-item {
+                min-width: 60px;
+                padding: 0.4rem 0.7rem 0.2rem 0.7rem;
+            }
+            .badge-icon, .badge-icon-svg svg {
+                width: 18px;
+                height: 18px;
+            }
+            .badge-value, .badge-value-alt, .badge-value-vip {
+                font-size: 0.95rem;
+            }
+        }
     </style>
 </head>
 <body>
@@ -631,24 +784,28 @@
         <div class="profile-section mb-5">
             <div class="profile-header">
                 <div class="profile-main">
-                    <div class="profile-avatar">
-                        <img src="https://via.placeholder.com/200" alt="头像" class="avatar-img">
+                    <div class="profile-avatar" onclick="openAvatarPreview()">
+                        <img src="{{ trader_info.profile_image_url|default('https://via.placeholder.com/150') }}" alt="头像" class="avatar-img">
                         <div class="online-status"></div>
+                        <button class="avatar-upload-btn" onclick="event.stopPropagation(); document.getElementById('avatarUpload').click();">
+                            <i class="bi bi-camera-fill"></i>
+                        </button>
+                        <input type="file" id="avatarUpload" class="avatar-upload-input" accept="image/*" onchange="handleAvatarUpload(event)">
                     </div>
                     <div class="profile-details">
                         <h1 class="profile-name">{{ trader_info.trader_name }}</h1>
                         <div class="profile-title">{{ trader_info.professional_title }}</div>
                         <div class="profile-stats">
                             <div class="stat-item">
-                                <span class="stat-value">5</span>
+                                <span class="stat-value">0</span>
                                 <span class="stat-label">年经验</span>
                             </div>
                             <div class="stat-item">
-                                <span class="stat-value">1000+</span>
+                                <span class="stat-value">0+</span>
                                 <span class="stat-label">交易次数</span>
                             </div>
                             <div class="stat-item">
-                                <span class="stat-value">85%</span>
+                                <span class="stat-value">0%</span>
                                 <span class="stat-label">胜率</span>
                             </div>
                         </div>
@@ -842,6 +999,70 @@
         </div>
     </div>
 
+    <!-- 添加头像预览模态框 -->
+    <div class="modal fade" id="avatarPreviewModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content avatar-modal">
+                <div class="modal-header">
+                    <h5 class="modal-title">个人头像</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <img src="{{ trader_info.profile_image_url|default('https://via.placeholder.com/150') }}" 
+                         alt="头像预览" 
+                         class="avatar-preview-img">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="profile-badges-floating">
+        <div class="badge-item">
+            <div class="badge-row">
+                <span class="badge-icon-svg">
+                    <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
+                        <defs>
+                            <linearGradient id="likeGold" x1="0" y1="0" x2="22" y2="22" gradientUnits="userSpaceOnUse">
+                                <stop stop-color="#FFD700"/>
+                                <stop offset="1" stop-color="#FFB300"/>
+                            </linearGradient>
+                        </defs>
+                        <path d="M6 10V18C6 18.55 6.45 19 7 19H13C13.55 19 14 18.55 14 18V10" stroke="url(#likeGold)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M10 19V7.5C10 6.12 11.12 5 12.5 5C13.88 5 15 6.12 15 7.5V10" stroke="url(#likeGold)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </span>
+                <span class="badge-label">点赞</span>
+            </div>
+            <span class="badge-value-alt">584</span>
+        </div>
+        <div class="badge-item">
+            <div class="badge-row">
+                <span class="badge-icon-svg">
+                    <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
+                        <defs>
+                            <linearGradient id="trophyGold" x1="0" y1="0" x2="22" y2="22" gradientUnits="userSpaceOnUse">
+                                <stop stop-color="#FFD700"/>
+                                <stop offset="1" stop-color="#FFB300"/>
+                            </linearGradient>
+                        </defs>
+                        <ellipse cx="11" cy="20" rx="7" ry="2" fill="#FFD700" opacity="0.18"/>
+                        <path d="M6 7C6 4 16 4 16 7C16 10 14 14 11 14C8 14 6 10 6 7Z" fill="url(#trophyGold)" stroke="#FFD700" stroke-width="1.2"/>
+                        <rect x="9" y="14" width="4" height="3" rx="1" fill="#FFD700" stroke="#FFD700" stroke-width="1"/>
+                    </svg>
+                </span>
+                <span class="badge-label">总榜</span>
+            </div>
+            <span class="badge-value-alt">12名</span>
+        </div>
+        <div class="badge-item">
+            <div class="badge-row">
+                <img src="/static/badges/vip.png" alt="VIP" class="badge-icon" />
+                <span class="badge-label">VIP</span>
+            </div>
+            <span class="badge-value-vip">2435</span>
+        </div>
+    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         // 加载个人资料
@@ -852,6 +1073,12 @@
                 
                 if (data.success) {
                     const profile = data.data;
+                    // 更新头像
+                    const avatarImg = document.querySelector('.avatar-img');
+                    if (profile.profile_image_url) {
+                        avatarImg.src = profile.profile_image_url;
+                    }
+                    
                     document.querySelector('.profile-name').textContent = profile.trader_name;
                     document.querySelector('.profile-title').textContent = profile.professional_title;
                     
@@ -905,6 +1132,76 @@
             if (!popup.contains(event.target) && !button.contains(event.target)) {
                 popup.classList.remove('show');
             }
+        });
+
+        // 打开头像预览
+        function openAvatarPreview() {
+            const modal = new bootstrap.Modal(document.getElementById('avatarPreviewModal'));
+            modal.show();
+        }
+
+        // 处理头像上传
+        async function handleAvatarUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            // 检查文件类型和大小
+            if (!file.type.startsWith('image/')) {
+                alert('请上传图片文件');
+                return;
+            }
+
+            if (file.size > 5 * 1024 * 1024) {
+                alert('图片大小不能超过5MB');
+                return;
+            }
+
+            try {
+                const formData = new FormData();
+                formData.append('avatar', file);
+
+                const response = await fetch('/api/upload-avatar', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const result = await response.json();
+                
+                if (result.success) {
+                    // 更新头像显示
+                    const avatarImg = document.querySelector('.avatar-img');
+                    const previewImg = document.querySelector('.avatar-preview-img');
+                    avatarImg.src = result.url;
+                    previewImg.src = result.url;
+                    alert('头像上传成功！');
+                } else {
+                    throw new Error(result.message);
+                }
+            } catch (error) {
+                console.error('上传失败:', error);
+                alert('上传失败，请稍后重试');
+            }
+        }
+
+        // 添加检查头像更新的函数
+        function checkAvatarUpdate() {
+            fetch('/api/get-avatar')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success && data.url) {
+                        const avatarImg = document.querySelector('.avatar-img');
+                        if (avatarImg && avatarImg.src !== data.url) {
+                            avatarImg.src = data.url;
+                        }
+                    }
+                })
+                .catch(error => console.error('检查头像更新失败:', error));
+        }
+
+        // 页面加载完成后开始定期检查头像更新
+        document.addEventListener('DOMContentLoaded', function() {
+            // 每30秒检查一次头像更新
+            setInterval(checkAvatarUpdate, 30000);
         });
     </script>
 </body>
