@@ -253,18 +253,18 @@ def index():
         # 获取交易员信息
         profile_response = supabase.table('trader_profiles').select("*").limit(1).execute()
         trader_info = profile_response.data[0] if profile_response.data else {
-            'trader_name': '专业交易员',
-            'professional_title': '金融交易专家 | 技术分析大师',
-            'bio': '专注于美股市场的技术分析和量化交易',
+            'trader_name': 'Professional Trader',
+            'professional_title': 'Financial Trading Expert | Technical Analysis Master',
+            'bio': 'Focused on US stock market technical analysis and quantitative trading',
             'profile_image_url': 'https://rwlziuinlbazgoajkcme.supabase.co/storage/v1/object/public/images/1920134_331262340400234_2042663349514343562_n.jpg'
         }
         
         # 获取最新的交易策略
         strategy_response = supabase.table('trading_strategies').select("*").order('updated_at', desc=True).limit(1).execute()
         strategy_info = strategy_response.data[0] if strategy_response.data else {
-            'market_analysis': '今日市场整体呈现震荡上行趋势，科技板块表现强势，建议关注AI相关概念股...',
-            'trading_focus': ['科技板块：AI、芯片、云计算', '新能源：光伏、储能、氢能', '医药：创新药、医疗器械'],
-            'risk_warning': '市场波动较大，建议控制仓位，设置止损位...',
+            'market_analysis': 'Today\'s market shows an upward trend with strong performance in the tech sector. Focus on AI-related stocks...',
+            'trading_focus': ['Tech Sector: AI, Chips, Cloud Computing', 'New Energy: Solar, Energy Storage, Hydrogen', 'Healthcare: Innovative Drugs, Medical Devices'],
+            'risk_warning': 'High market volatility, please control position size and set stop loss...',
             'updated_at': datetime.now(pytz.UTC).strftime('%Y-%m-%d %H:%M:%S.%f+00')
         }
         
@@ -274,9 +274,9 @@ def index():
         
         # 设置个人信息
         trader_info = {
-            'trader_name': '专业交易员',
-            'professional_title': '金融交易专家 | 技术分析大师',
-            'bio': '专注于美股市场的技术分析和量化交易',
+            'trader_name': 'Professional Trader',
+            'professional_title': 'Financial Trading Expert | Technical Analysis Master',
+            'bio': 'Focused on US stock market technical analysis and quantitative trading',
             'positions': positions,
             'monthly_profit': round(monthly_profit, 2),
             'active_trades': len(positions),
