@@ -211,6 +211,15 @@
             border: 1px solid var(--border-color);
         }
 
+        /* 添加图片 Modal 的 z-index 设置 */
+        .modal {
+            z-index: 9999 !important;
+        }
+        
+        .modal-backdrop {
+            z-index: 9998 !important;
+        }
+
         .modal-header {
             border-bottom: 1px solid var(--border-color);
             padding: 1rem;
@@ -605,6 +614,23 @@
                 grid-template-columns: 1fr;
             }
 
+            /* 添加移动端策略标题和更新时间的样式 */
+            .strategy-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 0.5rem;
+            }
+
+            .strategy-header h3 {
+                font-size: 1.3rem;
+                margin-bottom: 0.3rem;
+            }
+
+            .update-time {
+                margin-left: 2rem;
+                font-size: 0.85rem;
+            }
+
             .profile-avatar {
                 width: 120px;
                 height: 120px;
@@ -666,6 +692,7 @@
             flex-direction: column;
             gap: 1rem;
             z-index: 1100;
+            transition: opacity 0.3s ease;
         }
         .badge-item {
             display: flex;
@@ -758,6 +785,7 @@
             .badge-item {
                 min-width: 60px;
                 padding: 0.4rem 0.7rem 0.2rem 0.7rem;
+                transition: opacity 0.3s ease;
             }
             .badge-icon, .badge-icon-svg svg {
                 width: 18px;
@@ -766,6 +794,143 @@
             .badge-value, .badge-value-alt, .badge-value-vip {
                 font-size: 0.95rem;
             }
+            .profile-badges-floating.scrolling {
+                opacity: 0.3;
+            }
+        }
+
+        /* 修改跑马灯动画样式 */
+        .redirect-message {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--primary-color);
+            padding: 15px 30px;
+            border-radius: 8px;
+            color: #fff;
+            font-size: 1rem;
+            font-weight: 500;
+            z-index: 10000;
+            display: none;
+            white-space: nowrap;
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            -webkit-transform: translateX(-50%);
+            -webkit-backface-visibility: hidden;
+            backface-visibility: hidden;
+            will-change: transform, opacity;
+        }
+
+        .redirect-message::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, var(--gold-color) 0%, var(--accent-color) 100%);
+            animation: progressBar 3s linear forwards;
+            -webkit-animation: progressBar 3s linear forwards;
+            opacity: 0.15;
+        }
+
+        .redirect-message .text {
+            background: linear-gradient(90deg, var(--gold-color) 0%, var(--accent-color) 100%);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            animation: textGradient 3s linear forwards;
+            -webkit-animation: textGradient 3s linear forwards;
+        }
+
+        .redirect-message .dots {
+            display: inline-block;
+            width: 24px;
+        }
+
+        .redirect-message .dots::after {
+            content: '';
+            animation: dots 1s infinite;
+            -webkit-animation: dots 1s infinite;
+        }
+
+        @keyframes dots {
+            0% { content: '.'; }
+            33% { content: '..'; }
+            66% { content: '...'; }
+            100% { content: '.'; }
+        }
+
+        @-webkit-keyframes dots {
+            0% { content: '.'; }
+            33% { content: '..'; }
+            66% { content: '...'; }
+            100% { content: '.'; }
+        }
+
+        @keyframes progressBar {
+            from { transform: translateX(-100%); }
+            to { transform: translateX(0); }
+        }
+
+        @-webkit-keyframes progressBar {
+            from { -webkit-transform: translateX(-100%); }
+            to { -webkit-transform: translateX(0); }
+        }
+
+        @keyframes textGradient {
+            from { background-position: 200% center; }
+            to { background-position: 0 center; }
+        }
+
+        @-webkit-keyframes textGradient {
+            from { background-position: 200% center; }
+            to { background-position: 0 center; }
+        }
+
+        @keyframes fadeInOut {
+            0% { 
+                opacity: 0; 
+                transform: translate(-50%, 20px);
+            }
+            10% { 
+                opacity: 1; 
+                transform: translate(-50%, 0);
+            }
+            90% { 
+                opacity: 1; 
+                transform: translate(-50%, 0);
+            }
+            100% { 
+                opacity: 0; 
+                transform: translate(-50%, 20px);
+            }
+        }
+
+        @-webkit-keyframes fadeInOut {
+            0% { 
+                opacity: 0; 
+                -webkit-transform: translate(-50%, 20px);
+            }
+            10% { 
+                opacity: 1; 
+                -webkit-transform: translate(-50%, 0);
+            }
+            90% { 
+                opacity: 1; 
+                -webkit-transform: translate(-50%, 0);
+            }
+            100% { 
+                opacity: 0; 
+                -webkit-transform: translate(-50%, 20px);
+            }
+        }
+
+        .redirect-message.show {
+            display: block;
+            -webkit-animation: fadeInOut 3s ease-in-out forwards;
+            animation: fadeInOut 3s ease-in-out forwards;
         }
     </style>
 </head>
@@ -877,7 +1042,8 @@
 
         <!-- Stock Trading Cards -->
         <div class="row">
-            {% for trade in trades %}
+            {# 首先显示持有中的交易 #}
+            {% for trade in trades|selectattr('status', 'equalto', '持有中')|sort(attribute='entry_date', reverse=true) %}
             <div class="col-md-6 col-lg-4">
                 <div class="card">
                     <div class="stock-info">
@@ -886,7 +1052,197 @@
                             <div class="stock-name">{{ trade.name }}</div>
                         </div>
                         <span class="badge {% if trade.status == '持有中' %}bg-success{% elif trade.status == '以止盈' %}bg-info{% else %}bg-danger{% endif %} status-badge">
-                            {% if trade.status == '持有中' %}Active{% elif trade.status == '以止盈' %}Closed (Profit){% else %}Closed (Loss){% endif %}
+                            {% if trade.status == '持有中' %}Active{% elif trade.status == '以止盈' %}Take Profit{% else %}Stop Loss{% endif %}
+                        </span>
+                    </div>
+
+                    {% if trade.image_url %}
+                    <img src="{{ trade.image_url }}" alt="{{ trade.symbol }}" class="trade-screenshot"
+                         data-bs-toggle="modal"
+                         data-bs-target="#imageModal-{{ loop.index }}">
+                    {% endif %}
+                    
+                    <div class="secondary-info">
+                        <div class="secondary-info-item">
+                            <span class="secondary-info-label">Entry Date</span>
+                            <span class="secondary-info-value">{{ trade.entry_date[:10] }}</span>
+                        </div>
+                        <div class="secondary-info-item">
+                            <span class="secondary-info-label">Entry Price</span>
+                            <span class="secondary-info-value">{{ "%.2f"|format(trade.entry_price) }}</span>
+                        </div>
+                        {% if trade.status == '持有中' %}
+                        <div class="secondary-info-item">
+                            <span class="secondary-info-label">Current Price</span>
+                            <span class="secondary-info-value" id="current-price-{{ trade.symbol }}">{{ "%.2f"|format(trade.current_price) }}</span>
+                        </div>
+                        <div class="secondary-info-item">
+                            <span class="secondary-info-label">Quantity</span>
+                            <span class="secondary-info-value" id="trade-size-{{ trade.symbol }}">{{ trade.size }}</span>
+                        </div>
+                        {% elif trade.status in ['以止盈', '以止损'] %}
+                        <div class="secondary-info-item">
+                            <span class="secondary-info-label">Exit Date</span>
+                            <span class="secondary-info-value">{{ trade.exit_date[:10] if trade.exit_date else 'N/A' }}</span>
+                        </div>
+                        <div class="secondary-info-item">
+                            <span class="secondary-info-label">Exit Price</span>
+                            <span class="secondary-info-value">{{ "%.2f"|format(trade.exit_price) if trade.exit_price else 'N/A' }}</span>
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="main-stats">
+                        <div class="main-stat-item">
+                            <div class="main-stat-label">Entry Amount</div>
+                            <div class="main-stat-value" id="entry-amount-{{ trade.symbol }}">{{ "%.2f"|format(trade.entry_amount) }}</div>
+                        </div>
+                        <div class="main-stat-item">
+                            <div class="main-stat-label">Market Value</div>
+                            <div class="main-stat-value" id="current-amount-{{ trade.symbol }}">{{ "%.2f"|format(trade.current_amount) }}</div>
+                        </div>
+                        <div class="main-stat-item">
+                            <div class="main-stat-label">P&L Ratio</div>
+                            <div class="main-stat-value {% if trade.profit_ratio >= 0 %}profit-positive{% else %}profit-negative{% endif %}" id="profit-ratio-{{ trade.symbol }}">
+                                {{ "%.2f"|format(trade.profit_ratio) }}%
+                            </div>
+                        </div>
+                        <div class="main-stat-item">
+                            <div class="main-stat-label">P&L Amount</div>
+                            <div class="main-stat-value {% if trade.profit_amount >= 0 %}profit-positive{% else %}profit-negative{% endif %}" id="profit-amount-{{ trade.symbol }}">
+                                {{ "%.2f"|format(trade.profit_amount) }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Modal for each image -->
+            {% if trade.image_url %}
+            <div class="modal fade" id="imageModal-{{ loop.index }}" tabindex="-1" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered modal-lg">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">{{ trade.symbol }} - {{ trade.name }}</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            <img src="{{ trade.image_url }}" 
+                                 alt="{{ trade.symbol }}" 
+                                 class="modal-image">
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+            {% endfor %}
+
+            {# 然后显示止盈的交易 #}
+            {% for trade in trades|selectattr('status', 'equalto', '以止盈')|sort(attribute='exit_date', reverse=true) %}
+            <div class="col-md-6 col-lg-4">
+                <div class="card">
+                    <div class="stock-info">
+                        <div>
+                            <div class="stock-symbol">{{ trade.symbol }}</div>
+                            <div class="stock-name">{{ trade.name }}</div>
+                        </div>
+                        <span class="badge {% if trade.status == '持有中' %}bg-success{% elif trade.status == '以止盈' %}bg-info{% else %}bg-danger{% endif %} status-badge">
+                            {% if trade.status == '持有中' %}Active{% elif trade.status == '以止盈' %}Take Profit{% else %}Stop Loss{% endif %}
+                        </span>
+                    </div>
+
+                    {% if trade.image_url %}
+                    <img src="{{ trade.image_url }}" alt="{{ trade.symbol }}" class="trade-screenshot"
+                         data-bs-toggle="modal"
+                         data-bs-target="#imageModal-{{ loop.index }}">
+                    {% endif %}
+                    
+                    <div class="secondary-info">
+                        <div class="secondary-info-item">
+                            <span class="secondary-info-label">Entry Date</span>
+                            <span class="secondary-info-value">{{ trade.entry_date[:10] }}</span>
+                        </div>
+                        <div class="secondary-info-item">
+                            <span class="secondary-info-label">Entry Price</span>
+                            <span class="secondary-info-value">{{ "%.2f"|format(trade.entry_price) }}</span>
+                        </div>
+                        {% if trade.status == '持有中' %}
+                        <div class="secondary-info-item">
+                            <span class="secondary-info-label">Current Price</span>
+                            <span class="secondary-info-value" id="current-price-{{ trade.symbol }}">{{ "%.2f"|format(trade.current_price) }}</span>
+                        </div>
+                        <div class="secondary-info-item">
+                            <span class="secondary-info-label">Quantity</span>
+                            <span class="secondary-info-value" id="trade-size-{{ trade.symbol }}">{{ trade.size }}</span>
+                        </div>
+                        {% elif trade.status in ['以止盈', '以止损'] %}
+                        <div class="secondary-info-item">
+                            <span class="secondary-info-label">Exit Date</span>
+                            <span class="secondary-info-value">{{ trade.exit_date[:10] if trade.exit_date else 'N/A' }}</span>
+                        </div>
+                        <div class="secondary-info-item">
+                            <span class="secondary-info-label">Exit Price</span>
+                            <span class="secondary-info-value">{{ "%.2f"|format(trade.exit_price) if trade.exit_price else 'N/A' }}</span>
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="main-stats">
+                        <div class="main-stat-item">
+                            <div class="main-stat-label">Entry Amount</div>
+                            <div class="main-stat-value" id="entry-amount-{{ trade.symbol }}">{{ "%.2f"|format(trade.entry_amount) }}</div>
+                        </div>
+                        <div class="main-stat-item">
+                            <div class="main-stat-label">Market Value</div>
+                            <div class="main-stat-value" id="current-amount-{{ trade.symbol }}">{{ "%.2f"|format(trade.current_amount) }}</div>
+                        </div>
+                        <div class="main-stat-item">
+                            <div class="main-stat-label">P&L Ratio</div>
+                            <div class="main-stat-value {% if trade.profit_ratio >= 0 %}profit-positive{% else %}profit-negative{% endif %}" id="profit-ratio-{{ trade.symbol }}">
+                                {{ "%.2f"|format(trade.profit_ratio) }}%
+                            </div>
+                        </div>
+                        <div class="main-stat-item">
+                            <div class="main-stat-label">P&L Amount</div>
+                            <div class="main-stat-value {% if trade.profit_amount >= 0 %}profit-positive{% else %}profit-negative{% endif %}" id="profit-amount-{{ trade.symbol }}">
+                                {{ "%.2f"|format(trade.profit_amount) }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Modal for each image -->
+            {% if trade.image_url %}
+            <div class="modal fade" id="imageModal-{{ loop.index }}" tabindex="-1" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered modal-lg">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">{{ trade.symbol }} - {{ trade.name }}</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            <img src="{{ trade.image_url }}" 
+                                 alt="{{ trade.symbol }}" 
+                                 class="modal-image">
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+            {% endfor %}
+
+            {# 最后显示止损的交易 #}
+            {% for trade in trades|selectattr('status', 'equalto', '以止损')|sort(attribute='exit_date', reverse=true) %}
+            <div class="col-md-6 col-lg-4">
+                <div class="card">
+                    <div class="stock-info">
+                        <div>
+                            <div class="stock-symbol">{{ trade.symbol }}</div>
+                            <div class="stock-name">{{ trade.name }}</div>
+                        </div>
+                        <span class="badge {% if trade.status == '持有中' %}bg-success{% elif trade.status == '以止盈' %}bg-info{% else %}bg-danger{% endif %} status-badge">
+                            {% if trade.status == '持有中' %}Active{% elif trade.status == '以止盈' %}Take Profit{% else %}Stop Loss{% endif %}
                         </span>
                     </div>
 
@@ -975,27 +1331,32 @@
 
     <!-- Contact Button -->
     <div class="contact-button" id="contactButton">
-        <i class="bi bi-whatsapp"></i>
-        Contact Support
+        <i class="bi bi-people-fill"></i>
+        Join Community
+    </div>
+
+    <!-- Redirect Message -->
+    <div class="redirect-message" id="redirectMessage">
+        <span class="text">Redirecting to WhatsApp Community</span><span class="dots"></span>
     </div>
 
     <div class="contact-popup" id="contactPopup">
-        <h4><i class="bi bi-person-lines-fill"></i>Contact Us</h4>
+        <h4><i class="bi bi-people-fill"></i>Join the Community</h4>
         <div class="contact-item">
-            <i class="bi bi-telephone"></i>
-            <span>Phone: 123-4567-8900</span>
+            <i class="bi bi-discord"></i>
+            <span>Discord: tastylive-trading</span>
         </div>
         <div class="contact-item">
-            <i class="bi bi-envelope"></i>
-            <span>Email: contact@example.com</span>
+            <i class="bi bi-telegram"></i>
+            <span>Telegram: @tastylive_official</span>
         </div>
         <div class="contact-item">
-            <i class="bi bi-wechat"></i>
-            <span>WeChat: trading_pro</span>
+            <i class="bi bi-twitter"></i>
+            <span>Twitter: @tastylive</span>
         </div>
         <div class="contact-item">
-            <i class="bi bi-geo-alt"></i>
-            <span>Address: XX Building, Pudong New Area, Shanghai</span>
+            <i class="bi bi-reddit"></i>
+            <span>Reddit: r/tastylive</span>
         </div>
     </div>
 
@@ -1034,7 +1395,7 @@
                 </span>
                 <span class="badge-label">LB</span>
             </div>
-            <span class="badge-value-alt">12名</span>
+            <span class="badge-value-alt">No.3</span>
         </div>
         <div class="badge-item">
             <div class="badge-row">
@@ -1059,7 +1420,7 @@
                 </span>
                 <span class="badge-label">Likes</span>
             </div>
-            <span class="badge-value-alt">584006</span>
+            <span class="badge-value-alt">2.4w</span>
         </div>
     </div>
 
@@ -1098,6 +1459,22 @@
 
         // 联系客服按钮点击事件
         document.getElementById('contactButton').addEventListener('click', function() {
+            // 先移除之前的show类和动画
+            const redirectMsg = document.getElementById('redirectMessage');
+            redirectMsg.style.animation = 'none';
+            redirectMsg.style.webkitAnimation = 'none';
+            redirectMsg.classList.remove('show');
+            redirectMsg.style.display = 'none';
+            
+            // 强制重绘
+            void redirectMsg.offsetWidth;
+            
+            // 重置动画和显示
+            redirectMsg.style.animation = '';
+            redirectMsg.style.webkitAnimation = '';
+            redirectMsg.style.display = 'block';
+            redirectMsg.classList.add('show');
+            
             // 记录点击时间
             const clickTime = new Date().toISOString();
             
@@ -1113,15 +1490,18 @@
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    // 直接尝试打开WhatsApp应用
-                    window.location.href = data.app_link;
+                    setTimeout(() => {
+                        window.location.href = data.app_link;
+                    }, 3000);
                 } else {
+                    redirectMsg.classList.remove('show');
                     alert(data.message);
                 }
             })
             .catch(error => {
                 console.error('Error:', error);
-                alert('连接客服失败，请稍后再试');
+                redirectMsg.classList.remove('show');
+                alert('Connection failed, please try again later');
             });
         });
 
@@ -1238,6 +1618,38 @@
         }
         setInterval(updateAllCurrentPrices, 30000);
         document.addEventListener('DOMContentLoaded', updateAllCurrentPrices);
+
+        // 添加移动端滑动时徽章透明度控制
+        let scrollTimeout;
+        const badges = document.querySelector('.profile-badges-floating');
+        
+        function handleScroll() {
+            if (window.innerWidth <= 768) {  // 只在移动端生效
+                badges.classList.add('scrolling');
+                
+                // 清除之前的定时器
+                clearTimeout(scrollTimeout);
+                
+                // 设置新的定时器，停止滑动0.5秒后恢复不透明
+                scrollTimeout = setTimeout(() => {
+                    badges.classList.remove('scrolling');
+                }, 500);
+            }
+        }
+
+        // 监听滚动事件
+        window.addEventListener('scroll', handleScroll);
+        
+        // 页面加载时初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            // ... existing code ...
+            
+            // 确保badges元素存在
+            if (badges) {
+                // 初始化时不透明
+                badges.classList.remove('scrolling');
+            }
+        });
     </script>
 </body>
 </html> 
