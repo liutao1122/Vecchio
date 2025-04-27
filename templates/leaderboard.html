@@ -1,0 +1,660 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trader Leaderboard</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.7.2/font/bootstrap-icons.css" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(120deg, #181c2b 0%, #23243a 100%);
+            color: #fff;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+        }
+        .leaderboard-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2.5rem;
+            margin-top: 2rem;
+        }
+        .leaderboard-title {
+            font-size: 2.3rem;
+            font-weight: 800;
+            color: #ffd700;
+            letter-spacing: 1px;
+            text-shadow: 0 2px 12px #ffd70033;
+        }
+        .back-btn {
+            background: #ffd700;
+            color: #181c2b;
+            font-weight: 600;
+            border: none;
+            border-radius: 8px;
+            padding: 0.6rem 1.5rem;
+            font-size: 1.1rem;
+            transition: background 0.2s;
+            text-decoration: none;
+        }
+        .back-btn:hover {
+            background: #e6c200;
+            color: #181c2b;
+        }
+        /* 第一名大卡片 */
+        .first-card {
+            background: linear-gradient(120deg, #ffd700 60%, #fffbe6 100%);
+            color: #181c2b;
+            border-radius: 22px;
+            box-shadow: 0 8px 32px #ffd70055;
+            padding: 1.3rem 1rem 1rem 1rem !important;
+            margin-bottom: 2.5rem;
+            text-align: center;
+            position: relative;
+            transition: transform 0.18s cubic-bezier(.4,1.3,.6,1), box-shadow 0.18s, border 0.18s;
+            min-width: 420px !important;
+            max-width: 600px !important;
+        }
+        .first-card:hover {
+            transform: translateY(-8px) scale(1.025);
+            box-shadow: 0 10px 32px #ffd70055, 0 2px 16px #0003;
+            border: 2.5px solid #ffd700;
+            z-index: 5;
+        }
+        .first-card .rank-badge {
+            position: absolute;
+            top: -30px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #ffd700 60%, #ffb300 100%);
+            color: #fff;
+            font-size: 2.5rem;
+            font-weight: 900;
+            border: 5px solid #fffbe6;
+            box-shadow: 0 2px 16px #ffd70055;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 2;
+        }
+        .first-card .trader-avatar {
+            width: 90px !important;
+            height: 90px !important;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 5px solid #fffbe6;
+            box-shadow: 0 0 24px #ffd70055;
+            margin-bottom: 0.7rem !important;
+            background: #fff;
+        }
+        .first-card .trader-name {
+            font-size: 1.3rem !important;
+            font-weight: 900;
+            color: #b8860b;
+            margin-bottom: 0.15rem !important;
+        }
+        .first-card .trader-title {
+            color: #555;
+            font-size: 1rem !important;
+            margin-bottom: 0.7rem !important;
+        }
+        .first-card .stat-row {
+            display: flex;
+            justify-content: center;
+            gap: 1.2rem !important;
+            margin-bottom: 0.7rem !important;
+        }
+        .first-card .stat-block {
+            background: rgba(255,215,0,0.13);
+            border-radius: 12px;
+            padding: 0.5rem 1rem !important;
+            text-align: center;
+            min-width: 80px !important;
+        }
+        .first-card .stat-label {
+            color: #b8860b;
+            font-size: 1.05rem;
+        }
+        .first-card .stat-value {
+            color: #181c2b;
+            font-size: 1.35rem;
+            font-weight: 800;
+        }
+        .first-card .social-row {
+            display: flex;
+            justify-content: center;
+            gap: 1.2rem !important;
+            margin-bottom: 0.5rem !important;
+        }
+        .first-card .social-item {
+            display: flex;
+            align-items: center;
+            gap: 0.4em;
+            font-size: 1.15rem;
+            color: #b8860b;
+            font-weight: 700;
+            background: rgba(255,215,0,0.18);
+            border-radius: 10px;
+            padding: 0.4em 1.2em 0.4em 0.9em;
+            box-shadow: 0 1px 4px #ffd70022;
+        }
+        .first-card .social-item .bi {
+            font-size: 1.3em;
+            color: #b8860b;
+        }
+        .first-card .profit-bar {
+            width: 100%;
+            height: 16px !important;
+            background: linear-gradient(90deg, #ffd700 0%, #2ecc71 100%);
+            border-radius: 10px;
+            margin-top: 0.7rem !important;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1rem !important;
+            font-weight: 900;
+            color: #181c2b;
+            letter-spacing: 1px;
+            box-shadow: 0 2px 8px #ffd70033;
+        }
+        /* 第二三名中卡片 */
+        .top3-row {
+            display: flex;
+            gap: 2.5rem;
+            margin-bottom: 2.5rem;
+            justify-content: center;
+        }
+        .top3-card {
+            background: linear-gradient(120deg, #23243a 60%, #181c2b 100%);
+            color: #fff;
+            border-radius: 14px !important;
+            box-shadow: 0 4px 18px #ffd70022;
+            padding: 1rem 0.7rem 0.7rem 0.7rem !important;
+            text-align: center;
+            position: relative;
+            flex: 1 1 0;
+            min-width: 300px !important;
+            max-width: 400px !important;
+            transition: transform 0.18s cubic-bezier(.4,1.3,.6,1), box-shadow 0.18s, border 0.18s;
+        }
+        .top3-card:hover {
+            transform: translateY(-8px) scale(1.025);
+            box-shadow: 0 10px 32px #ffd70055, 0 2px 16px #0003;
+            border: 2.5px solid #ffd700;
+            z-index: 5;
+        }
+        .top3-card .rank-badge {
+            position: absolute;
+            top: -22px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 54px;
+            height: 54px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #C0C0C0 60%, #b0b0b0 100%);
+            color: #fff;
+            font-size: 1.7rem;
+            font-weight: 900;
+            border: 4px solid #fffbe6;
+            box-shadow: 0 2px 10px #ffd70033;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 2;
+        }
+        .top3-card.rank-3 .rank-badge {
+            background: linear-gradient(135deg, #CD7F32 60%, #b87333 100%);
+        }
+        .top3-card .trader-avatar {
+            width: 55px !important;
+            height: 55px !important;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 3px solid #ffd700;
+            box-shadow: 0 0 12px #ffd70033;
+            margin-bottom: 0.4rem !important;
+            background: #fff;
+        }
+        .top3-card .trader-name {
+            font-size: 1.01rem !important;
+            font-weight: 700;
+            color: #ffd700;
+            margin-bottom: 0.1rem !important;
+        }
+        .top3-card .trader-title {
+            color: #b0b0b0;
+            font-size: 0.92rem !important;
+            margin-bottom: 0.4rem !important;
+        }
+        .top3-card .stat-row {
+            display: flex;
+            justify-content: center;
+            gap: 0.7rem !important;
+            margin-bottom: 0.3rem !important;
+        }
+        .top3-card .stat-block {
+            background: rgba(255,215,0,0.09);
+            border-radius: 8px;
+            padding: 0.3rem 0.7rem !important;
+            text-align: center;
+            min-width: 55px !important;
+        }
+        .top3-card .stat-label {
+            color: #b0b0b0;
+            font-size: 0.92rem;
+        }
+        .top3-card .stat-value {
+            color: #ffd700;
+            font-size: 1.08rem;
+            font-weight: 700;
+        }
+        .top3-card .social-row {
+            display: flex;
+            justify-content: center;
+            gap: 0.7rem !important;
+            margin-bottom: 0.2rem !important;
+        }
+        .top3-card .social-item {
+            display: flex;
+            align-items: center;
+            gap: 0.3em;
+            font-size: 1.01rem;
+            color: #ffd700;
+            font-weight: 600;
+            background: rgba(255,215,0,0.08);
+            border-radius: 8px;
+            padding: 0.2em 0.8em 0.2em 0.6em;
+            box-shadow: 0 1px 4px #ffd70011;
+        }
+        .top3-card .social-item .bi {
+            font-size: 1.1em;
+            color: #ffd700;
+        }
+        .top3-card .profit-bar {
+            width: 100%;
+            height: 12px !important;
+            background: linear-gradient(90deg, #ffd700 0%, #2ecc71 100%);
+            border-radius: 8px;
+            margin-top: 0.3rem !important;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.92rem !important;
+            font-weight: 800;
+            color: #181c2b;
+            letter-spacing: 1px;
+            box-shadow: 0 2px 8px #ffd70022;
+        }
+        /* 4-20名列表条 */
+        .list-table {
+            width: 100%;
+            background: #181c2b;
+            border-radius: 16px;
+            box-shadow: 0 2px 12px #0005;
+            overflow: hidden;
+        }
+        .list-row {
+            display: flex;
+            align-items: center;
+            padding: 0.7rem 1.2rem;
+            border-bottom: 1px solid #23243a;
+            transition: background 0.15s;
+        }
+        .list-row:last-child { border-bottom: none; }
+        .list-row:hover { background: #23243a; }
+        .list-rank {
+            width: 38px;
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: #ffd700;
+            text-align: center;
+        }
+        .list-avatar {
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid #ffd70044;
+            margin-right: 0.7rem;
+        }
+        .list-name {
+            font-weight: 600;
+            color: #ffd700;
+            font-size: 1.05rem;
+        }
+        .list-title {
+            color: #b0b0b0;
+            font-size: 0.92rem;
+        }
+        .list-profit {
+            color: #2ecc71;
+            font-weight: 700;
+            font-size: 1.08rem;
+            margin-left: 1.2rem;
+        }
+        .list-social {
+            display: flex;
+            align-items: center;
+            gap: 1.1rem;
+            margin-left: 1.2rem;
+        }
+        .list-social-item {
+            display: flex;
+            align-items: center;
+            gap: 0.3em;
+            color: #ffd700;
+            font-size: 0.98rem;
+        }
+        .list-social-item .bi {
+            font-size: 1.1em;
+        }
+        @media (max-width: 900px) {
+            .podium-row { flex-direction: column !important; gap: 1.2rem !important; align-items: center !important; }
+            .first-card, .top3-card { min-width: 0 !important; max-width: 100% !important; }
+        }
+        @media (max-width: 600px) {
+            .leaderboard-header { flex-direction: column; gap: 1.2rem; }
+            .first-card { padding: 1.2rem 0.5rem; }
+            .top3-card { padding: 1rem 0.3rem; min-width: 0; }
+            .list-row { padding: 0.5rem 0.3rem; font-size: 0.95rem; }
+        }
+        .rank-badge-corner {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 38px;
+            height: 38px;
+            border-radius: 16px;
+            font-size: 1.25rem;
+            font-weight: 800;
+            color: #fff;
+            box-shadow: 0 2px 8px #0002;
+            border: 2.5px solid #fffbe6;
+            z-index: 3;
+            letter-spacing: 1px;
+        }
+        .podium-row { gap: 2.5rem !important; align-items: flex-end !important; }
+        .podium-card {
+            background: rgba(255,255,255,0.10) !important;
+            backdrop-filter: blur(6px);
+            border-radius: 22px;
+            box-shadow: 0 4px 18px #000a;
+            min-width: 340px;
+            max-width: 420px;
+            padding: 2.2rem 1.2rem 1.2rem 1.2rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-end;
+            position: relative;
+            border: 2.5px solid transparent;
+            transition: transform 0.18s cubic-bezier(.4,1.3,.6,1), box-shadow 0.18s, border 0.18s;
+        }
+        .podium-card:hover {
+            transform: translateY(-8px) scale(1.025);
+            box-shadow: 0 10px 32px #ffd70055, 0 2px 16px #0003;
+            border: 2.5px solid #ffd70088;
+            z-index: 5;
+        }
+        .podium-card.podium-rank-1 {
+            border: 2.5px solid #ffd700;
+            box-shadow: 0 8px 32px #ffd70055, 0 4px 24px #000a;
+            min-width: 380px;
+            max-width: 480px;
+            background: rgba(255,255,255,0.13) !important;
+        }
+        .podium-card.podium-rank-2 {
+            border: 2.5px solid #C0C0C0;
+            background: rgba(255,255,255,0.10) !important;
+        }
+        .podium-card.podium-rank-3 {
+            border: 2.5px solid #CD7F32;
+            background: rgba(255,255,255,0.10) !important;
+        }
+        .podium-avatar {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 5px solid #ffd700;
+            box-shadow: 0 0 24px #ffd70033;
+            margin-bottom: 0.7rem;
+            background: #fff;
+            z-index: 2;
+        }
+        .podium-rank-badge {
+            position: absolute;
+            top: 18px;
+            left: 18px;
+            min-width: 0;
+            height: auto;
+            border-radius: 0;
+            display: flex;
+            flex-direction: row;
+            align-items: flex-end;
+            justify-content: flex-start;
+            box-shadow: none;
+            border: none;
+            background: none;
+            padding: 0;
+            z-index: 3;
+            gap: 0.18em;
+        }
+        .podium-rank-badge .top-label {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: #fffbe6cc;
+            letter-spacing: 0.22em;
+            line-height: 1;
+            margin-left: 2px;
+            text-shadow: 0 2px 8px #0002;
+        }
+        .podium-card.podium-rank-1 .podium-rank-badge .rank-number {
+            font-size: 2.5rem;
+            font-weight: 900;
+            background: linear-gradient(90deg,#ffd700 60%,#ffb300 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            line-height: 1.05;
+            margin-left: 0.18em;
+            letter-spacing: 0.05em;
+            text-shadow: 0 4px 18px #ffd70055, 0 2px 8px #0005, 0 1px 2px #fff5;
+        }
+        .podium-card.podium-rank-2 .podium-rank-badge .rank-number {
+            font-size: 2.1rem;
+            font-weight: 900;
+            background: linear-gradient(90deg,#C0C0C0 60%,#b0b0b0 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            line-height: 1.05;
+            margin-left: 0.18em;
+            letter-spacing: 0.05em;
+            text-shadow: 0 4px 18px #C0C0C055, 0 2px 8px #0005, 0 1px 2px #fff5;
+        }
+        .podium-card.podium-rank-3 .podium-rank-badge .rank-number {
+            font-size: 2.1rem;
+            font-weight: 900;
+            background: linear-gradient(90deg,#CD7F32 60%,#b87333 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            line-height: 1.05;
+            margin-left: 0.18em;
+            letter-spacing: 0.05em;
+            text-shadow: 0 4px 18px #CD7F3255, 0 2px 8px #0005, 0 1px 2px #fff5;
+        }
+        .podium-profit {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-bottom: 0.5rem;
+        }
+        .podium-profit-label {
+            font-size: 1.08rem;
+            color: #ffd700;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            margin-bottom: 0.1rem;
+        }
+        .podium-profit-amount {
+            font-size: 2.5rem;
+            font-weight: 900;
+            color: #ffd700;
+            letter-spacing: 1px;
+            text-shadow: 0 2px 12px #ffd70033, 0 1px 2px #fff5;
+            line-height: 1.1;
+        }
+        .podium-name {
+            font-size: 1.25rem;
+            font-weight: 800;
+            color: #fff;
+            margin-bottom: 0.1rem;
+            text-align: center;
+        }
+        .podium-title {
+            color: #b0b0b0;
+            font-size: 1.05rem;
+            margin-bottom: 0.7rem;
+            text-align: center;
+        }
+        .podium-bottom-row {
+            display: flex;
+            justify-content: center;
+            gap: 1.5rem;
+            margin-top: 0.7rem;
+            width: 100%;
+        }
+        .podium-bottom-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            color: #fff;
+            font-weight: 700;
+            font-size: 1.08rem;
+        }
+        .podium-bottom-item .icon-gold { color: #ffd700; }
+        .podium-bottom-label {
+            color: #b0b0b0;
+            font-size: 0.92rem;
+            font-weight: 500;
+            margin-top: 0.1rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="leaderboard-header">
+            <div class="leaderboard-title">
+                <i class="bi bi-trophy-fill" style="color:#ffd700;"></i> Trader Leaderboard
+            </div>
+            <a href="/" class="back-btn"><i class="bi bi-arrow-left"></i> Back to Dashboard</a>
+        </div>
+        <!-- 活动介绍和比赛规则卡片 -->
+        <div class="mb-4" style="max-width: 1200px; margin: 0 auto;">
+            <div style="background: linear-gradient(90deg, var(--secondary-color) 0%, var(--primary-color) 100%); border-radius: 20px; box-shadow: 0 4px 18px #0006; padding: 2.7rem 3rem 2.2rem 3rem; border: 2.5px solid #ffd70033;">
+                <div style="display: flex; align-items: center; gap: 0.7em; margin-bottom: 0.7em;">
+                    <i class="bi bi-info-circle-fill" style="font-size: 2rem; color: #ffd700;"></i>
+                    <span style="font-size: 1.7rem; font-weight: 800; color: #ffd700; letter-spacing: 1px;">活动介绍 & 比赛规则</span>
+                </div>
+                <div style="color: #fff; font-size: 1.13rem; line-height: 1.7;">
+                    <b>活动时间：</b>2024年6月1日-6月30日<br>
+                    <b>活动简介：</b>本次交易大赛旨在发掘优秀交易员，前20名将获得丰厚奖励。<br>
+                    <b>参赛规则：</b>
+                    <ol style="margin-top: 0.5em; margin-bottom: 0.5em; padding-left: 1.5em;">
+                        <li>所有注册用户均可自动参与；</li>
+                        <li>排行榜按总收益排名，收益=结算时总资产-初始资产；</li>
+                        <li>禁止作弊、刷单等违规行为，违者取消资格；</li>
+                        <li>更多细则请见官网公告。</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+        {% if traders|length > 0 %}
+            <!-- 领奖台式前三名 -->
+            <div class="podium-row d-flex justify-content-center align-items-end mb-5">
+                {% if traders|length > 1 %}
+                <div class="podium-card position-relative podium-rank-2" style="order:1;">
+                    <span class="podium-rank-badge podium-rank-2"><span class="top-label">TOP</span><span class="rank-number">2</span></span>
+                    <img src="{{ traders[1].profile_image_url }}" class="podium-avatar" alt="{{ traders[1].trader_name }}">
+                    <div class="podium-profit">
+                        <span class="podium-profit-label">Total Profit</span>
+                        <span class="podium-profit-amount">${{ traders[1].total_profit|round(2) }}</span>
+                    </div>
+                    <div class="podium-name">{{ traders[1].trader_name }}</div>
+                    <div class="podium-title">{{ traders[1].professional_title }}</div>
+                    <div class="podium-bottom-row">
+                        <div class="podium-bottom-item">{{ traders[1].total_trades }}<span class="podium-bottom-label">Trades</span></div>
+                        <div class="podium-bottom-item">{{ traders[1].win_rate }}%<span class="podium-bottom-label">Win Rate</span></div>
+                        <div class="podium-bottom-item"><i class="bi bi-people-fill icon-gold"></i> {{ traders[1].followers_count }}<span class="podium-bottom-label">Followers</span></div>
+                        <div class="podium-bottom-item"><i class="bi bi-hand-thumbs-up-fill icon-gold"></i> {{ traders[1].likes_count }}<span class="podium-bottom-label">Likes</span></div>
+                    </div>
+                </div>
+                {% endif %}
+                <div class="podium-card position-relative podium-rank-1" style="order:2;">
+                    <span class="podium-rank-badge podium-rank-1"><span class="top-label">TOP</span><span class="rank-number">1</span></span>
+                    <img src="{{ traders[0].profile_image_url }}" class="podium-avatar" alt="{{ traders[0].trader_name }}">
+                    <div class="podium-profit">
+                        <span class="podium-profit-label">Total Profit</span>
+                        <span class="podium-profit-amount">${{ traders[0].total_profit|round(2) }}</span>
+                    </div>
+                    <div class="podium-name">{{ traders[0].trader_name }}</div>
+                    <div class="podium-title">{{ traders[0].professional_title }}</div>
+                    <div class="podium-bottom-row">
+                        <div class="podium-bottom-item">{{ traders[0].total_trades }}<span class="podium-bottom-label">Trades</span></div>
+                        <div class="podium-bottom-item">{{ traders[0].win_rate }}%<span class="podium-bottom-label">Win Rate</span></div>
+                        <div class="podium-bottom-item"><i class="bi bi-people-fill icon-gold"></i> {{ traders[0].followers_count }}<span class="podium-bottom-label">Followers</span></div>
+                        <div class="podium-bottom-item"><i class="bi bi-hand-thumbs-up-fill icon-gold"></i> {{ traders[0].likes_count }}<span class="podium-bottom-label">Likes</span></div>
+                    </div>
+                </div>
+                {% if traders|length > 2 %}
+                <div class="podium-card position-relative podium-rank-3" style="order:3;">
+                    <span class="podium-rank-badge podium-rank-3"><span class="top-label">TOP</span><span class="rank-number">3</span></span>
+                    <img src="{{ traders[2].profile_image_url }}" class="podium-avatar" alt="{{ traders[2].trader_name }}">
+                    <div class="podium-profit">
+                        <span class="podium-profit-label">Total Profit</span>
+                        <span class="podium-profit-amount">${{ traders[2].total_profit|round(2) }}</span>
+                    </div>
+                    <div class="podium-name">{{ traders[2].trader_name }}</div>
+                    <div class="podium-title">{{ traders[2].professional_title }}</div>
+                    <div class="podium-bottom-row">
+                        <div class="podium-bottom-item">{{ traders[2].total_trades }}<span class="podium-bottom-label">Trades</span></div>
+                        <div class="podium-bottom-item">{{ traders[2].win_rate }}%<span class="podium-bottom-label">Win Rate</span></div>
+                        <div class="podium-bottom-item"><i class="bi bi-people-fill icon-gold"></i> {{ traders[2].followers_count }}<span class="podium-bottom-label">Followers</span></div>
+                        <div class="podium-bottom-item"><i class="bi bi-hand-thumbs-up-fill icon-gold"></i> {{ traders[2].likes_count }}<span class="podium-bottom-label">Likes</span></div>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+            <!-- 4-20名列表条 -->
+            <div class="list-table mb-5">
+                {% for trader in traders[3:] %}
+                <div class="list-row">
+                    <div class="list-rank">{{ loop.index + 3 }}</div>
+                    <img src="{{ trader.profile_image_url }}" class="list-avatar" alt="{{ trader.trader_name }}">
+                    <div style="min-width:120px;">
+                        <div class="list-name">{{ trader.trader_name }}</div>
+                        <div class="list-title">{{ trader.professional_title }}</div>
+                    </div>
+                    <div class="list-middle-data d-flex align-items-center" style="gap:1.5rem; margin-left:2.2rem;">
+                        <div class="list-social-item"><i class="bi bi-bar-chart-fill" style="color:#ffd700;"></i> {{ trader.total_trades }}<span class="list-social-label">交易数</span></div>
+                        <div class="list-social-item"><i class="bi bi-graph-up" style="color:#2ecc71;"></i> {{ trader.win_rate }}%<span class="list-social-label">胜率</span></div>
+                        <div class="list-social-item"><i class="bi bi-people-fill" style="color:#ffd700;"></i> {{ trader.followers_count }}<span class="list-social-label">粉丝</span></div>
+                        <div class="list-social-item"><i class="bi bi-hand-thumbs-up-fill" style="color:#ffd700;"></i> {{ trader.likes_count }}<span class="list-social-label">点赞</span></div>
+                    </div>
+                    <div class="list-profit ms-auto" style="font-size:1.25rem; font-weight:900; color:#2ecc71; min-width:120px; text-align:right;">${{ trader.total_profit|round(2) }}</div>
+                </div>
+                {% endfor %}
+            </div>
+        {% else %}
+        <div class="text-center py-5">
+            <h4 class="text-secondary">No traders found in the leaderboard.</h4>
+        </div>
+        {% endif %}
+    </div>
+</body>
+</html> 

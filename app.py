@@ -8,6 +8,7 @@ import hashlib
 import json
 import os
 import uuid
+import random
 
 app = Flask(__name__)
 
@@ -57,6 +58,29 @@ def get_real_time_price(symbol):
         return float(current_price) if current_price else None
     except Exception as e:
         print(f"Error getting price for {symbol}: {str(e)}")
+        return None
+
+def get_historical_data(symbol):
+    """获取历史数据"""
+    try:
+        stock = yf.Ticker(symbol)
+        history = stock.history(period="1mo")  # 获取一个月的历史数据
+        if not history.empty:
+            # 将数据转换为列表格式
+            data = []
+            for date, row in history.iterrows():
+                data.append({
+                    'date': date.strftime('%Y-%m-%d'),
+                    'open': float(row['Open']),
+                    'high': float(row['High']),
+                    'low': float(row['Low']),
+                    'close': float(row['Close']),
+                    'volume': int(row['Volume'])
+                })
+            return data
+        return None
+    except Exception as e:
+        print(f"Error getting historical data for {symbol}: {str(e)}")
         return None
 
 def get_device_fingerprint():
@@ -200,14 +224,14 @@ def get_whatsapp_link():
             print("未能获取到可用的客服")
             return {
                 'success': False,
-                'message': "暂时无法连接客服，请稍后再试"
+                'message': "No available support agent, please try again later"
             }
             
     except Exception as e:
         print(f"处理WhatsApp链接请求时发生错误: {str(e)}")
         return {
             'success': False,
-            'message': "系统错误，请稍后再试"
+            'message': "System error, please try again later"
         }
 
 @app.route('/')
@@ -239,16 +263,26 @@ def index():
         total_trades = len(trades)
         
         # 获取当前持仓
-        positions = [t for t in trades if t['status'] == '持有中']
+        positions = [t for t in trades if t['status'] in ['Active', '持有中']]
         
         # 计算当月平仓盈亏
         current_month = datetime.now().strftime('%Y-%m')
         monthly_closed_trades = [t for t in trades 
-                               if t['status'] in ['以止盈', '以止损'] 
+                               if t['status'] in ['Take Profit', 'Stop Loss', '以止盈', '以止损'] 
                                and 'exit_date' in t 
                                and t['exit_date'] 
                                and t['exit_date'].startswith(current_month)]
+        
+        # 添加调试信息
+        print("=== Monthly Profit Debug ===")
+        print(f"Current Month: {current_month}")
+        print(f"Monthly Closed Trades Count: {len(monthly_closed_trades)}")
+        print("Monthly Closed Trades:")
+        for trade in monthly_closed_trades:
+            print(f"Trade: {trade.get('symbol')} - Status: {trade.get('status')} - Profit: {trade.get('profit_amount')}")
+        
         monthly_profit = sum(t.get('profit_amount', 0) for t in monthly_closed_trades)
+        print(f"Total Monthly Profit: {monthly_profit}")
         
         # 获取交易员信息
         profile_response = supabase.table('trader_profiles').select("*").limit(1).execute()
@@ -302,9 +336,11 @@ def index():
         print(f"Error in index route: {e}")
         return render_template('index.html', 
                             trades=[],
-                            trader_info={'trader_name': '系统错误', 
-                                       'monthly_profit': 0, 
-                                       'active_trades': 0})
+                            trader_info={
+                                'trader_name': 'System Error', 
+                                'monthly_profit': 0, 
+                                'active_trades': 0
+                            })
 
 @app.route('/api/trader-profile', methods=['GET'])
 def trader_profile():
@@ -325,14 +361,14 @@ def trader_profile():
                 'data': profile
             })
         else:
-            # 如果没有数据，返回默认值，但使用动态计算的总交易次数
+            # 如果没有数据，返回默认值
             return jsonify({
                 'success': True,
                 'data': {
-                    'trader_name': '专业交易员',
-                    'professional_title': '股票交易专家 | 技术分析大师',
+                    'trader_name': 'Professional Trader',
+                    'professional_title': 'Stock Trading Expert | Technical Analysis Master',
                     'years_of_experience': 5,
-                    'total_trades': trades_count,  # 使用动态计算的值
+                    'total_trades': trades_count,
                     'win_rate': 85.0
                 }
             })
@@ -342,19 +378,48 @@ def trader_profile():
             'message': str(e)
         }), 500
 
+@app.route('/leaderboard')
+def leaderboard():
+    # 生成20条虚拟排行榜数据
+    names = [
+        "Alice", "Bob", "Cathy", "David", "Eva", "Frank", "Grace", "Henry", "Ivy", "Jack",
+        "Kathy", "Leo", "Mona", "Nina", "Oscar", "Paul", "Queen", "Ray", "Sandy", "Tom"
+    ]
+    titles = [
+        "Top Trader", "Swing King", "Momentum Queen", "Value Hunter", "Growth Star", "Options Pro", "ETF Master", "Day Trader", "Quant Guru", "Trend Follower"
+    ]
+    avatars = [
+        f"https://randomuser.me/api/portraits/men/{i}.jpg" if i % 2 == 0 else f"https://randomuser.me/api/portraits/women/{i}.jpg" for i in range(1, 21)
+    ]
+    traders = []
+    for i in range(20):
+        traders.append({
+            "profile_image_url": avatars[i],
+            "trader_name": names[i % len(names)],
+            "professional_title": random.choice(titles),
+            "total_profit": random.randint(20000, 150000),
+            "total_trades": random.randint(80, 500),
+            "win_rate": random.randint(60, 95),
+            "followers_count": random.randint(200, 8000),
+            "likes_count": random.randint(500, 30000)
+        })
+    # 按收益降序排列
+    traders = sorted(traders, key=lambda x: x['total_profit'], reverse=True)
+    return render_template('leaderboard.html', traders=traders)
+
 @app.route('/api/upload-avatar', methods=['POST'])
 def upload_avatar():
     try:
         if 'avatar' not in request.files:
-            return jsonify({'success': False, 'message': '没有上传文件'}), 400
+            return jsonify({'success': False, 'message': 'No file uploaded'}), 400
 
         file = request.files['avatar']
         if file.filename == '':
-            return jsonify({'success': False, 'message': '没有选择文件'}), 400
+            return jsonify({'success': False, 'message': 'No file selected'}), 400
 
         # 检查文件类型
-        if not file.content_type.startswith('image/'):
-            return jsonify({'success': False, 'message': '请上传图片文件'}), 400
+        if not file.type.startswith('image/'):
+            return jsonify({'success': False, 'message': 'Please upload an image file'}), 400
 
         # 获取文件信息
         file_size = len(file.read())
@@ -362,7 +427,7 @@ def upload_avatar():
         
         # 检查文件大小（限制为5MB）
         if file_size > 5 * 1024 * 1024:
-            return jsonify({'success': False, 'message': '文件大小不能超过5MB'}), 400
+            return jsonify({'success': False, 'message': 'File size cannot exceed 5MB'}), 400
 
         # 生成唯一的文件名
         file_extension = os.path.splitext(file.filename)[1].lower()
@@ -384,8 +449,8 @@ def upload_avatar():
         if not profile_response.data:
             # 如果没有找到交易员记录，创建一个新记录
             trader_data = {
-                'trader_name': '专业交易员',
-                'professional_title': '金融交易专家',
+                'trader_name': 'Professional Trader',
+                'professional_title': 'Financial Trading Expert',
                 'created_at': datetime.now(pytz.UTC).isoformat(),
                 'updated_at': datetime.now(pytz.UTC).isoformat()
             }
@@ -422,8 +487,8 @@ def upload_avatar():
         })
 
     except Exception as e:
-        print(f"上传失败: {str(e)}")
-        return jsonify({'success': False, 'message': '上传失败，请稍后重试'}), 500
+        print(f"Upload failed: {str(e)}")
+        return jsonify({'success': False, 'message': 'Upload failed, please try again later'}), 500
 
 @app.route('/api/get-avatar', methods=['GET'])
 def get_avatar():
@@ -437,14 +502,50 @@ def get_avatar():
             })
         return jsonify({
             'success': False,
-            'message': '未找到头像'
+            'message': 'Avatar not found'
         })
     except Exception as e:
-        print(f"获取头像失败: {str(e)}")
+        print(f"Failed to get avatar: {str(e)}")
         return jsonify({
             'success': False,
-            'message': '获取头像失败'
+            'message': 'Failed to get avatar'
         }), 500
+
+@app.route('/api/price')
+def api_price():
+    symbol = request.args.get('symbol')
+    if not symbol:
+        return jsonify({'success': False, 'message': 'No symbol provided'}), 400
+
+    price = get_real_time_price(symbol)
+    if price is not None:
+        return jsonify({'success': True, 'price': float(price)})
+    else:
+        return jsonify({'success': False, 'message': 'Failed to get price'}), 500
+
+@app.route('/api/history')
+def api_history():
+    symbol = request.args.get('symbol')
+    if not symbol:
+        return jsonify({'success': False, 'message': 'No symbol provided'}), 400
+
+    history = get_historical_data(symbol)
+    if history is not None:
+        return jsonify({'success': True, 'data': history})
+    else:
+        return jsonify({'success': False, 'message': 'Failed to get historical data'}), 500
+
+@app.route('/vip')
+def vip():
+    trader_info = {
+        'profile_image_url': 'https://via.placeholder.com/180',
+        'trader_name': 'VIP用户',
+        'professional_title': '顶级交易员',
+        'total_profit': 147132,
+        'followers_count': 2090,
+        'likes_count': 23711
+    }
+    return render_template('vip.html', trader_info=trader_info)
 
 if __name__ == '__main__':
     app.run(debug=True) 
