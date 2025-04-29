@@ -13,11 +13,13 @@ import sqlite3
 from supabase_client import get_traders  # Import the get_traders function
 
 app = Flask(__name__)
-app.secret_key = 'your_secret_key_here'  # 用于session
+app.secret_key = os.environ.get('FLASK_SECRET_KEY', 'your_secret_key_here')  # 使用环境变量
 
 # Supabase配置
-url = os.environ.get('SUPABASE_URL', "https://rwlziuinlbazgoajkcme.supabase.co")
-key = os.environ.get('SUPABASE_KEY', "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ3bHppdWlubGJhemdvYWprY21lIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDUxODAwNjIsImV4cCI6MjA2MDc1NjA2Mn0.Y1KiIiUXmDiDSFYFQLHmyd1Oe86SxSfvHJcKrJmz2gI")
+url = os.environ.get('SUPABASE_URL')
+key = os.environ.get('SUPABASE_KEY')
+if not url or not key:
+    raise ValueError("Missing required environment variables: SUPABASE_URL and SUPABASE_KEY")
 supabase = create_client(url, key)
 
 # 股票图片映射

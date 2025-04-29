@@ -3,4 +3,16 @@ __pycache__/
 *.pyc
 .venv/
 .vscode/
-*.log 
+*.log
+*.db
+.DS_Store
+*.sqlite3
+.env.local
+.env.*.local
+node_modules/
+dist/
+build/
+*.pyc
+*.pyo
+*.pyd
+.Python 
