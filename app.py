@@ -12,6 +12,9 @@ import random
 import sqlite3
 from supabase_client import get_traders  # Import the get_traders function
 import requests
+from dotenv import load_dotenv
+from apscheduler.schedulers.background import BackgroundScheduler
+from apscheduler.triggers.interval import IntervalTrigger
 
 app = Flask(__name__)
 app.secret_key = os.environ.get('FLASK_SECRET_KEY', 'your_secret_key_here')  # 使用环境变量
@@ -53,18 +56,37 @@ def format_datetime(dt_str):
         return dt_str
 
 def get_real_time_price(symbol):
-    """获取实时股票价格"""
+    """获取股票价格（15分钟延迟）"""
     try:
-        api_key = "g_M1OstKnY6engOcJarC_JN1TkWZqL6w"
-        url = f"https://api.stockdata.org/v1/data/quote?symbols={symbol}&api_token={api_key}"
+        api_key = "ob6wG6eBtzdzL0TGVwzz4dDfuIAPaZwM"
+        # 使用聚合数据端点获取最近15分钟的数据
+        current_timestamp = int(datetime.now().timestamp() * 1000)
+        from_timestamp = current_timestamp - (15 * 60 * 1000)  # 15分钟前
+        
+        url = f"https://api.polygon.io/v2/aggs/ticker/{symbol}/range/1/minute/{from_timestamp}/{current_timestamp}?adjusted=true&sort=desc&limit=1&apiKey={api_key}"
+        print(f"\n=== 开始获取 {symbol} 的价格（15分钟延迟）===")
+        print(f"请求URL: {url}")
         response = requests.get(url)
+        print(f"响应状态码: {response.status_code}")
+        print(f"完整响应内容: {response.text}")
+        
         if response.status_code == 200:
             data = response.json()
-            if data['data'] and len(data['data']) > 0:
-                return float(data['data'][0]['price'])
+            print(f"解析后的JSON数据: {data}")
+            
+            if data.get('results') and len(data['results']) > 0:
+                price = float(data['results'][0]['c'])  # 使用最近一分钟的收盘价
+                print(f"成功获取 {symbol} 的价格: {price}")
+                return price
+            else:
+                print(f"在响应中未找到价格数据: {data}")
+        elif response.status_code == 403:
+            print(f"API权限错误，请检查API密钥权限")
+        else:
+            print(f"API请求失败，状态码: {response.status_code}")
         return None
     except Exception as e:
-        print(f"Error getting price for {symbol}: {str(e)}")
+        print(f"获取 {symbol} 价格时发生错误: {str(e)}")
         return None
 
 def get_historical_data(symbol):
@@ -586,6 +608,52 @@ def login():
 def logout():
     session.clear()
     return redirect(url_for('vip'))
+
+def update_holding_stocks_prices():
+    """更新所有持有中股票的实时价格"""
+    try:
+        # 获取所有持有中的股票
+        response = supabase.table('trades').select("*").eq('status', '持有中').execute()
+        holding_stocks = response.data
+        
+        if not holding_stocks:
+            print("No holding stocks found")
+            return
+        
+        # 遍历每个持有中的股票
+        for stock in holding_stocks:
+            symbol = stock['symbol']
+            # 获取实时价格
+            current_price = get_real_time_price(symbol)
+            
+            if current_price:
+                # 更新数据库中的价格
+                update_response = supabase.table('trades').update({
+                    'current_price': current_price,
+                    'current_amount': current_price * stock['size'],
+                    'profit_amount': (current_price * stock['size']) - stock['entry_amount'],
+                    'profit_ratio': ((current_price * stock['size'] - stock['entry_amount']) / stock['entry_amount']) * 100
+                }).eq('id', stock['id']).execute()
+                
+                print(f"Updated price for {symbol}: {current_price}")
+            else:
+                print(f"Failed to get price for {symbol}")
+                
+    except Exception as e:
+        print(f"Error updating stock prices: {str(e)}")
+
+# 创建调度器
+scheduler = BackgroundScheduler()
+scheduler.start()
+
+# 添加定时任务，每一分钟更新一次价格
+scheduler.add_job(
+    func=update_holding_stocks_prices,
+    trigger=IntervalTrigger(minutes=1),
+    id='update_stock_prices',
+    name='Update holding stocks prices every minute',
+    replace_existing=True
+)
 
 if __name__ == '__main__':
     app.run(debug=True) 
