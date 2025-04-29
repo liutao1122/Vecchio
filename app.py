@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, jsonify
+from flask import Flask, render_template, request, jsonify, redirect, url_for, session
 from supabase import create_client
 import pandas as pd
 import yfinance as yf
@@ -9,8 +9,11 @@ import json
 import os
 import uuid
 import random
+import sqlite3
+from supabase_client import get_traders  # Import the get_traders function
 
 app = Flask(__name__)
+app.secret_key = 'your_secret_key_here'  # 用于session
 
 # Supabase配置
 url = os.environ.get('SUPABASE_URL', "https://rwlziuinlbazgoajkcme.supabase.co")
@@ -380,31 +383,16 @@ def trader_profile():
 
 @app.route('/leaderboard')
 def leaderboard():
-    # 生成20条虚拟排行榜数据
-    names = [
-        "Alice", "Bob", "Cathy", "David", "Eva", "Frank", "Grace", "Henry", "Ivy", "Jack",
-        "Kathy", "Leo", "Mona", "Nina", "Oscar", "Paul", "Queen", "Ray", "Sandy", "Tom"
-    ]
-    titles = [
-        "Top Trader", "Swing King", "Momentum Queen", "Value Hunter", "Growth Star", "Options Pro", "ETF Master", "Day Trader", "Quant Guru", "Trend Follower"
-    ]
-    avatars = [
-        f"https://randomuser.me/api/portraits/men/{i}.jpg" if i % 2 == 0 else f"https://randomuser.me/api/portraits/women/{i}.jpg" for i in range(1, 21)
-    ]
-    traders = []
-    for i in range(20):
-        traders.append({
-            "profile_image_url": avatars[i],
-            "trader_name": names[i % len(names)],
-            "professional_title": random.choice(titles),
-            "total_profit": random.randint(20000, 150000),
-            "total_trades": random.randint(80, 500),
-            "win_rate": random.randint(60, 95),
-            "followers_count": random.randint(200, 8000),
-            "likes_count": random.randint(500, 30000)
-        })
-    # 按收益降序排列
-    traders = sorted(traders, key=lambda x: x['total_profit'], reverse=True)
+    # Get sort parameter from query string, default to 'profit'
+    sort_by = request.args.get('sort', 'profit')
+    
+    # Get traders from Supabase
+    traders = get_traders(sort_by)
+    
+    # If no traders found, return empty list
+    if not traders:
+        traders = []
+        
     return render_template('leaderboard.html', traders=traders)
 
 @app.route('/api/upload-avatar', methods=['POST'])
@@ -537,15 +525,63 @@ def api_history():
 
 @app.route('/vip')
 def vip():
-    trader_info = {
-        'profile_image_url': 'https://via.placeholder.com/180',
-        'trader_name': 'VIP用户',
-        'professional_title': '顶级交易员',
-        'total_profit': 147132,
-        'followers_count': 2090,
-        'likes_count': 23711
-    }
-    return render_template('vip.html', trader_info=trader_info)
+    if 'username' in session:
+        # 已登录，从Supabase users表查找当前用户信息
+        username = session['username']
+        response = supabase.table('users').select('*').eq('username', username).execute()
+        user = response.data[0] if response.data else None
+        trader_info = {
+            'trader_name': user['username'],
+            'profile_image_url': user.get('profile_image_url', 'https://via.placeholder.com/180'),
+            'professional_title': user.get('professional_title', 'VIP会员'),
+            # 你可以根据users表结构补充更多字段
+        } if user else None
+        return render_template('vip.html', trader_info=trader_info)
+    else:
+        # 未登录，不传trader_info，只渲染登录入口
+        return render_template('vip.html')
+
+# --- 用户表自动建表 ---
+def init_user_db():
+    conn = sqlite3.connect('users.db')
+    c = conn.cursor()
+    c.execute('''
+        CREATE TABLE IF NOT EXISTS users (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            username TEXT UNIQUE NOT NULL,
+            password TEXT NOT NULL
+        )
+    ''')
+    conn.commit()
+    conn.close()
+
+init_user_db()
+
+# --- 登录接口（Supabase版） ---
+@app.route('/login', methods=['POST'])
+def login():
+    data = request.get_json() or request.form
+    username = data.get('username')
+    password = data.get('password')
+    if not username or not password:
+        return jsonify({'success': False, 'message': '请输入账号和密码'}), 400
+    # 用Supabase校验账号密码（查password_hash字段）
+    response = supabase.table('users').select('*').eq('username', username).eq('password_hash', password).execute()
+    print('Login debug:', username, password)  # 新增调试输出
+    print('Supabase response:', response.data)  # 新增调试输出
+    user = response.data[0] if response.data else None
+    if user:
+        session['user_id'] = user.get('id') or user.get('uuid')
+        session['username'] = username
+        return jsonify({'success': True, 'message': '登录成功'})
+    else:
+        return jsonify({'success': False, 'message': '账号或密码错误'}), 401
+
+# --- 登出接口 ---
+@app.route('/logout')
+def logout():
+    session.clear()
+    return redirect(url_for('vip'))
 
 if __name__ == '__main__':
     app.run(debug=True) 

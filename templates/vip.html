@@ -56,6 +56,12 @@
             0% { box-shadow: 0 0 32px #ffd70088, 0 2px 16px #fffbe655; }
             100% { box-shadow: 0 0 64px #ffd700cc, 0 4px 32px #fffbe6aa; }
         }
+        .vip-banner-title,
+        .vip-banner-slogan {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
         .vip-banner-title {
             font-size: 2.7rem;
             font-weight: 900;
@@ -159,12 +165,6 @@
             font-size: 1.1rem;
             margin-bottom: 0.7rem;
         }
-        .vip-profile-profit {
-            color: #2ecc71;
-            font-size: 1.35rem;
-            font-weight: 900;
-            margin-bottom: 1.1rem;
-        }
         .vip-profile-actions {
             display: flex;
             gap: 1.2rem;
@@ -195,69 +195,6 @@
             color: #ffd700;
             margin-bottom: 1.2rem;
             letter-spacing: 1px;
-        }
-        .vip-fav-list-scroll {
-            display: flex;
-            gap: 2rem;
-            overflow-x: auto;
-            padding-bottom: 0.5rem;
-        }
-        .vip-fav-card {
-            background: linear-gradient(120deg, #23243a 60%, #181c2b 100%);
-            border-radius: 16px;
-            box-shadow: 0 2px 10px #ffd70022;
-            padding: 1.2rem 1.2rem 1rem 1.2rem;
-            min-width: 260px;
-            max-width: 320px;
-            flex: 0 0 260px;
-            display: flex;
-            flex-direction: column;
-            align-items: flex-start;
-            border: 2px solid #ffd70033;
-            position: relative;
-        }
-        .vip-fav-card .fav-symbol {
-            font-size: 1.15rem;
-            font-weight: 700;
-            color: #ffd700;
-        }
-        .vip-fav-card .fav-name {
-            color: #b0b0b0;
-            font-size: 1rem;
-            margin-bottom: 0.5rem;
-        }
-        .vip-fav-card .fav-profit {
-            color: #2ecc71;
-            font-weight: 800;
-            font-size: 1.15rem;
-            margin-bottom: 0.3rem;
-        }
-        .vip-fav-card .fav-meta {
-            display: flex;
-            gap: 1.1rem;
-            font-size: 0.98rem;
-            color: #ffd700;
-            margin-bottom: 0.3rem;
-        }
-        .vip-fav-card .fav-meta .bi {
-            font-size: 1.1em;
-        }
-        .vip-fav-card .fav-actions {
-            margin-top: 0.5rem;
-            width: 100%;
-            display: flex;
-            justify-content: flex-end;
-        }
-        .vip-fav-card .fav-unfav-btn {
-            background: none;
-            border: none;
-            color: #ffd700;
-            font-size: 1.2rem;
-            cursor: pointer;
-            transition: color 0.2s;
-        }
-        .vip-fav-card .fav-unfav-btn:hover {
-            color: #e6c200;
         }
         .vip-fav-empty {
             text-align: center;
@@ -356,43 +293,155 @@
             .vip-info-blackgold-meta {
                 font-size: 0.98rem !important;
             }
-            .vip-fav-list-scroll {
-                gap: 0.7rem !important;
-                scroll-snap-type: x mandatory;
+            .vip-fav-empty {
+                margin: 1.5rem 0;
             }
-            .vip-fav-card {
-                min-width: 180px !important;
-                max-width: 220px !important;
-                border-radius: 10px !important;
-                padding: 0.7rem 0.7rem 0.6rem 0.7rem !important;
-                box-shadow: 0 1px 4px #ffd70011 !important;
-                scroll-snap-align: start;
+            .vip-banner-title {
+                font-size: 1.25rem !important;
+                max-width: 90vw;
             }
-            .vip-footer-links {
-                gap: 1.2rem !important;
+            .vip-banner-slogan {
                 font-size: 0.98rem !important;
-                margin: 1.5rem 0 1rem 0 !important;
+                max-width: 90vw;
+            }
+            .vip-banner {
+                flex-direction: column !important;
+                align-items: center !important;
+                gap: 1rem !important;
+                padding: 1.2rem 0.5rem 1rem 0.5rem !important;
+            }
+            #vipInfoCard {
+                width: 100% !important;
+                max-width: 350px;
+                margin: 0 auto !important;
+                position: static !important;
+                left: auto !important;
+                right: auto !important;
+                top: auto !important;
+                box-shadow: 0 2px 12px #ffd70033;
+                background: #23243a;
+                border-radius: 18px;
+            }
+        }
+        /* 移动端专用个人信息卡片样式 */
+        .vip-mobile-profile-card {
+            width: 92vw;
+            max-width: 420px;
+            margin: 1.2rem auto 1.5rem auto;
+            background: linear-gradient(90deg, #23243a 0%, #181c2b 100%);
+            border-radius: 18px;
+            box-shadow: 0 2px 12px #ffd70033;
+            padding: 1.5rem 1.2rem 1.2rem 1.2rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            border: 2px solid #ffd70055;
+            position: relative;
+        }
+        .vip-mobile-avatar-wrap {
+            position: relative;
+            margin-bottom: 1rem;
+        }
+        .vip-mobile-avatar {
+            width: 88px;
+            height: 88px;
+            border-radius: 50%;
+            object-fit: cover;
+            background: #fff;
+            border: 4px solid #ffd700;
+            box-shadow: 0 0 16px #ffd70055;
+        }
+        .vip-mobile-crown {
+            position: absolute;
+            left: 50%;
+            top: -18px;
+            transform: translateX(-50%);
+            font-size: 1.7rem;
+            color: #ffd700;
+            filter: drop-shadow(0 2px 8px #ffd70088);
+        }
+        .vip-mobile-profile-name {
+            font-size: 1.25rem;
+            font-weight: 800;
+            color: #ffd700;
+            margin-bottom: 0.2rem;
+        }
+        .vip-mobile-profile-level,
+        .vip-mobile-profile-id {
+            color: #b0b0b0;
+            font-size: 1rem;
+            margin-bottom: 0.3rem;
+        }
+        .vip-mobile-profile-actions {
+            display: flex;
+            gap: 1rem;
+            margin-top: 0.7rem;
+        }
+        .vip-mobile-action-btn {
+            background: #ffd700;
+            color: #181c2b;
+            font-weight: 700;
+            border: none;
+            border-radius: 8px;
+            padding: 0.45rem 1.1rem;
+            font-size: 1rem;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 0.3rem;
+            transition: background 0.18s;
+        }
+        .vip-mobile-action-btn:hover {
+            background: #e6c200;
+            color: #181c2b;
+        }
+        @media (max-width: 600px) {
+            .vip-mobile-profile-card {
+                padding: 1.1rem 0.5rem 1rem 0.5rem;
+                border-radius: 12px;
+            }
+            .vip-mobile-avatar {
+                width: 66px;
+                height: 66px;
+            }
+            .vip-mobile-profile-name {
+                font-size: 1.05rem;
+            }
+            .vip-mobile-profile-level,
+            .vip-mobile-profile-id {
+                font-size: 0.92rem;
+            }
+            .vip-mobile-action-btn {
+                font-size: 0.95rem;
+                padding: 0.35rem 0.7rem;
             }
         }
     </style>
 </head>
 <body>
-    <!-- 顶部横幅Header（主页同款，始终100%宽度） -->
-    <nav class="navbar navbar-expand-lg navbar-dark mb-0" style="background:linear-gradient(90deg,#181c2b 60%,#23243a 100%);">
-        <div class="container d-flex justify-content-between align-items-center">
-            <a class="navbar-brand d-flex align-items-center" href="#" style="font-size:1.25rem;font-weight:700;color:#fff;">
-                <i class="bi bi-graph-up me-2" style="font-size:1.3rem;"></i>
-                Tastylive Internal Performance Battle Rankings
-            </a>
-            <a href="/" class="vip-back-link d-flex align-items-center ms-3" style="font-size:1.08rem;font-weight:700;color:#fff;text-decoration:none;transition:color 0.18s;">
-                <i class="bi bi-arrow-left me-1" style="font-size:1.15rem;"></i> BANK
-            </a>
-        </div>
-    </nav>
-    <!-- 分割线，宽度与内容区一致 -->
-    <div style="width:100%;display:flex;justify-content:center;background:transparent;">
-        <div style="width:1200px;max-width:100vw;height:2px;background:linear-gradient(90deg,#ffd700 60%,#fffbe6 100%);margin:0 auto 0 auto;"></div>
+    <!-- 顶部横幅Header（主页同款，宽度与主内容区一致） -->
+    <div class="container" style="max-width:1200px;">
+        <nav class="navbar navbar-expand-lg navbar-dark mb-0" style="background:linear-gradient(90deg,#181c2b 60%,#23243a 100%);border-radius:0 0 0 0;">
+            <div class="d-flex justify-content-between align-items-center w-100">
+                <a class="navbar-brand d-flex align-items-center" href="#" style="font-size:1.25rem;font-weight:700;color:#fff;">
+                    <i class="bi bi-graph-up me-2" style="font-size:1.3rem;"></i>
+                    Tastylive VIP
+                </a>
+                <div class="d-flex align-items-center" style="gap:1.2rem;">
+                    <a href="/" class="vip-back-link d-flex align-items-center ms-3" style="font-size:1.08rem;font-weight:700;color:#fff;text-decoration:none;transition:color 0.18s;">
+                        <i class="bi bi-arrow-left me-1" style="font-size:1.15rem;"></i> BANK
+                    </a>
+                    {% if trader_info %}
+                    <a href="/logout" id="vipLogoutBtn" class="vip-logout-link d-flex align-items-center ms-3" style="font-size:1.08rem;font-weight:700;color:#fff;text-decoration:none;transition:color 0.18s;">
+                        <i class="bi bi-box-arrow-right me-1" style="font-size:1.15rem;"></i> 退出登录
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+        </nav>
     </div>
+    <!-- 分割线横跨全屏 -->
+    <div style="width:100vw;height:2px;background:linear-gradient(90deg,#ffd700 60%,#fffbe6 100%);margin:0 0 0 0;"></div>
     <div id="vip-main-content">
         <div class="container">
             <!-- 1. 顶部Banner -->
@@ -404,15 +453,19 @@
                         <div class="vip-banner-slogan">尊享特权 · 影响力加持 · 专属身份</div>
                     </div>
                 </div>
-                <!-- 登录前显示按钮，登录后显示VIP信息卡片 -->
-                <a href="#" class="vip-join-btn" id="vipJoinBtn">立即加入VIP</a>
-                <div id="vipInfoCard" style="display:none;align-items:center;gap:1.5rem;">
-                    <div style="text-align:right;">
-                        <div id="vipInfoName" class="vip-info-blackgold-name">VIP用户</div>
-                        <div id="vipInfoLevel" class="vip-info-blackgold-meta">VIP等级：至尊会员</div>
-                        <div id="vipInfoId" class="vip-info-blackgold-meta">会员编号：VIP20240001</div>
-                    </div>
+                {% if trader_info %}
+                <!-- 已登录显示VIP信息卡片，内容居中 -->
+                <div id="vipInfoCard" style="display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:0.5rem;">
+                    <div id="vipInfoName" class="vip-info-blackgold-name">{{ trader_info.trader_name }}</div>
+                    <div id="vipInfoLevel" class="vip-info-blackgold-meta">VIP等级：{{ trader_info.professional_title or '至尊会员' }}</div>
+                    <div id="vipInfoId" class="vip-info-blackgold-meta">会员编号：{{ trader_info.id or 'VIP20240001' }}</div>
                 </div>
+                <!-- 移动端专用个人信息卡片，仅在手机端显示 -->
+                <!-- 已删除该区域 -->
+                {% else %}
+                <!-- 未登录显示加入按钮 -->
+                <a href="#" class="vip-join-btn" id="vipJoinBtn">立即加入VIP</a>
+                {% endif %}
             </div>
             <!-- 2. VIP权益介绍 -->
             <div class="vip-benefits-card">
@@ -425,51 +478,9 @@
                     <li>更多权益持续解锁中…</li>
                 </ul>
             </div>
-            <!-- 3. 个人资料区 -->
-            <div class="vip-profile-card">
-                <div class="vip-avatar-wrap">
-                    <img src="{{ trader_info.profile_image_url|default('https://via.placeholder.com/180') }}" class="vip-avatar">
-                    <div class="vip-crown"><i class="bi bi-gem"></i></div>
-                </div>
-                <div class="vip-profile-name">{{ trader_info.trader_name|default('VIP用户') }}</div>
-                <div class="vip-profile-level">VIP等级：至尊会员</div>
-                <div class="vip-profile-profit">总收益：${{ trader_info.total_profit|default(0) }}</div>
-                <div class="vip-profile-actions">
-                    <a href="#" class="vip-action-btn"><i class="bi bi-upload"></i> 上传交易截图</a>
-                    <a href="#" class="vip-action-btn"><i class="bi bi-pencil-square"></i> 编辑资料</a>
-                </div>
-            </div>
-            <!-- 4. 我的关注/收藏区 -->
+            <!-- 3. 我的关注/收藏区 -->
             <div class="vip-fav-section">
                 <div class="vip-fav-title"><i class="bi bi-star"></i> 我的关注/收藏</div>
-                <div class="vip-fav-list-scroll">
-                    <!-- 示例收藏卡片，可后续用循环渲染 -->
-                    <div class="vip-fav-card">
-                        <div class="fav-symbol">AAPL</div>
-                        <div class="fav-name">Apple Inc.</div>
-                        <div class="fav-profit">收益：$2,500</div>
-                        <div class="fav-meta">
-                            <span><i class="bi bi-bar-chart-fill"></i> 120</span>
-                            <span><i class="bi bi-graph-up"></i> 78%</span>
-                        </div>
-                        <div class="fav-actions">
-                            <button class="fav-unfav-btn" title="取消收藏"><i class="bi bi-star-fill"></i></button>
-                        </div>
-                    </div>
-                    <div class="vip-fav-card">
-                        <div class="fav-symbol">TSLA</div>
-                        <div class="fav-name">Tesla Inc.</div>
-                        <div class="fav-profit">收益：$1,800</div>
-                        <div class="fav-meta">
-                            <span><i class="bi bi-bar-chart-fill"></i> 98</span>
-                            <span><i class="bi bi-graph-up"></i> 65%</span>
-                        </div>
-                        <div class="fav-actions">
-                            <button class="fav-unfav-btn" title="取消收藏"><i class="bi bi-star-fill"></i></button>
-                        </div>
-                    </div>
-                    <!-- 更多收藏卡片可循环渲染 -->
-                </div>
                 <!-- 空状态 -->
                 <div class="vip-fav-empty" style="display:none;">
                     <img src="https://cdn-icons-png.flaticon.com/512/1828/1828884.png" alt="暂无收藏">
@@ -531,34 +542,30 @@
           errorMsg.style.display = 'block';
           return;
         }
-        // 示例：假设账号admin/密码123456通过
-        if (username === 'admin' && password === '123456') {
-          errorMsg.style.display = 'none';
-          // 登录成功，保存信息到localStorage
-          localStorage.setItem('vipUser', JSON.stringify({
-            name: username,
-            level: '至尊会员',
-            id: 'VIP20240001'
-          }));
-          // 刷新页面
-          location.reload();
-        } else {
-          errorMsg.textContent = '账号或密码错误';
+        // 发送请求到 Flask 后端 /login
+        try {
+          const resp = await fetch('/login', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({username, password})
+          });
+          const data = await resp.json();
+          if (data.success) {
+            errorMsg.style.display = 'none';
+            // 登录成功，刷新页面
+            location.reload();
+          } else {
+            errorMsg.textContent = data.message || '账号或密码错误';
+            errorMsg.style.display = 'block';
+          }
+        } catch (err) {
+          errorMsg.textContent = '网络错误，请稍后重试';
           errorMsg.style.display = 'block';
         }
       });
-      // 3. 页面加载时检查登录状态，切换显示
-      window.addEventListener('DOMContentLoaded', function() {
-        const vipUser = localStorage.getItem('vipUser');
-        if (vipUser) {
-          const info = JSON.parse(vipUser);
-          document.getElementById('vipJoinBtn').style.display = 'none';
-          const card = document.getElementById('vipInfoCard');
-          card.style.display = 'flex';
-          document.getElementById('vipInfoName').textContent = info.name;
-          document.getElementById('vipInfoLevel').textContent = 'VIP等级：' + info.level;
-          document.getElementById('vipInfoId').textContent = '会员编号：' + info.id;
-        }
+      // 退出登录时清除localStorage登录信息
+      document.getElementById('vipLogoutBtn').addEventListener('click', function() {
+        localStorage.removeItem('vipUser');
       });
     </script>
 </body>
