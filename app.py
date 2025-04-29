@@ -11,6 +11,7 @@ import uuid
 import random
 import sqlite3
 from supabase_client import get_traders  # Import the get_traders function
+import requests
 
 app = Flask(__name__)
 app.secret_key = os.environ.get('FLASK_SECRET_KEY', 'your_secret_key_here')  # 使用环境变量
@@ -54,13 +55,14 @@ def format_datetime(dt_str):
 def get_real_time_price(symbol):
     """获取实时股票价格"""
     try:
-        stock = yf.Ticker(f"{symbol}")
-        current_price = stock.info.get('regularMarketPrice')
-        if current_price is None:
-            hist = stock.history(period="1d")
-            if not hist.empty:
-                current_price = hist['Close'].iloc[-1]
-        return float(current_price) if current_price else None
+        api_key = "g_M1OstKnY6engOcJarC_JN1TkWZqL6w"
+        url = f"https://api.stockdata.org/v1/data/quote?symbols={symbol}&api_token={api_key}"
+        response = requests.get(url)
+        if response.status_code == 200:
+            data = response.json()
+            if data['data'] and len(data['data']) > 0:
+                return float(data['data'][0]['price'])
+        return None
     except Exception as e:
         print(f"Error getting price for {symbol}: {str(e)}")
         return None
