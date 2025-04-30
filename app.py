@@ -10,20 +10,19 @@ import os
 import uuid
 import random
 import sqlite3
-from supabase_client import get_traders  # Import the get_traders function
+from supabase_client import get_traders
 import requests
 from dotenv import load_dotenv
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers.interval import IntervalTrigger
 
+# Flask应用配置
 app = Flask(__name__)
-app.secret_key = os.environ.get('FLASK_SECRET_KEY', 'your_secret_key_here')  # 使用环境变量
+app.secret_key = os.environ.get('FLASK_SECRET_KEY', 'your_secret_key_here')
 
 # Supabase配置
-url = os.environ.get('SUPABASE_URL')
-key = os.environ.get('SUPABASE_KEY')
-if not url or not key:
-    raise ValueError("Missing required environment variables: SUPABASE_URL and SUPABASE_KEY")
+url = 'https://rwlziuinlbazgoajkcme.supabase.co'
+key = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ3bHppdWlubGJhemdvYWprY21lIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDUxODAwNjIsImV4cCI6MjA2MDc1NjA2Mn0.Y1KiIiUXmDiDSFYFQLHmyd1Oe86SxSfvHJcKrJmz2gI'
 supabase = create_client(url, key)
 
 # 股票图片映射
@@ -41,19 +40,43 @@ STOCK_IMAGES = {
 }
 
 def format_datetime(dt_str):
-    """将UTC时间字符串转换为本地时间并格式化"""
+    """将UTC时间字符串转换为美国东部时间并格式化为 DD-MMM-YY 格式"""
     try:
         # 解析UTC时间字符串
         dt = datetime.strptime(dt_str.split('+')[0], '%Y-%m-%d %H:%M:%S.%f')
         # 设置为UTC时区
         dt = pytz.UTC.localize(dt)
-        # 转换为中国时区
-        china_tz = pytz.timezone('Asia/Shanghai')
-        dt = dt.astimezone(china_tz)
-        # 格式化为易读格式
-        return dt.strftime('%Y-%m-%d %H:%M')
-    except:
-        return dt_str
+        # 转换为美国东部时间
+        eastern = pytz.timezone('America/New_York')
+        dt = dt.astimezone(eastern)
+        # 格式化为 DD-MMM-YY 格式 (Windows 兼容格式)
+        day = str(dt.day)  # 不使用 %-d
+        return f"{day}-{dt.strftime('%b-%y')}"
+    except Exception as e:
+        try:
+            # 尝试其他格式
+            dt = datetime.fromisoformat(dt_str.replace('Z', '+00:00'))
+            dt = pytz.UTC.localize(dt)
+            eastern = pytz.timezone('America/New_York')
+            dt = dt.astimezone(eastern)
+            day = str(dt.day)  # 不使用 %-d
+            return f"{day}-{dt.strftime('%b-%y')}"
+        except:
+            return dt_str
+
+def format_date_for_db(dt):
+    """将日期格式化为数据库存储格式（UTC）"""
+    if isinstance(dt, str):
+        try:
+            # 尝试解析 DD-MMM-YY 格式
+            dt = datetime.strptime(dt, '%d-%b-%y')
+        except:
+            return dt
+    # 确保时区是UTC
+    if dt.tzinfo is None:
+        eastern = pytz.timezone('America/New_York')
+        dt = eastern.localize(dt)
+    return dt.astimezone(pytz.UTC).strftime('%Y-%m-%d %H:%M:%S.%f+00:00')
 
 def get_real_time_price(symbol):
     """获取股票价格（15分钟延迟）"""
@@ -267,52 +290,73 @@ def get_whatsapp_link():
 def index():
     try:
         # 获取交易数据
-        response = supabase.table('trades').select("*").execute()
+        response = supabase.table('trades1').select("*").execute()
         trades = response.data
-        
+
         if not trades:
             print("No trades found in database")
             trades = []
         
-        # 为每个交易添加图片URL
+        # 为每个交易添加图片URL和计算属性
         for trade in trades:
+            # 格式化日期
+            trade['entry_date'] = format_datetime(trade['entry_date'])
+            if trade.get('exit_date'):
+                trade['exit_date'] = format_datetime(trade['exit_date'])
+            
             # 优先使用数据库中的 image_url，否则用 STOCK_IMAGES
             trade['image_url'] = trade.get('image_url') or STOCK_IMAGES.get(trade['symbol'], '')
+            
+            # 计算交易金额和盈亏
+            trade['entry_amount'] = trade['entry_price'] * trade['size']
             
             # 如果没有current_price，获取实时价格
             if 'current_price' not in trade or not trade['current_price']:
                 current_price = get_real_time_price(trade['symbol'])
                 if current_price:
                     trade['current_price'] = current_price
-                    trade['current_amount'] = current_price * trade['size']
-                    trade['profit_amount'] = trade['current_amount'] - trade['entry_amount']
-                    trade['profit_ratio'] = (trade['profit_amount'] / trade['entry_amount']) * 100
+                    # 更新数据库中的价格
+                    supabase.table('trades1').update({
+                        'current_price': current_price
+                    }).eq('id', trade['id']).execute()
+            
+            # 计算当前市值和盈亏
+            trade['current_amount'] = trade['current_price'] * trade['size'] if trade.get('current_price') else trade['entry_amount']
+            
+            # 计算盈亏
+            if trade.get('exit_price'):
+                trade['profit_amount'] = (trade['exit_price'] - trade['entry_price']) * trade['size']
+            else:
+                trade['profit_amount'] = (trade['current_price'] - trade['entry_price']) * trade['size'] if trade.get('current_price') else 0
+            
+            # 计算盈亏比例
+            trade['profit_ratio'] = (trade['profit_amount'] / trade['entry_amount']) * 100 if trade['entry_amount'] else 0
+            
+            # 设置状态
+            if trade.get('exit_price') is None and trade.get('exit_date') is None:
+                trade['status'] = "持有中"
+            else:
+                trade['status'] = "以止盈" if trade['profit_amount'] > 0 else "以止损"
         
         # 计算总览数据
         total_trades = len(trades)
         
         # 获取当前持仓
-        positions = [t for t in trades if t['status'] in ['Active', '持有中']]
+        positions = [t for t in trades if t['status'] == "持有中"]
+        
+        # 获取当前美国东部时间的月份
+        eastern = pytz.timezone('America/New_York')
+        current_time = datetime.now(eastern)
+        current_month = f"{str(current_time.day)}-{current_time.strftime('%b-%y')}"
         
         # 计算当月平仓盈亏
-        current_month = datetime.now().strftime('%Y-%m')
         monthly_closed_trades = [t for t in trades 
-                               if t['status'] in ['Take Profit', 'Stop Loss', '以止盈', '以止损'] 
-                               and 'exit_date' in t 
-                               and t['exit_date'] 
-                               and t['exit_date'].startswith(current_month)]
-        
-        # 添加调试信息
-        print("=== Monthly Profit Debug ===")
-        print(f"Current Month: {current_month}")
-        print(f"Monthly Closed Trades Count: {len(monthly_closed_trades)}")
-        print("Monthly Closed Trades:")
-        for trade in monthly_closed_trades:
-            print(f"Trade: {trade.get('symbol')} - Status: {trade.get('status')} - Profit: {trade.get('profit_amount')}")
+                               if t['status'] in ['以止盈', '以止损'] 
+                               and t.get('exit_date') 
+                               and t['exit_date'].split('-')[1] == current_month.split('-')[1]]
         
         monthly_profit = sum(t.get('profit_amount', 0) for t in monthly_closed_trades)
-        print(f"Total Monthly Profit: {monthly_profit}")
-        
+
         # 获取交易员信息
         profile_response = supabase.table('trader_profiles').select("*").limit(1).execute()
         trader_info = profile_response.data[0] if profile_response.data else {
@@ -328,35 +372,28 @@ def index():
             'market_analysis': 'Today\'s market shows an upward trend with strong performance in the tech sector. Focus on AI-related stocks...',
             'trading_focus': ['Tech Sector: AI, Chips, Cloud Computing', 'New Energy: Solar, Energy Storage, Hydrogen', 'Healthcare: Innovative Drugs, Medical Devices'],
             'risk_warning': 'High market volatility, please control position size and set stop loss...',
-            'updated_at': datetime.now(pytz.UTC).strftime('%Y-%m-%d %H:%M:%S.%f+00')
+            'updated_at': datetime.now(pytz.UTC).strftime('%Y-%m-%d %H:%M:%S.%f+00:00')
         }
         
         # 格式化更新时间
         if strategy_info.get('updated_at'):
             strategy_info['formatted_time'] = format_datetime(strategy_info['updated_at'])
         
+        # 计算总利润
+        total_profit = sum(t.get('profit_amount', 0) for t in trades)
+
         # 设置个人信息
         trader_info = {
-            'trader_name': 'Professional Trader',
-            'professional_title': 'Financial Trading Expert | Technical Analysis Master',
-            'bio': 'Focused on US stock market technical analysis and quantitative trading',
+            'trader_name': trader_info.get('trader_name', 'Professional Trader'),
+            'professional_title': trader_info.get('professional_title', 'Financial Trading Expert | Technical Analysis Master'),
+            'bio': trader_info.get('bio', 'Focused on US stock market technical analysis and quantitative trading'),
             'positions': positions,
             'monthly_profit': round(monthly_profit, 2),
             'active_trades': len(positions),
-            'total_profit': round(3000000 + sum(t.get('profit_amount', 0) for t in trades), 2),
-            'strategy_info': strategy_info
+            'total_profit': round(total_profit, 2),  # 确保 total_profit 存在
+            'strategy_info': strategy_info,
+            'profile_image_url': trader_info.get('profile_image_url')
         }
-
-        # 从数据库获取头像URL
-        profile_response = supabase.table('trader_profiles').select('profile_image_url').limit(1).execute()
-        if profile_response.data:
-            trader_info['profile_image_url'] = profile_response.data[0].get('profile_image_url')
-
-        # 添加调试日志
-        print("=== Debug Info ===")
-        print(f"Profile Image URL: {trader_info.get('profile_image_url')}")
-        print("=== Trader Info ===")
-        print(trader_info)
         
         return render_template('index.html', 
                             trades=trades,
@@ -368,7 +405,8 @@ def index():
                             trader_info={
                                 'trader_name': 'System Error', 
                                 'monthly_profit': 0, 
-                                'active_trades': 0
+                                'active_trades': 0,
+                                'total_profit': 0  # 添加默认的 total_profit
                             })
 
 @app.route('/api/trader-profile', methods=['GET'])
@@ -378,7 +416,7 @@ def trader_profile():
         response = supabase.table('trader_profiles').select('*').limit(1).execute()
         
         # 获取trades表中的记录数
-        trades_response = supabase.table('trades').select('id').execute()
+        trades_response = supabase.table('trades1').select('id').execute()
         trades_count = len(trades_response.data) if trades_response.data else 0
         
         if response.data:
@@ -462,11 +500,13 @@ def upload_avatar():
         profile_response = supabase.table('trader_profiles').select('id').limit(1).execute()
         if not profile_response.data:
             # 如果没有找到交易员记录，创建一个新记录
+            eastern = pytz.timezone('America/New_York')
+            current_time = datetime.now(eastern)
             trader_data = {
                 'trader_name': 'Professional Trader',
                 'professional_title': 'Financial Trading Expert',
-                'created_at': datetime.now(pytz.UTC).isoformat(),
-                'updated_at': datetime.now(pytz.UTC).isoformat()
+                'created_at': format_date_for_db(current_time),
+                'updated_at': format_date_for_db(current_time)
             }
             profile_response = supabase.table('trader_profiles').insert(trader_data).execute()
         
@@ -478,6 +518,8 @@ def upload_avatar():
         }).eq('user_id', trader_id).execute()
 
         # 插入新的头像记录
+        eastern = pytz.timezone('America/New_York')
+        current_time = datetime.now(eastern)
         avatar_data = {
             'user_id': trader_id,
             'image_url': file_url,
@@ -485,14 +527,15 @@ def upload_avatar():
             'file_name': file.filename,
             'file_size': file_size,
             'mime_type': file.content_type,
-            'is_current': True
+            'is_current': True,
+            'created_at': format_date_for_db(current_time)
         }
         supabase.table('avatar_history').insert(avatar_data).execute()
 
         # 更新用户个人资料
         supabase.table('trader_profiles').update({
             'profile_image_url': file_url,
-            'updated_at': datetime.now(pytz.UTC).isoformat()
+            'updated_at': format_date_for_db(current_time)
         }).eq('id', trader_id).execute()
 
         return jsonify({
@@ -613,31 +656,39 @@ def update_holding_stocks_prices():
     """更新所有持有中股票的实时价格"""
     try:
         # 获取所有持有中的股票
-        response = supabase.table('trades').select("*").eq('status', '持有中').execute()
-        holding_stocks = response.data
+        response = supabase.table('trades1').select("*").execute()
+        trades = response.data
         
-        if not holding_stocks:
-            print("No holding stocks found")
+        if not trades:
+            print("No trades found")
             return
         
         # 遍历每个持有中的股票
-        for stock in holding_stocks:
-            symbol = stock['symbol']
-            # 获取实时价格
-            current_price = get_real_time_price(symbol)
-            
-            if current_price:
-                # 更新数据库中的价格
-                update_response = supabase.table('trades').update({
-                    'current_price': current_price,
-                    'current_amount': current_price * stock['size'],
-                    'profit_amount': (current_price * stock['size']) - stock['entry_amount'],
-                    'profit_ratio': ((current_price * stock['size'] - stock['entry_amount']) / stock['entry_amount']) * 100
-                }).eq('id', stock['id']).execute()
+        for trade in trades:
+            # 检查是否是持有中的股票
+            if trade.get('exit_price') is None and trade.get('exit_date') is None:
+                symbol = trade['symbol']
+                # 获取实时价格
+                current_price = get_real_time_price(symbol)
                 
-                print(f"Updated price for {symbol}: {current_price}")
-            else:
-                print(f"Failed to get price for {symbol}")
+                if current_price:
+                    # 计算新的数据
+                    entry_amount = trade['entry_price'] * trade['size']
+                    current_amount = current_price * trade['size']
+                    profit_amount = current_amount - entry_amount
+                    profit_ratio = (profit_amount / entry_amount) * 100 if entry_amount else 0
+                    
+                    # 更新数据库中的价格
+                    eastern = pytz.timezone('America/New_York')
+                    current_time = datetime.now(eastern)
+                    update_response = supabase.table('trades1').update({
+                        'current_price': current_price,
+                        'updated_at': format_date_for_db(current_time)
+                    }).eq('id', trade['id']).execute()
+                
+                    print(f"Updated price for {symbol}: {current_price}")
+                else:
+                    print(f"Failed to get price for {symbol}")
                 
     except Exception as e:
         print(f"Error updating stock prices: {str(e)}")
