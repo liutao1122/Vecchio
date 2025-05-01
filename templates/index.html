@@ -992,7 +992,7 @@
                             <span>Monthly P&L</span>
                         </div>
                         <div class="performance-value {% if trader_info.monthly_profit >= 0 %}positive{% endif %}">
-                            ${{ "%.2f"|format(trader_info.monthly_profit) }}
+                            {% if trader_info.monthly_profit >= 0 %}+{% endif %}${{ "%.2f"|format(trader_info.monthly_profit) }}
                         </div>
                     </div>
                     <div class="performance-card">
@@ -1001,7 +1001,7 @@
                             <span>Total P&L</span>
                         </div>
                         <div class="performance-value {% if trader_info.total_profit >= 0 %}positive{% endif %}">
-                            ${{ "%.2f"|format(trader_info.total_profit|default(0)) }}
+                            {% if trader_info.total_profit >= 0 %}+{% endif %}${{ "%.2f"|format(trader_info.total_profit|default(0)) }}
                         </div>
                     </div>
                 </div>
@@ -1043,7 +1043,7 @@
         <!-- Stock Trading Cards -->
         <div class="row">
             {# 首先显示持有中的交易 #}
-            {% for trade in trades|selectattr('status', 'equalto', '持有中')|sort(attribute='entry_date', reverse=true) %}
+            {% for trade in trades|selectattr('status', 'equalto', '持有中') %}
             <div class="col-md-6 col-lg-4">
                 <div class="card">
                     <div class="stock-info">
@@ -1051,9 +1051,7 @@
                             <div class="stock-symbol">{{ trade.symbol }}</div>
                             <div class="stock-name">{{ trade.name }}</div>
                         </div>
-                        <span class="badge {% if trade.status == '持有中' %}bg-success{% elif trade.status == '以止盈' %}bg-info{% else %}bg-danger{% endif %} status-badge">
-                            {% if trade.status == '持有中' %}Active{% elif trade.status == '以止盈' %}Take Profit{% else %}Stop Loss{% endif %}
-                        </span>
+                        <span class="badge bg-success status-badge">Active</span>
                     </div>
 
                     {% if trade.image_url %}
@@ -1071,7 +1069,6 @@
                             <span class="secondary-info-label">Entry Price</span>
                             <span class="secondary-info-value">{{ "%.2f"|format(trade.entry_price) }}</span>
                         </div>
-                        {% if trade.status == '持有中' %}
                         <div class="secondary-info-item">
                             <span class="secondary-info-label">Current Price</span>
                             <span class="secondary-info-value" id="current-price-{{ trade.symbol }}">{{ "%.2f"|format(trade.current_price) }}</span>
@@ -1080,16 +1077,6 @@
                             <span class="secondary-info-label">Quantity</span>
                             <span class="secondary-info-value" id="trade-size-{{ trade.symbol }}">{{ trade.size }}</span>
                         </div>
-                        {% elif trade.status in ['以止盈', '以止损'] %}
-                        <div class="secondary-info-item">
-                            <span class="secondary-info-label">Exit Date</span>
-                            <span class="secondary-info-value">{{ trade.exit_date[:10] if trade.exit_date else 'N/A' }}</span>
-                        </div>
-                        <div class="secondary-info-item">
-                            <span class="secondary-info-label">Exit Price</span>
-                            <span class="secondary-info-value">{{ "%.2f"|format(trade.exit_price) if trade.exit_price else 'N/A' }}</span>
-                        </div>
-                        {% endif %}
                     </div>
 
                     <div class="main-stats">
@@ -1110,7 +1097,7 @@
                         <div class="main-stat-item">
                             <div class="main-stat-label">P&L Amount</div>
                             <div class="main-stat-value {% if trade.profit_amount >= 0 %}profit-positive{% else %}profit-negative{% endif %}" id="profit-amount-{{ trade.symbol }}">
-                                {{ "%.2f"|format(trade.profit_amount) }}
+                                {% if trade.profit_amount >= 0 %}+{% endif %}{{ "%.2f"|format(trade.profit_amount) }}
                             </div>
                         </div>
                     </div>
@@ -1137,8 +1124,8 @@
             {% endif %}
             {% endfor %}
 
-            {# 然后显示止盈的交易 #}
-            {% for trade in trades|selectattr('status', 'equalto', '以止盈')|sort(attribute='exit_date', reverse=true) %}
+            {# 然后显示已平仓的交易 #}
+            {% for trade in trades|selectattr('status', 'equalto', '已平仓') %}
             <div class="col-md-6 col-lg-4">
                 <div class="card">
                     <div class="stock-info">
@@ -1146,8 +1133,8 @@
                             <div class="stock-symbol">{{ trade.symbol }}</div>
                             <div class="stock-name">{{ trade.name }}</div>
                         </div>
-                        <span class="badge {% if trade.status == '持有中' %}bg-success{% elif trade.status == '以止盈' %}bg-info{% else %}bg-danger{% endif %} status-badge">
-                            {% if trade.status == '持有中' %}Active{% elif trade.status == '以止盈' %}Take Profit{% else %}Stop Loss{% endif %}
+                        <span class="badge {% if trade.profit_amount >= 0 %}bg-info{% else %}bg-danger{% endif %} status-badge">
+                            {% if trade.profit_amount >= 0 %}Take Profit{% else %}Stop Loss{% endif %}
                         </span>
                     </div>
 
@@ -1166,16 +1153,6 @@
                             <span class="secondary-info-label">Entry Price</span>
                             <span class="secondary-info-value">{{ "%.2f"|format(trade.entry_price) }}</span>
                         </div>
-                        {% if trade.status == '持有中' %}
-                        <div class="secondary-info-item">
-                            <span class="secondary-info-label">Current Price</span>
-                            <span class="secondary-info-value" id="current-price-{{ trade.symbol }}">{{ "%.2f"|format(trade.current_price) }}</span>
-                        </div>
-                        <div class="secondary-info-item">
-                            <span class="secondary-info-label">Quantity</span>
-                            <span class="secondary-info-value" id="trade-size-{{ trade.symbol }}">{{ trade.size }}</span>
-                        </div>
-                        {% elif trade.status in ['以止盈', '以止损'] %}
                         <div class="secondary-info-item">
                             <span class="secondary-info-label">Exit Date</span>
                             <span class="secondary-info-value">{{ trade.exit_date[:10] if trade.exit_date else 'N/A' }}</span>
@@ -1184,7 +1161,6 @@
                             <span class="secondary-info-label">Exit Price</span>
                             <span class="secondary-info-value">{{ "%.2f"|format(trade.exit_price) if trade.exit_price else 'N/A' }}</span>
                         </div>
-                        {% endif %}
                     </div>
 
                     <div class="main-stats">
@@ -1205,102 +1181,7 @@
                         <div class="main-stat-item">
                             <div class="main-stat-label">P&L Amount</div>
                             <div class="main-stat-value {% if trade.profit_amount >= 0 %}profit-positive{% else %}profit-negative{% endif %}" id="profit-amount-{{ trade.symbol }}">
-                                {{ "%.2f"|format(trade.profit_amount) }}
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Modal for each image -->
-            {% if trade.image_url %}
-            <div class="modal fade" id="imageModal-{{ trade.status }}-{{ loop.index0 }}" tabindex="-1" aria-hidden="true">
-                <div class="modal-dialog modal-dialog-centered modal-lg">
-                    <div class="modal-content">
-                        <div class="modal-header">
-                            <h5 class="modal-title">{{ trade.symbol }} - {{ trade.name }}</h5>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                        </div>
-                        <div class="modal-body">
-                            <img src="{{ trade.image_url }}" 
-                                 alt="{{ trade.symbol }}" 
-                                 class="modal-image">
-                        </div>
-                    </div>
-                </div>
-            </div>
-            {% endif %}
-            {% endfor %}
-
-            {# 最后显示止损的交易 #}
-            {% for trade in trades|selectattr('status', 'equalto', '以止损')|sort(attribute='exit_date', reverse=true) %}
-            <div class="col-md-6 col-lg-4">
-                <div class="card">
-                    <div class="stock-info">
-                        <div>
-                            <div class="stock-symbol">{{ trade.symbol }}</div>
-                            <div class="stock-name">{{ trade.name }}</div>
-                        </div>
-                        <span class="badge {% if trade.status == '持有中' %}bg-success{% elif trade.status == '以止盈' %}bg-info{% else %}bg-danger{% endif %} status-badge">
-                            {% if trade.status == '持有中' %}Active{% elif trade.status == '以止盈' %}Take Profit{% else %}Stop Loss{% endif %}
-                        </span>
-                    </div>
-
-                    {% if trade.image_url %}
-                    <img src="{{ trade.image_url }}" alt="{{ trade.symbol }}" class="trade-screenshot"
-                         data-bs-toggle="modal"
-                         data-bs-target="#imageModal-{{ trade.status }}-{{ loop.index0 }}">
-                    {% endif %}
-                    
-                    <div class="secondary-info">
-                        <div class="secondary-info-item">
-                            <span class="secondary-info-label">Entry Date</span>
-                            <span class="secondary-info-value">{{ trade.entry_date[:10] }}</span>
-                        </div>
-                        <div class="secondary-info-item">
-                            <span class="secondary-info-label">Entry Price</span>
-                            <span class="secondary-info-value">{{ "%.2f"|format(trade.entry_price) }}</span>
-                        </div>
-                        {% if trade.status == '持有中' %}
-                        <div class="secondary-info-item">
-                            <span class="secondary-info-label">Current Price</span>
-                            <span class="secondary-info-value" id="current-price-{{ trade.symbol }}">{{ "%.2f"|format(trade.current_price) }}</span>
-                        </div>
-                        <div class="secondary-info-item">
-                            <span class="secondary-info-label">Quantity</span>
-                            <span class="secondary-info-value" id="trade-size-{{ trade.symbol }}">{{ trade.size }}</span>
-                        </div>
-                        {% elif trade.status in ['以止盈', '以止损'] %}
-                        <div class="secondary-info-item">
-                            <span class="secondary-info-label">Exit Date</span>
-                            <span class="secondary-info-value">{{ trade.exit_date[:10] if trade.exit_date else 'N/A' }}</span>
-                        </div>
-                        <div class="secondary-info-item">
-                            <span class="secondary-info-label">Exit Price</span>
-                            <span class="secondary-info-value">{{ "%.2f"|format(trade.exit_price) if trade.exit_price else 'N/A' }}</span>
-                        </div>
-                        {% endif %}
-                    </div>
-
-                    <div class="main-stats">
-                        <div class="main-stat-item">
-                            <div class="main-stat-label">Entry Amount</div>
-                            <div class="main-stat-value" id="entry-amount-{{ trade.symbol }}">{{ "%.2f"|format(trade.entry_amount) }}</div>
-                        </div>
-                        <div class="main-stat-item">
-                            <div class="main-stat-label">Market Value</div>
-                            <div class="main-stat-value" id="current-amount-{{ trade.symbol }}">{{ "%.2f"|format(trade.current_amount) }}</div>
-                        </div>
-                        <div class="main-stat-item">
-                            <div class="main-stat-label">P&L Ratio</div>
-                            <div class="main-stat-value {% if trade.profit_ratio >= 0 %}profit-positive{% else %}profit-negative{% endif %}" id="profit-ratio-{{ trade.symbol }}">
-                                {{ "%.2f"|format(trade.profit_ratio) }}%
-                            </div>
-                        </div>
-                        <div class="main-stat-item">
-                            <div class="main-stat-label">P&L Amount</div>
-                            <div class="main-stat-value {% if trade.profit_amount >= 0 %}profit-positive{% else %}profit-negative{% endif %}" id="profit-amount-{{ trade.symbol }}">
-                                {{ "%.2f"|format(trade.profit_amount) }}
+                                {% if trade.profit_amount >= 0 %}+{% endif %}{{ "%.2f"|format(trade.profit_amount) }}
                             </div>
                         </div>
                     </div>
@@ -1608,7 +1489,8 @@
                             document.getElementById('current-amount-' + symbol).textContent = currentAmount.toFixed(2);
                             const profitAmount = currentAmount - entryAmount;
                             const profitAmountElem = document.getElementById('profit-amount-' + symbol);
-                            profitAmountElem.textContent = profitAmount.toFixed(2);
+                            // 添加正负号
+                            profitAmountElem.textContent = (profitAmount >= 0 ? '+' : '') + profitAmount.toFixed(2);
                             // 盈亏金额颜色
                             profitAmountElem.classList.remove('profit-positive', 'profit-negative');
                             profitAmountElem.classList.add(profitAmount >= 0 ? 'profit-positive' : 'profit-negative');

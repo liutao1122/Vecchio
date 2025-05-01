@@ -297,12 +297,50 @@ def index():
             print("No trades found in database")
             trades = []
         
+        print("\n=== 原始数据 ===")
+        for trade in trades:
+            print(f"Symbol: {trade['symbol']}")
+            print(f"Entry Date: {trade.get('entry_date')}")
+            print(f"Exit Date: {trade.get('exit_date')}")
+            print("---")
+        
         # 为每个交易添加图片URL和计算属性
         for trade in trades:
-            # 格式化日期
-            trade['entry_date'] = format_datetime(trade['entry_date'])
+            # 格式化日期前先保存原始日期用于排序
             if trade.get('exit_date'):
+                # 将日期字符串转换为datetime对象用于排序
+                try:
+                    # 尝试解析数据库中的日期格式
+                    exit_date = datetime.strptime(trade['exit_date'].split('+')[0], '%Y-%m-%d %H:%M:%S.%f')
+                    trade['original_exit_date'] = exit_date
+                    print(f"\nExit date for {trade['symbol']}:")
+                    print(f"Original string: {trade['exit_date']}")
+                    print(f"Parsed datetime: {exit_date}")
+                except Exception as e:
+                    print(f"\nError parsing exit date for {trade['symbol']}:")
+                    print(f"Date string: {trade['exit_date']}")
+                    print(f"Error: {e}")
+                    # 如果解析失败，尝试其他格式
+                    try:
+                        exit_date = datetime.fromisoformat(trade['exit_date'].replace('Z', '+00:00'))
+                        trade['original_exit_date'] = exit_date
+                        print(f"Successfully parsed using ISO format: {exit_date}")
+                    except Exception as e2:
+                        print(f"Second parsing attempt failed: {e2}")
+                        trade['original_exit_date'] = datetime.min
                 trade['exit_date'] = format_datetime(trade['exit_date'])
+
+            if trade.get('entry_date'):
+                try:
+                    entry_date = datetime.strptime(trade['entry_date'].split('+')[0], '%Y-%m-%d %H:%M:%S.%f')
+                    trade['original_entry_date'] = entry_date
+                except Exception as e:
+                    try:
+                        entry_date = datetime.fromisoformat(trade['entry_date'].replace('Z', '+00:00'))
+                        trade['original_entry_date'] = entry_date
+                    except:
+                        trade['original_entry_date'] = datetime.min
+                trade['entry_date'] = format_datetime(trade['entry_date'])
             
             # 优先使用数据库中的 image_url，否则用 STOCK_IMAGES
             trade['image_url'] = trade.get('image_url') or STOCK_IMAGES.get(trade['symbol'], '')
@@ -336,13 +374,71 @@ def index():
             if trade.get('exit_price') is None and trade.get('exit_date') is None:
                 trade['status'] = "持有中"
             else:
-                trade['status'] = "以止盈" if trade['profit_amount'] > 0 else "以止损"
+                trade['status'] = "已平仓"
+        
+        # 分离持仓和平仓的交易
+        holding_trades = [t for t in trades if t['status'] == "持有中"]
+        closed_trades = [t for t in trades if t['status'] == "已平仓"]
+        
+        print("\n=== 排序前的交易 ===")
+        print("持仓中的交易:")
+        for trade in holding_trades:
+            print(f"Symbol: {trade['symbol']}")
+            print(f"Entry Date: {trade.get('entry_date')}")
+            print(f"Original Entry Date: {trade.get('original_entry_date')}")
+            print("---")
+        
+        print("\n平仓的交易:")
+        for trade in closed_trades:
+            print(f"Symbol: {trade['symbol']}")
+            print(f"Exit Date: {trade.get('exit_date')}")
+            print(f"Original Exit Date: {trade.get('original_exit_date')}")
+            print("---")
+        
+        # 对持仓交易按买入时间降序排序（最近的在前面）
+        holding_trades.sort(key=lambda x: x['original_entry_date'], reverse=True)
+        
+        # 对平仓交易按退出时间降序排序
+        closed_trades.sort(key=lambda x: x['original_exit_date'], reverse=True)
+        
+        print("\n=== 排序后的交易 ===")
+        print("持仓中的交易:")
+        for trade in holding_trades:
+            print(f"Symbol: {trade['symbol']}")
+            print(f"Entry Date: {trade.get('entry_date')}")
+            print(f"Original Entry Date: {trade.get('original_entry_date')}")
+            print("---")
+        
+        print("\n平仓的交易:")
+        for trade in closed_trades:
+            print(f"Symbol: {trade['symbol']}")
+            print(f"Exit Date: {trade.get('exit_date')}")
+            print(f"Original Exit Date: {trade.get('original_exit_date')}")
+            print("---")
+        
+        # 合并排序后的交易列表
+        sorted_trades = holding_trades + closed_trades
+        
+        print("\n=== 最终排序后的交易列表 ===")
+        print("持仓中的交易:")
+        for trade in [t for t in sorted_trades if t['status'] == "持有中"]:
+            print(f"Symbol: {trade['symbol']}")
+            print(f"Entry Date: {trade.get('entry_date')}")
+            print(f"Original Entry Date: {trade.get('original_entry_date')}")
+            print("---")
+        
+        print("\n平仓的交易:")
+        for trade in [t for t in sorted_trades if t['status'] == "已平仓"]:
+            print(f"Symbol: {trade['symbol']}")
+            print(f"Exit Date: {trade.get('exit_date')}")
+            print(f"Original Exit Date: {trade.get('original_exit_date')}")
+            print("---")
         
         # 计算总览数据
-        total_trades = len(trades)
+        total_trades = len(sorted_trades)
         
         # 获取当前持仓
-        positions = [t for t in trades if t['status'] == "持有中"]
+        positions = holding_trades
         
         # 获取当前美国东部时间的月份
         eastern = pytz.timezone('America/New_York')
@@ -350,9 +446,8 @@ def index():
         current_month = f"{str(current_time.day)}-{current_time.strftime('%b-%y')}"
         
         # 计算当月平仓盈亏
-        monthly_closed_trades = [t for t in trades 
-                               if t['status'] in ['以止盈', '以止损'] 
-                               and t.get('exit_date') 
+        monthly_closed_trades = [t for t in closed_trades 
+                               if t.get('exit_date') 
                                and t['exit_date'].split('-')[1] == current_month.split('-')[1]]
         
         monthly_profit = sum(t.get('profit_amount', 0) for t in monthly_closed_trades)
@@ -380,7 +475,7 @@ def index():
             strategy_info['formatted_time'] = format_datetime(strategy_info['updated_at'])
         
         # 计算总利润
-        total_profit = sum(t.get('profit_amount', 0) for t in trades)
+        total_profit = sum(t.get('profit_amount', 0) for t in sorted_trades)
 
         # 设置个人信息
         trader_info = {
@@ -390,13 +485,13 @@ def index():
             'positions': positions,
             'monthly_profit': round(monthly_profit, 2),
             'active_trades': len(positions),
-            'total_profit': round(total_profit, 2),  # 确保 total_profit 存在
+            'total_profit': round(total_profit, 2),
             'strategy_info': strategy_info,
             'profile_image_url': trader_info.get('profile_image_url')
         }
         
         return render_template('index.html', 
-                            trades=trades,
+                            trades=sorted_trades,
                             trader_info=trader_info)
     except Exception as e:
         print(f"Error in index route: {e}")
@@ -406,7 +501,7 @@ def index():
                                 'trader_name': 'System Error', 
                                 'monthly_profit': 0, 
                                 'active_trades': 0,
-                                'total_profit': 0  # 添加默认的 total_profit
+                                'total_profit': 0
                             })
 
 @app.route('/api/trader-profile', methods=['GET'])
