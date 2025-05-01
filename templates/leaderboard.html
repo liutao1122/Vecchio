@@ -49,7 +49,7 @@
             background: #e6c200;
             color: #181c2b;
         }
-        /* 第一名大卡片 */
+        /* First Place Card */
         .first-card {
             background: linear-gradient(120deg, #ffd700 60%, #fffbe6 100%);
             color: #181c2b;
@@ -168,7 +168,7 @@
             letter-spacing: 1px;
             box-shadow: 0 2px 8px #ffd70033;
         }
-        /* 第二三名中卡片 */
+        /* Second and Third Place Cards */
         .top3-row {
             display: flex;
             gap: 2.5rem;
@@ -475,7 +475,7 @@
             letter-spacing: 2px;
         }
         
-        /* TOP1 样式 */
+        /* Rank 1 Style */
         .carousel-avatar-wrapper[data-rank="1"] .rank-badge {
             background: linear-gradient(135deg, rgba(255, 215, 0, 0.95), rgba(255, 140, 0, 0.95));
             box-shadow: 0 4px 20px rgba(255, 215, 0, 0.4);
@@ -492,7 +492,7 @@
             color: #ffffff;
         }
         
-        /* TOP2 样式 */
+        /* Rank 2 Style */
         .carousel-avatar-wrapper[data-rank="2"] .rank-badge {
             background: linear-gradient(135deg, rgba(192, 192, 192, 0.95), rgba(232, 232, 232, 0.95));
             box-shadow: 0 4px 15px rgba(192, 192, 192, 0.3);
@@ -507,7 +507,7 @@
             color: #333333;
         }
         
-        /* TOP3 样式 */
+        /* Rank 3 Style */
         .carousel-avatar-wrapper[data-rank="3"] .rank-badge {
             background: linear-gradient(135deg, rgba(205, 127, 50, 0.95), rgba(223, 168, 120, 0.95));
             box-shadow: 0 4px 15px rgba(205, 127, 50, 0.3);
@@ -923,18 +923,18 @@
             </div>
             <a href="/" class="back-btn" style="text-align: center;"><i class="bi bi-arrow-left"></i> Back to Dashboard</a>
         </div>
-        <!-- 活动介绍和比赛规则卡片 -->
+        <!-- Competition Introduction and Rules Card -->
         <div class="mb-4" style="max-width: 1200px; margin: 0 auto; text-align: center;">
             <div style="background: linear-gradient(90deg, var(--secondary-color) 0%, var(--primary-color) 100%); border-radius: 20px; box-shadow: 0 4px 18px #0006; padding: 2.7rem 3rem 2.2rem 3rem; border: 2.5px solid #ffd70033; text-align: center;">
                 <div style="display: flex; align-items: center; justify-content: center; gap: 0.7em; margin-bottom: 0.7em; text-align: center;">
                 </div>
                 
-                <!-- 总收益 -->
+                <!-- Total Profit Section -->
                 <div style="margin-bottom: 1.2rem; padding: 1rem; background: rgba(255,215,0,0.05); border-radius: 10px; border: 1px solid rgba(255,215,0,0.2); text-align: center;">
                     <div style="display: flex; align-items: center; justify-content: center; cursor: pointer; text-align: center;" onclick="toggleDetails('profit-details')">
                         <div style="display: flex; align-items: center; justify-content: center; gap: 0.5em; text-align: center;">
                             <i class="bi bi-currency-dollar" style="font-size: 1.3rem; color: #ffd700;"></i>
-                            <h3 style="color: #ffd700; font-size: 1.2rem; font-weight: 700; margin: 0; text-align: center;">总收益</h3>
+                            <h3 style="color: #ffd700; font-size: 1.2rem; font-weight: 700; margin: 0; text-align: center;">Total Profit</h3>
                         </div>
                         <i class="bi bi-chevron-down" style="color: #ffd700; font-size: 1.2rem;" id="profit-icon"></i>
                     </div>
@@ -946,34 +946,34 @@
                         </p>
                     </div>
                     <div id="profit-details" style="display: none; margin-top: 0.8rem; border-top: 1px solid rgba(255,215,0,0.1); padding-top: 0.8rem; text-align: center;">
-                        <p style="margin-bottom: 0.8rem; text-align: center;"><strong>比赛规则：</strong></p>
+                        <p style="margin-bottom: 0.8rem; text-align: center;"><strong>Competition Rules:</strong></p>
                         <ul style="list-style: none; padding-left: 0; margin: 0; text-align: center;">
                             <li style="margin-bottom: 0.5rem; display: flex; align-items: center; justify-content: center; gap: 0.5rem; text-align: center;">
                                 <span style="color: #ffd700;">•</span>
-                                <span style="text-align: center;">当月交易次数必须超过50次</span>
+                                <span style="text-align: center;">Minimum 50 trades per month required</span>
                             </li>
                             <li style="margin-bottom: 0.5rem; display: flex; align-items: center; justify-content: center; gap: 0.5rem; text-align: center;">
                                 <span style="color: #ffd700;">•</span>
-                                <span style="text-align: center;">当月收益必须超过100万美元</span>
+                                <span style="text-align: center;">Monthly profit must exceed $1 million</span>
                             </li>
                             <li style="margin-bottom: 0.5rem; display: flex; align-items: center; justify-content: center; gap: 0.5rem; text-align: center;">
                                 <span style="color: #ffd700;">•</span>
-                                <span style="text-align: center;">每次交易必须实时更新到网站，并配上交易截图</span>
+                                <span style="text-align: center;">All trades must be updated in real-time with screenshots</span>
                             </li>
                             <li style="margin-bottom: 0.5rem; display: flex; align-items: center; justify-content: center; gap: 0.5rem; text-align: center;">
                                 <span style="color: #ffd700;">•</span>
-                                <span style="text-align: center;">盈利收益以每月一号平仓收益到每月月底最后一天平仓收益为准</span>
+                                <span style="text-align: center;">Profit calculation period: 1st to last day of each month</span>
                             </li>
                         </ul>
                     </div>
                 </div>
 
-                <!-- VIP会员 -->
+                <!-- VIP Members Section -->
                 <div style="margin-bottom: 1.2rem; padding: 1rem; background: rgba(255,215,0,0.05); border-radius: 10px; border: 1px solid rgba(255,215,0,0.2); text-align: center;">
                     <div style="display: flex; align-items: center; justify-content: center; cursor: pointer; text-align: center;" onclick="toggleDetails('vip-details')">
                         <div style="display: flex; align-items: center; justify-content: center; gap: 0.5em; text-align: center;">
                             <i class="bi bi-people-fill" style="font-size: 1.3rem; color: #ffd700;"></i>
-                            <h3 style="color: #ffd700; font-size: 1.2rem; font-weight: 700; margin: 0; text-align: center;">VIP会员</h3>
+                            <h3 style="color: #ffd700; font-size: 1.2rem; font-weight: 700; margin: 0; text-align: center;">VIP Members</h3>
                         </div>
                         <i class="bi bi-chevron-down" style="color: #ffd700; font-size: 1.2rem;" id="vip-icon"></i>
                     </div>
@@ -985,42 +985,42 @@
                         </p>
                     </div>
                     <div id="vip-details" style="display: none; margin-top: 0.8rem; border-top: 1px solid rgba(255,215,0,0.1); padding-top: 0.8rem; text-align: center;">
-                        <p style="margin-bottom: 0.8rem; text-align: center;"><strong>比赛规则：</strong></p>
+                        <p style="margin-bottom: 0.8rem; text-align: center;"><strong>Membership Requirements:</strong></p>
                         <ul style="list-style: none; padding-left: 0; margin: 0; text-align: center;">
                             <li style="margin-bottom: 0.5rem; display: flex; align-items: center; justify-content: center; gap: 0.5rem; text-align: center;">
                                 <span style="color: #ffd700;">•</span>
-                                <span style="text-align: center;">会员数量以累计形式计算，每月评选会员发展数量最多的交易员</span>
+                                <span style="text-align: center;">Members are counted cumulatively each month</span>
                             </li>
                             <li style="margin-bottom: 0.5rem; display: flex; align-items: center; justify-content: center; gap: 0.5rem; text-align: center;">
                                 <span style="color: #ffd700;">•</span>
-                                <span style="text-align: center;">参与排名需满足以下会员数量要求：</span>
+                                <span style="text-align: center;">Minimum membership requirements:</span>
                             </li>
                             <li style="margin-bottom: 0.5rem; display: flex; align-items: center; justify-content: center; gap: 0.5rem; text-align: center;">
                                 <span style="color: #ffd700;">-</span>
-                                <span style="text-align: center;">钻石会员：≥ 10名</span>
+                                <span style="text-align: center;">Diamond: ≥ 10 members</span>
                             </li>
                             <li style="margin-bottom: 0.5rem; display: flex; align-items: center; justify-content: center; gap: 0.5rem; text-align: center;">
                                 <span style="color: #ffd700;">-</span>
-                                <span style="text-align: center;">黄金会员：≥ 50名</span>
+                                <span style="text-align: center;">Gold: ≥ 50 members</span>
                             </li>
                             <li style="margin-bottom: 0.5rem; display: flex; align-items: center; justify-content: center; gap: 0.5rem; text-align: center;">
                                 <span style="color: #ffd700;">-</span>
-                                <span style="text-align: center;">白金会员：≥ 100名</span>
+                                <span style="text-align: center;">Platinum: ≥ 100 members</span>
                             </li>
                             <li style="margin-bottom: 0.5rem; display: flex; align-items: center; justify-content: center; gap: 0.5rem; text-align: center;">
                                 <span style="color: #ffd700;">-</span>
-                                <span style="text-align: center;">普通会员：≥ 500名</span>
+                                <span style="text-align: center;">Regular: ≥ 500 members</span>
                             </li>
                         </ul>
                     </div>
                 </div>
 
-                <!-- 点赞 -->
+                <!-- Likes Section -->
                 <div style="margin-bottom: 1.2rem; padding: 1rem; background: rgba(255,215,0,0.05); border-radius: 10px; border: 1px solid rgba(255,215,0,0.2); text-align: center;">
                     <div style="display: flex; align-items: center; justify-content: center; cursor: pointer; text-align: center;" onclick="toggleDetails('like-details')">
                         <div style="display: flex; align-items: center; justify-content: center; gap: 0.5em; text-align: center;">
                             <i class="bi bi-hand-thumbs-up-fill" style="font-size: 1.3rem; color: #ffd700;"></i>
-                            <h3 style="color: #ffd700; font-size: 1.2rem; font-weight: 700; margin: 0; text-align: center;">点赞</h3>
+                            <h3 style="color: #ffd700; font-size: 1.2rem; font-weight: 700; margin: 0; text-align: center;">Likes</h3>
                         </div>
                         <i class="bi bi-chevron-down" style="color: #ffd700; font-size: 1.2rem;" id="like-icon"></i>
                     </div>
@@ -1032,27 +1032,27 @@
                         </p>
                     </div>
                     <div id="like-details" style="display: none; margin-top: 0.8rem; border-top: 1px solid rgba(255,215,0,0.1); padding-top: 0.8rem; text-align: center;">
-                        <p style="margin-bottom: 0.8rem; text-align: center;"><strong>比赛规则：</strong></p>
+                        <p style="margin-bottom: 0.8rem; text-align: center;"><strong>Like Rules:</strong></p>
                         <ul style="list-style: none; padding-left: 0; margin: 0; text-align: center;">
                             <li style="margin-bottom: 0.5rem; display: flex; align-items: center; justify-content: center; gap: 0.5rem; text-align: center;">
                                 <span style="color: #ffd700;">•</span>
-                                <span style="text-align: center;">每个用户每天只能点赞一次</span>
+                                <span style="text-align: center;">One like per user per day</span>
                             </li>
                             <li style="margin-bottom: 0.5rem; display: flex; align-items: center; justify-content: center; gap: 0.5rem; text-align: center;">
                                 <span style="color: #ffd700;">•</span>
-                                <span style="text-align: center;">每月点赞累计必须超过10,000点赞才能加入排行榜</span>
+                                <span style="text-align: center;">Minimum 10,000 likes required to join the leaderboard</span>
                             </li>
                             <li style="margin-bottom: 0.5rem; display: flex; align-items: center; justify-content: center; gap: 0.5rem; text-align: center;">
                                 <span style="color: #ffd700;">•</span>
-                                <span style="text-align: center;">严禁刷点赞，一经发现异常将取消排名资格</span>
+                                <span style="text-align: center;">Any form of like manipulation will result in disqualification</span>
                             </li>
                         </ul>
                     </div>
                 </div>
 
                 <div style="color: #b0b0b0; font-size: 0.9rem; line-height: 1.5; margin-top: 1rem; text-align: center;">
-                    <p style="margin-bottom: 0.3em; text-align: center;"><strong>活动时间：</strong>每月1日 - 每月最后1日（月度赛制）</p>
-                    <p style="margin-bottom: 0.3em; text-align: center;"><strong>注意事项：</strong>严禁任何形式的作弊行为，一经发现将永久取消排名资格。</p>
+                    <p style="margin-bottom: 0.3em; text-align: center;"><strong>Competition Period:</strong> 1st - Last day of each month (Monthly Competition)</p>
+                    <p style="margin-bottom: 0.3em; text-align: center;"><strong>Important Notice:</strong> Any form of cheating will result in permanent disqualification from the rankings.</p>
                 </div>
 
                 <script>
@@ -1072,14 +1072,14 @@
                 </script>
             </div>
         </div>
-        <!-- 排行榜 -->
+        <!-- Leaderboard -->
         <div style="margin-top: 1.5rem; text-align: center;">
-            <h3 style="color: #fff; font-size: 1.2rem; font-weight: 700; margin-bottom: 1rem; text-align: center;">排行榜</h3>
+            <h3 style="color: #fff; font-size: 1.2rem; font-weight: 700; margin-bottom: 1rem; text-align: center;">Leaderboard</h3>
             <div id="leaderboard-content" style="text-align: center;">
-                <!-- 排行榜内容将通过JavaScript动态加载 -->
+                <!-- Leaderboard content will be dynamically loaded through JavaScript -->
             </div>
         </div>
-        <!-- 排序选项 -->
+        <!-- Sorting Options -->
         <div class="sort-options">
             <div class="sort-option" data-sort="followers">
                 <i class="bi bi-people-fill"></i>
@@ -1095,7 +1095,7 @@
             </div>
         </div>
         {% if traders|length > 0 %}
-            <!-- 领奖台式前三名（桌面端显示） -->
+            <!-- Podium Style Top 3 (Desktop Display) -->
             <div class="podium-row d-flex justify-content-center align-items-end mb-5">
                 {% if traders|length > 1 %}
                 <div class="podium-card position-relative podium-rank-2" style="order:1;">
@@ -1150,7 +1150,7 @@
                 </div>
                 {% endif %}
             </div>
-            <!-- 移动端圆形转盘动画 -->
+            <!-- Mobile Carousel Animation -->
             <div class="mobile-podium-carousel">
                 <div class="carousel-track" id="carouselTrack">
                     {% set top_traders = [traders[0], traders[1], traders[2]] %}
@@ -1192,7 +1192,7 @@
                     </div>
                 </div>
             </div>
-            <!-- 4-20名列表条 -->
+            <!-- Ranks 4-20 List -->
             <div class="list-table mb-5">
                 {% for trader in traders %}
                 <div class="list-row">
@@ -1205,22 +1205,22 @@
                         <div class="list-stat-item">
                             <i class="bi bi-people-fill"></i>
                             {{ "{:,}".format(trader.followers_count) }}
-                            <span class="stat-label">会员</span>
+                            <span class="stat-label">Members</span>
                         </div>
                         <div class="list-stat-item">
                             <i class="bi bi-hand-thumbs-up-fill"></i>
                             {{ "{:,}".format(trader.likes_count) }}
-                            <span class="stat-label">点赞</span>
+                            <span class="stat-label">Likes</span>
                         </div>
                         <div class="list-stat-item">
                             <i class="bi bi-graph-up"></i>
                             {{ trader.win_rate }}%
-                            <span class="stat-label">胜率</span>
+                            <span class="stat-label">Win Rate</span>
                         </div>
                         <div class="list-stat-item">
                             <i class="bi bi-clock-history"></i>
                             {{ "{:,}".format(trader.total_trades) }}
-                            <span class="stat-label">交易</span>
+                            <span class="stat-label">Trades</span>
                         </div>
                     </div>
                     <div class="list-profit ms-auto">
@@ -1240,11 +1240,11 @@
       {{ traders[:20]|tojson|safe }}
     </script>
     <script>
-    // 全局变量存储交易员数据和当前排序方式
+    // Global variables to store trader data and current sort method
     let globalTraders = [];
     let currentSortType = 'profit';
 
-    // 排序函数
+    // Sort function
     function sortTraders(traders, sortType) {
         const sortedTraders = [...traders];
         switch(sortType) {
@@ -1261,12 +1261,12 @@
         return sortedTraders;
     }
 
-    // 更新前三名展示（PC端）
+    // Update top three display (PC)
     function updatePodiumView(topThree) {
         const podiumRow = document.querySelector('.podium-row');
         if (!podiumRow) return;
 
-        // 更新第二名
+        // Update second place
         if (topThree.length > 1) {
             const rank2Card = podiumRow.querySelector('.podium-rank-2');
             if (rank2Card) {
@@ -1282,7 +1282,7 @@
             }
         }
 
-        // 更新第一名
+        // Update first place
         const rank1Card = podiumRow.querySelector('.podium-rank-1');
         if (rank1Card) {
             rank1Card.querySelector('.podium-avatar').src = topThree[0].profile_image_url;
@@ -1296,7 +1296,7 @@
             bottomRow.children[3].innerHTML = `<i class="bi bi-hand-thumbs-up-fill icon-gold"></i> ${topThree[0].likes_count}<span class="podium-bottom-label">Likes</span>`;
         }
 
-        // 更新第三名
+        // Update third place
         if (topThree.length > 2) {
             const rank3Card = podiumRow.querySelector('.podium-rank-3');
             if (rank3Card) {
@@ -1313,24 +1313,24 @@
         }
     }
 
-    // 更新移动端轮播图
+    // Update mobile carousel
     function updateMobileCarousel(topThree) {
         const track = document.getElementById('carouselTrack');
         if (!track) return;
 
-        // 重新排序：第二名、第一名、第三名
+        // Reorder: second place, first place, third place
         const reorderedTraders = [
-            topThree[1], // 第二名放左边
-            topThree[0], // 第一名放中间
-            topThree[2]  // 第三名放右边
+            topThree[1], // second place on the left
+            topThree[0], // first place in the middle
+            topThree[2]  // third place on the right
         ];
 
-        // 更新轮播头像
+        // Update carousel avatars
         track.innerHTML = reorderedTraders.map((trader, idx) => {
             let actualRank;
-            if (idx === 0) actualRank = 2;      // 左边显示第二名
-            else if (idx === 1) actualRank = 1;  // 中间显示第一名
-            else actualRank = 3;                 // 右边显示第三名
+            if (idx === 0) actualRank = 2;      // left shows second place
+            else if (idx === 1) actualRank = 1;  // middle shows first place
+            else actualRank = 3;                 // right shows third place
 
             return `
                 <div class="carousel-avatar-wrapper" data-index="${idx}" data-rank="${actualRank}">
@@ -1344,17 +1344,17 @@
             `;
         }).join('');
 
-        // 默认选中中间的头像（第一名）
+        // Default select middle avatar (first place)
         currentIndex = 1;
         
-        // 更新当前显示的数据（显示第一名）
+        // Update current displayed data (show first place)
         updateCarouselData(topThree[0]);
 
-        // 重新初始化轮播事件
+        // Reinitialize carousel event
         initMobileCarousel(reorderedTraders);
     }
 
-    // 更新轮播图数据显示
+    // Update carousel data display
     function updateCarouselData(trader) {
         const data = document.getElementById('carouselData');
         if (!data) return;
@@ -1387,24 +1387,24 @@
         `;
     }
 
-    // 更新排行榜显示
+    // Update leaderboard display
     function updateLeaderboard(sortType) {
-        // 更新排序按钮状态
+        // Update sort button state
         document.querySelectorAll('.sort-option').forEach(option => {
             option.classList.toggle('active', option.dataset.sort === sortType);
         });
 
-        // 排序数据
+        // Sort data
         const sortedTraders = sortTraders(globalTraders, sortType);
         const topThree = sortedTraders.slice(0, 3);
         
-        // 更新PC端前三名显示
+        // Update top three display (PC)
         updatePodiumView(topThree);
         
-        // 更新移动端轮播图
+        // Update mobile carousel
         updateMobileCarousel(topThree);
         
-        // 更新列表显示
+        // Update list display
         const listTable = document.querySelector('.list-table');
         if (listTable) {
             listTable.innerHTML = sortedTraders.map((trader, index) => `
@@ -1418,22 +1418,22 @@
                         <div class="list-stat-item">
                             <i class="bi bi-people-fill"></i>
                             ${trader.followers_count.toLocaleString()}
-                            <span class="stat-label">会员</span>
+                            <span class="stat-label">Members</span>
                         </div>
                         <div class="list-stat-item">
                             <i class="bi bi-hand-thumbs-up-fill"></i>
                             ${trader.likes_count.toLocaleString()}
-                            <span class="stat-label">点赞</span>
+                            <span class="stat-label">Likes</span>
                         </div>
                         <div class="list-stat-item">
                             <i class="bi bi-graph-up"></i>
                             ${trader.win_rate}%
-                            <span class="stat-label">胜率</span>
+                            <span class="stat-label">Win Rate</span>
                         </div>
                         <div class="list-stat-item">
                             <i class="bi bi-clock-history"></i>
                             ${trader.total_trades.toLocaleString()}
-                            <span class="stat-label">交易</span>
+                            <span class="stat-label">Trades</span>
                         </div>
                     </div>
                     <div class="list-profit ms-auto">
@@ -1445,24 +1445,24 @@
         }
     }
 
-    // 初始化移动端轮播
+    // Initialize mobile carousel
     function initMobileCarousel(traders, isInitialLoad = false) {
         const track = document.getElementById('carouselTrack');
         if (!track) return;
 
         const wrappers = track.querySelectorAll('.carousel-avatar-wrapper');
         
-        // 总是从中间位置（第一名）开始
+        // Always start from the middle position (first place)
         let currentIndex = 1;
 
-        // 立即更新位置和数据
+        // Immediately update position and data
         updateAvatarPositions();
         if (isInitialLoad) {
-            // 确保显示第一名的数据
-            updateCarouselData(traders[1]); // index 1 是第一名
+            // Ensure first place data is displayed
+            updateCarouselData(traders[1]); // index 1 is first place
         }
 
-        // 点击事件
+        // Click event
         wrappers.forEach((wrapper, index) => {
             wrapper.addEventListener('click', () => {
                 if (index !== currentIndex) {
@@ -1473,7 +1473,7 @@
             });
         });
 
-        // 更新头像位置
+        // Update avatar positions
         function updateAvatarPositions() {
             wrappers.forEach((wrapper, index) => {
                 const offset = index - currentIndex;
@@ -1498,7 +1498,7 @@
             });
         }
 
-        // 触摸滑动支持
+        // Touch swipe support
         let startX = 0;
         let isDragging = false;
         let dragStartTime = 0;
@@ -1563,35 +1563,35 @@
         });
     }
 
-    // 页面加载完成后初始化
+    // Initialize after page load
     document.addEventListener('DOMContentLoaded', function() {
-        // 获取并存储交易员数据
+        // Get and store trader data
         globalTraders = JSON.parse(document.getElementById('traders-data').textContent);
         
-        // 添加排序选项点击事件
+        // Add sort option click event
         document.querySelectorAll('.sort-option').forEach(option => {
             option.addEventListener('click', function() {
                 const sortType = this.dataset.sort;
                 currentSortType = sortType;
-                // 更新 URL 参数但不刷新页面
+                // Update URL parameter without refreshing page
                 const url = new URL(window.location);
                 url.searchParams.set('sort', sortType);
                 window.history.pushState({}, '', url);
-                // 更新显示
+                // Update display
                 updateLeaderboard(sortType);
             });
         });
 
-        // 获取 URL 中的排序参数
+        // Get sort parameter from URL
         const urlParams = new URLSearchParams(window.location.search);
         const sortType = urlParams.get('sort') || 'profit';
         currentSortType = sortType;
 
-        // 初始化显示
+        // Initialize display
         updateLeaderboard(sortType);
     });
 
-    // 窗口大小变化时重新初始化
+    // Reinitialize when window size changes
     window.addEventListener('resize', function() {
         if (window.innerWidth <= 600) {
             updateLeaderboard(currentSortType);

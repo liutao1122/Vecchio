@@ -211,13 +211,13 @@
             border: 1px solid var(--border-color);
         }
 
-        /* 添加图片 Modal 的 z-index 设置 */
+        /* Add Image Modal z-index settings */
         .modal {
             z-index: 9999 !important;
         }
         
         .modal-backdrop {
-            z-index: 9998 !important;
+            z-index: 1040;
         }
 
         .modal-header {
@@ -248,7 +248,7 @@
             object-fit: contain;
         }
 
-        /* 个人简介区域样式 */
+        /* Profile Area Styles */
         .profile-section {
             margin-top: 2rem;
         }
@@ -403,7 +403,7 @@
             color: var(--success-color);
         }
 
-        /* 交易策略更新区域样式 */
+        /* Trading Strategy Update Area Styles */
         .strategy-update {
             background: var(--secondary-color);
             border: 1px solid var(--border-color);
@@ -483,12 +483,12 @@
             color: var(--danger-color);
         }
 
-        /* 交易记录分隔区域样式 */
-        .trading-record-divider {
+        /* Trade Record Separator Styles */
+        .trade-separator {
             margin: 2rem 0;
         }
 
-        .trading-record-divider h3 {
+        .trade-separator h3 {
             font-size: 1.2rem;
             color: var(--gold-color);
             margin: 0 0 0.8rem 0;
@@ -497,19 +497,19 @@
             gap: 0.5rem;
         }
 
-        .trading-record-divider h3 i {
+        .trade-separator h3 i {
             color: var(--gold-color);
             font-size: 1.1rem;
         }
 
-        .trading-record-divider .divider-line {
+        .trade-separator .divider-line {
             width: 100%;
             height: 2px;
             background: var(--border-color);
         }
 
-        /* 联系方式按钮样式 */
-        .contact-button {
+        /* Contact Button Styles */
+        .contact-btn {
             position: fixed;
             right: 30px;
             bottom: 30px;
@@ -527,12 +527,12 @@
             transition: all 0.3s ease;
         }
 
-        .contact-button:hover {
+        .contact-btn:hover {
             transform: translateY(-2px);
             box-shadow: 0 6px 20px rgba(0,0,0,0.3);
         }
 
-        .contact-button i {
+        .contact-btn i {
             font-size: 1.2rem;
         }
 
@@ -614,7 +614,7 @@
                 grid-template-columns: 1fr;
             }
 
-            /* 添加移动端策略标题和更新时间的样式 */
+            /* Add Mobile Strategy Title and Update Time Styles */
             .strategy-header {
                 flex-direction: column;
                 align-items: flex-start;
@@ -647,8 +647,8 @@
             }
         }
 
-        /* 头像上传和预览相关样式 */
-        .avatar-upload-btn {
+        /* Avatar Upload and Preview Styles */
+        .avatar-upload {
             position: absolute;
             bottom: 0;
             right: 0;
@@ -664,7 +664,7 @@
             transition: all 0.3s ease;
         }
 
-        .avatar-upload-btn:hover {
+        .avatar-upload:hover {
             transform: scale(1.1);
         }
 
@@ -672,8 +672,8 @@
             display: none;
         }
 
-        /* 头像预览模态框样式 */
-        .avatar-modal .modal-content {
+        /* Avatar Preview Modal Styles */
+        .avatar-preview-modal .modal-content {
             background: var(--primary-color);
             border: 1px solid var(--gold-color);
         }
@@ -799,7 +799,7 @@
             }
         }
 
-        /* 修改跑马灯动画样式 */
+        /* Modify Marquee Animation Styles */
         .redirect-message {
             position: fixed;
             bottom: 30px;
@@ -952,7 +952,7 @@
                     <div class="profile-avatar" onclick="openAvatarPreview()">
                         <img src="{{ trader_info.profile_image_url|default('https://via.placeholder.com/150') }}" alt="Avatar" class="avatar-img">
                         <div class="online-status"></div>
-                        <button class="avatar-upload-btn" onclick="event.stopPropagation(); document.getElementById('avatarUpload').click();">
+                        <button class="avatar-upload" onclick="event.stopPropagation(); document.getElementById('avatarUpload').click();">
                             <i class="bi bi-camera-fill"></i>
                         </button>
                         <input type="file" id="avatarUpload" class="avatar-upload-input" accept="image/*" onchange="handleAvatarUpload(event)">
@@ -1034,7 +1034,7 @@
             </div>
 
             <!-- Trading Record Divider -->
-            <div class="trading-record-divider">
+            <div class="trade-separator">
                 <h3><i class="bi bi-clipboard-data"></i> Trading Records (Last 3 Months)</h3>
                 <div class="divider-line"></div>
             </div>
@@ -1042,8 +1042,8 @@
 
         <!-- Stock Trading Cards -->
         <div class="row">
-            {# 首先显示持有中的交易 #}
-            {% for trade in trades|selectattr('status', 'equalto', '持有中') %}
+            {# First show active trades #}
+            {% for trade in trades|selectattr('status', 'equalto', 'Active') %}
             <div class="col-md-6 col-lg-4">
                 <div class="card">
                     <div class="stock-info">
@@ -1124,8 +1124,8 @@
             {% endif %}
             {% endfor %}
 
-            {# 然后显示已平仓的交易 #}
-            {% for trade in trades|selectattr('status', 'equalto', '已平仓') %}
+            {# Then show closed trades #}
+            {% for trade in trades|selectattr('status', 'equalto', 'Closed') %}
             <div class="col-md-6 col-lg-4">
                 <div class="card">
                     <div class="stock-info">
@@ -1211,7 +1211,7 @@
     </div>
 
     <!-- Contact Button -->
-    <div class="contact-button" id="contactButton">
+    <div class="contact-btn" id="contactButton">
         <i class="bi bi-people-fill"></i>
         Join Community
     </div>
@@ -1244,7 +1244,7 @@
     <!-- Avatar Preview Modal -->
     <div class="modal fade" id="avatarPreviewModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered modal-lg">
-            <div class="modal-content avatar-modal">
+            <div class="modal-content avatar-preview-modal">
                 <div class="modal-header">
                     <h5 class="modal-title">Profile Avatar</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
@@ -1313,7 +1313,7 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        // 加载个人资料
+        // Load profile data
         async function loadProfile() {
             try {
                 const response = await fetch('/api/trader-profile');
@@ -1321,7 +1321,7 @@
                 
                 if (data.success) {
                     const profile = data.data;
-                    // 更新头像
+                    // Update avatar
                     const avatarImg = document.querySelector('.avatar-img');
                     if (profile.profile_image_url) {
                         avatarImg.src = profile.profile_image_url;
@@ -1330,7 +1330,7 @@
                     document.querySelector('.profile-name').textContent = profile.trader_name;
                     document.querySelector('.profile-title').textContent = profile.professional_title;
                     
-                    // 更新统计数据
+                    // Update stats
                     const stats = document.querySelectorAll('.profile-stats .stat-item');
                     stats[0].querySelector('.stat-value').textContent = profile.years_of_experience;
                     stats[1].querySelector('.stat-value').textContent = profile.total_trades;
@@ -1341,28 +1341,28 @@
             }
         }
 
-        // 页面加载时获取个人资料
+        // Load profile data when page loads
         document.addEventListener('DOMContentLoaded', loadProfile);
 
-        // 联系客服按钮点击事件
+        // Contact customer service button click event
         document.getElementById('contactButton').addEventListener('click', function() {
-            // 先移除之前的show类和动画
+            // Remove previous show class and animation
             const redirectMsg = document.getElementById('redirectMessage');
             redirectMsg.style.animation = 'none';
             redirectMsg.style.webkitAnimation = 'none';
             redirectMsg.classList.remove('show');
             redirectMsg.style.display = 'none';
             
-            // 强制重绘
+            // Force repaint
             void redirectMsg.offsetWidth;
             
-            // 重置动画和显示
+            // Reset animation and display
             redirectMsg.style.animation = '';
             redirectMsg.style.webkitAnimation = '';
             redirectMsg.style.display = 'block';
             redirectMsg.classList.add('show');
             
-            // 记录点击时间
+            // Record click time
             const clickTime = new Date().toISOString();
             
             fetch('/api/get-whatsapp-link', {
@@ -1392,27 +1392,27 @@
             });
         });
 
-        // 点击其他地方关闭联系方式弹窗
+        // Click elsewhere to close contact popup
         document.addEventListener('click', function(event) {
             const popup = document.getElementById('contactPopup');
-            const button = document.querySelector('.contact-button');
+            const button = document.querySelector('.contact-btn');
             if (!popup.contains(event.target) && !button.contains(event.target)) {
                 popup.classList.remove('show');
             }
         });
 
-        // 打开头像预览
+        // Open avatar preview
         function openAvatarPreview() {
             const modal = new bootstrap.Modal(document.getElementById('avatarPreviewModal'));
             modal.show();
         }
 
-        // 处理头像上传
+        // Handle avatar upload
         async function handleAvatarUpload(event) {
             const file = event.target.files[0];
             if (!file) return;
 
-            // 检查文件类型和大小
+            // Check file type and size
             if (!file.type.startsWith('image/')) {
                 alert('请上传图片文件');
                 return;
@@ -1435,7 +1435,7 @@
                 const result = await response.json();
                 
                 if (result.success) {
-                    // 更新头像显示
+                    // Update avatar display
                     const avatarImg = document.querySelector('.avatar-img');
                     const previewImg = document.querySelector('.avatar-preview-img');
                     avatarImg.src = result.url;
@@ -1450,7 +1450,7 @@
             }
         }
 
-        // 添加检查头像更新的函数
+        // Add check avatar update function
         function checkAvatarUpdate() {
             fetch('/api/get-avatar')
                 .then(response => response.json())
@@ -1465,13 +1465,13 @@
                 .catch(error => console.error('检查头像更新失败:', error));
         }
 
-        // 页面加载完成后开始定期检查头像更新
+        // Start checking avatar update periodically after page loads
         document.addEventListener('DOMContentLoaded', function() {
-            // 每30秒检查一次头像更新
+            // Check every 30 seconds
             setInterval(checkAvatarUpdate, 30000);
         });
 
-        // 自动刷新所有持仓股票的当前价格
+        // Automatically refresh current prices of all held stocks
         function updateAllCurrentPrices() {
             document.querySelectorAll('[id^="current-price-"]').forEach(function(span) {
                 const id = span.id;
@@ -1484,17 +1484,17 @@
                         if (data.success) {
                             const price = parseFloat(data.price);
                             span.textContent = price.toFixed(2);
-                            // 计算并更新总市值、盈亏金额、盈亏比例
+                            // Calculate and update total market value, profit amount, and profit ratio
                             const currentAmount = price * size;
                             document.getElementById('current-amount-' + symbol).textContent = currentAmount.toFixed(2);
                             const profitAmount = currentAmount - entryAmount;
                             const profitAmountElem = document.getElementById('profit-amount-' + symbol);
-                            // 添加正负号
+                            // Add sign
                             profitAmountElem.textContent = (profitAmount >= 0 ? '+' : '') + profitAmount.toFixed(2);
-                            // 盈亏金额颜色
+                            // Profit amount color
                             profitAmountElem.classList.remove('profit-positive', 'profit-negative');
                             profitAmountElem.classList.add(profitAmount >= 0 ? 'profit-positive' : 'profit-negative');
-                            // 盈亏比例
+                            // Profit ratio
                             const profitRatio = entryAmount !== 0 ? (profitAmount / entryAmount) * 100 : 0;
                             const profitRatioElem = document.getElementById('profit-ratio-' + symbol);
                             profitRatioElem.textContent = profitRatio.toFixed(2) + '%';
@@ -1507,34 +1507,34 @@
         setInterval(updateAllCurrentPrices, 30000);
         document.addEventListener('DOMContentLoaded', updateAllCurrentPrices);
 
-        // 添加移动端滑动时徽章透明度控制
+        // Add mobile scroll control for badge transparency
         let scrollTimeout;
         const badges = document.querySelector('.profile-badges-floating');
         
         function handleScroll() {
-            if (window.innerWidth <= 768) {  // 只在移动端生效
+            if (window.innerWidth <= 768) {  // Only apply on mobile
                 badges.classList.add('scrolling');
                 
-                // 清除之前的定时器
+                // Clear previous timer
                 clearTimeout(scrollTimeout);
                 
-                // 设置新的定时器，停止滑动0.5秒后恢复不透明
+                // Set new timer, stop scrolling 0.5 seconds after stopping
                 scrollTimeout = setTimeout(() => {
                     badges.classList.remove('scrolling');
                 }, 500);
             }
         }
 
-        // 监听滚动事件
+        // Listen for scroll events
         window.addEventListener('scroll', handleScroll);
         
-        // 页面加载时初始化
+        // Page load initialization
         document.addEventListener('DOMContentLoaded', function() {
             // ... existing code ...
             
-            // 确保badges元素存在
+            // Ensure badges element exists
             if (badges) {
-                // 初始化时不透明
+                // Initially opaque
                 badges.classList.remove('scrolling');
             }
         });

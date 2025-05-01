@@ -15,10 +15,14 @@ import requests
 from dotenv import load_dotenv
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers.interval import IntervalTrigger
+from flask_cors import CORS
+import mysql.connector
+from mysql.connector import Error
 
 # Flask应用配置
 app = Flask(__name__)
 app.secret_key = os.environ.get('FLASK_SECRET_KEY', 'your_secret_key_here')
+CORS(app, supports_credentials=True)
 
 # Supabase配置
 url = 'https://rwlziuinlbazgoajkcme.supabase.co'
@@ -38,6 +42,23 @@ STOCK_IMAGES = {
     'V': 'https://logo.clearbit.com/visa.com',
     'WMT': 'https://logo.clearbit.com/walmart.com'
 }
+
+# 数据库配置
+db_config = {
+    'host': 'localhost',
+    'user': 'root',
+    'password': 'root',
+    'database': 'trading_platform'
+}
+
+# 数据库连接函数
+def get_db_connection():
+    try:
+        connection = mysql.connector.connect(**db_config)
+        return connection
+    except Error as e:
+        print(f"Error connecting to MySQL: {e}")
+        return None
 
 def format_datetime(dt_str):
     """将UTC时间字符串转换为美国东部时间并格式化为 DD-MMM-YY 格式"""
@@ -372,14 +393,14 @@ def index():
             
             # 设置状态
             if trade.get('exit_price') is None and trade.get('exit_date') is None:
-                trade['status'] = "持有中"
+                trade['status'] = "Active"
             else:
-                trade['status'] = "已平仓"
+                trade['status'] = "Closed"
         
         # 分离持仓和平仓的交易
-        holding_trades = [t for t in trades if t['status'] == "持有中"]
-        closed_trades = [t for t in trades if t['status'] == "已平仓"]
-        
+        holding_trades = [t for t in trades if t['status'] == "Active"]
+        closed_trades = [t for t in trades if t['status'] == "Closed"]
+
         print("\n=== 排序前的交易 ===")
         print("持仓中的交易:")
         for trade in holding_trades:
@@ -421,14 +442,14 @@ def index():
         
         print("\n=== 最终排序后的交易列表 ===")
         print("持仓中的交易:")
-        for trade in [t for t in sorted_trades if t['status'] == "持有中"]:
+        for trade in [t for t in sorted_trades if t['status'] == "Active"]:
             print(f"Symbol: {trade['symbol']}")
             print(f"Entry Date: {trade.get('entry_date')}")
             print(f"Original Entry Date: {trade.get('original_entry_date')}")
             print("---")
         
         print("\n平仓的交易:")
-        for trade in [t for t in sorted_trades if t['status'] == "已平仓"]:
+        for trade in [t for t in sorted_trades if t['status'] == "Closed"]:
             print(f"Symbol: {trade['symbol']}")
             print(f"Exit Date: {trade.get('exit_date')}")
             print(f"Original Exit Date: {trade.get('original_exit_date')}")
@@ -690,20 +711,33 @@ def api_history():
 @app.route('/vip')
 def vip():
     if 'username' in session:
-        # 已登录，从Supabase users表查找当前用户信息
-        username = session['username']
-        response = supabase.table('users').select('*').eq('username', username).execute()
-        user = response.data[0] if response.data else None
-        trader_info = {
-            'trader_name': user['username'],
-            'profile_image_url': user.get('profile_image_url', 'https://via.placeholder.com/180'),
-            'professional_title': user.get('professional_title', 'VIP会员'),
-            # 你可以根据users表结构补充更多字段
-        } if user else None
-        return render_template('vip.html', trader_info=trader_info)
+        # 从Supabase获取用户信息
+        response = supabase.table('users').select('*').eq('username', session['username']).execute()
+        
+        if response.data:
+            user = response.data[0]
+            trader_info = {
+                'trader_name': user['username'],
+                'membership_level': user.get('membership_level', 'VIP会员'),
+                'trading_volume': user.get('trading_volume', 0),
+                'profile_image_url': 'https://via.placeholder.com/180'
+            }
+        else:
+            trader_info = {
+                'trader_name': session['username'],
+                'membership_level': 'VIP会员',
+                'trading_volume': 0,
+                'profile_image_url': 'https://via.placeholder.com/180'
+            }
     else:
-        # 未登录，不传trader_info，只渲染登录入口
-        return render_template('vip.html')
+        # 未登录用户的默认信息
+        trader_info = {
+            'membership_level': 'VIP会员',
+            'trading_volume': 0,
+            'profile_image_url': 'https://via.placeholder.com/180'
+        }
+            
+    return render_template('vip.html', trader_info=trader_info)
 
 # --- 用户表自动建表 ---
 def init_user_db():
@@ -713,39 +747,308 @@ def init_user_db():
         CREATE TABLE IF NOT EXISTS users (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             username TEXT UNIQUE NOT NULL,
-            password TEXT NOT NULL
+            password_hash TEXT NOT NULL,
+            email TEXT UNIQUE,
+            status TEXT DEFAULT 'active',
+            role TEXT DEFAULT 'user',
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            last_login TIMESTAMP,
+            last_login_ip TEXT,
+            last_login_location TEXT,
+            membership_level TEXT DEFAULT '普通会员'
         )
     ''')
     conn.commit()
     conn.close()
 
-init_user_db()
+# --- 会员等级表自动建表 ---
+def init_membership_levels_db():
+    conn = sqlite3.connect('users.db')
+    c = conn.cursor()
+    c.execute('''
+        CREATE TABLE IF NOT EXISTS membership_levels (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT NOT NULL,
+            level INTEGER NOT NULL,
+            min_trading_volume DECIMAL(10,2) NOT NULL,
+            benefits TEXT NOT NULL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    ''')
+    
+    # 插入默认会员等级
+    default_levels = [
+        ('普通会员', 1, 0.00, '基础交易工具,标准市场分析,社区访问,标准支持'),
+        ('黄金会员', 2, 50000.00, '高级交易工具,实时市场分析,优先支持,VIP社区访问,交易策略分享'),
+        ('钻石会员', 3, 200000.00, '所有黄金会员权益,个人交易顾问,定制策略开发,新功能优先体验,专属交易活动'),
+        ('至尊黑卡', 4, 1000000.00, '所有钻石会员权益,24/7专属交易顾问,AI量化策略定制,全球金融峰会邀请,专属投资机会,一对一交易指导')
+    ]
+    
+    c.execute('SELECT COUNT(*) FROM membership_levels')
+    if c.fetchone()[0] == 0:
+        c.executemany('''
+            INSERT INTO membership_levels (name, level, min_trading_volume, benefits)
+            VALUES (?, ?, ?, ?)
+        ''', default_levels)
+    
+    conn.commit()
+    conn.close()
+
+# --- 用户会员等级关联表自动建表 ---
+def init_user_membership_db():
+    conn = sqlite3.connect('users.db')
+    c = conn.cursor()
+    c.execute('''
+        CREATE TABLE IF NOT EXISTS user_membership (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL,
+            level_id INTEGER NOT NULL,
+            assigned_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (user_id) REFERENCES users (id),
+            FOREIGN KEY (level_id) REFERENCES membership_levels (id)
+        )
+    ''')
+    conn.commit()
+    conn.close()
+
+# --- 会员等级分配API ---
+@app.route('/api/admin/assign-membership', methods=['POST'])
+def assign_membership():
+    try:
+        # 检查管理员权限
+        if 'role' not in session or session['role'] != 'admin':
+            print("权限检查失败：不是管理员")
+            return jsonify({'success': False, 'message': '无权限访问'}), 403
+            
+        data = request.get_json()
+        if not data.get('user_id'):
+            print("缺少用户ID")
+            return jsonify({'success': False, 'message': '缺少用户ID'}), 400
+
+        # 根据level_id获取会员等级名称
+        membership_levels = {
+            '1': '普通会员',
+            '2': '黄金会员',
+            '3': '钻石会员',
+            '4': '至尊黑卡'
+        }
+        
+        level_name = membership_levels.get(str(data.get('level_id')))
+        if not level_name:
+            print(f"无效的会员等级ID: {data.get('level_id')}")
+            return jsonify({'success': False, 'message': '无效的会员等级'}), 400
+
+        print(f"准备更新用户 {data['user_id']} 的会员等级为 {level_name}")
+        
+        # 直接更新users表
+        response = supabase.table('users').update({
+            'membership_level': level_name
+        }).eq('id', data['user_id']).execute()
+        
+        if not response.data:
+            print("更新失败，未找到用户")
+            return jsonify({'success': False, 'message': '用户不存在'}), 404
+            
+        print("会员等级更新成功")
+        return jsonify({'success': True, 'message': '会员等级分配成功'})
+        
+    except Exception as e:
+        print(f"分配会员等级时发生错误: {str(e)}")
+        return jsonify({'success': False, 'message': f'操作失败: {str(e)}'}), 500
+
+# --- 获取用户会员等级信息 ---
+@app.route('/api/user/membership', methods=['GET'])
+def get_user_membership():
+    try:
+        if 'user_id' not in session:
+            return jsonify({'success': False, 'message': '请先登录'}), 401
+            
+        conn = sqlite3.connect('users.db')
+        c = conn.cursor()
+        
+        # 获取用户的会员等级信息
+        c.execute('''
+            SELECT m.name, m.level, m.benefits
+            FROM user_membership um
+            JOIN membership_levels m ON um.level_id = m.id
+            WHERE um.user_id = ?
+        ''', (session['user_id'],))
+        
+        membership = c.fetchone()
+        conn.close()
+        
+        if membership:
+            return jsonify({
+                'success': True,
+                'membership': {
+                    'name': membership[0],
+                    'level': membership[1],
+                    'benefits': membership[2]
+                }
+            })
+        else:
+            return jsonify({
+                'success': True,
+                'membership': None
+            })
+            
+    except Exception as e:
+        print(f"Get user membership error: {str(e)}")
+        return jsonify({'success': False, 'message': '获取会员信息失败'}), 500
+
+# --- 会员等级管理API ---
+@app.route('/api/admin/membership-levels', methods=['GET', 'POST', 'PUT', 'DELETE'])
+def manage_membership_levels():
+    try:
+        # 检查管理员权限
+        if 'role' not in session or session['role'] != 'admin':
+            return jsonify({'success': False, 'message': '无权限访问'}), 403
+            
+        if request.method == 'GET':
+            # 获取所有会员等级
+            conn = sqlite3.connect('users.db')
+            c = conn.cursor()
+            c.execute('SELECT * FROM membership_levels ORDER BY level')
+            levels = []
+            for row in c.fetchall():
+                levels.append({
+                    'id': row[0],
+                    'name': row[1],
+                    'level': row[2],
+                    'min_trading_volume': row[3],
+                    'benefits': row[4],
+                    'created_at': row[5]
+                })
+            conn.close()
+            return jsonify({'success': True, 'levels': levels})
+            
+        elif request.method == 'POST':
+            # 创建新会员等级
+            data = request.get_json()
+            required_fields = ['name', 'level', 'min_trading_volume', 'benefits']
+            
+            if not all(field in data for field in required_fields):
+                return jsonify({'success': False, 'message': '缺少必要字段'}), 400
+                
+            conn = sqlite3.connect('users.db')
+            c = conn.cursor()
+            c.execute('''
+                INSERT INTO membership_levels (name, level, min_trading_volume, benefits)
+                VALUES (?, ?, ?, ?)
+            ''', (data['name'], data['level'], data['min_trading_volume'], data['benefits']))
+            conn.commit()
+            conn.close()
+            
+            return jsonify({'success': True, 'message': '会员等级创建成功'})
+            
+        elif request.method == 'PUT':
+            # 更新会员等级
+            data = request.get_json()
+            required_fields = ['id', 'name', 'level', 'min_trading_volume', 'benefits']
+            
+            if not all(field in data for field in required_fields):
+                return jsonify({'success': False, 'message': '缺少必要字段'}), 400
+                
+            conn = sqlite3.connect('users.db')
+            c = conn.cursor()
+            c.execute('''
+                UPDATE membership_levels
+                SET name = ?, level = ?, min_trading_volume = ?, benefits = ?
+                WHERE id = ?
+            ''', (data['name'], data['level'], data['min_trading_volume'], data['benefits'], data['id']))
+            conn.commit()
+            conn.close()
+            
+            return jsonify({'success': True, 'message': '会员等级更新成功'})
+            
+        elif request.method == 'DELETE':
+            # 删除会员等级
+            level_id = request.args.get('id')
+            if not level_id:
+                return jsonify({'success': False, 'message': '缺少会员等级ID'}), 400
+                
+            conn = sqlite3.connect('users.db')
+            c = conn.cursor()
+            c.execute('DELETE FROM membership_levels WHERE id = ?', (level_id,))
+            conn.commit()
+            conn.close()
+            
+            return jsonify({'success': True, 'message': '会员等级删除成功'})
+            
+    except Exception as e:
+        print(f"Manage membership levels error: {str(e)}")
+        return jsonify({'success': False, 'message': '操作失败'}), 500
 
 # --- 登录接口（Supabase版） ---
-@app.route('/login', methods=['POST'])
+@app.route('/api/login', methods=['POST'])
 def login():
-    data = request.get_json() or request.form
-    username = data.get('username')
-    password = data.get('password')
-    if not username or not password:
-        return jsonify({'success': False, 'message': '请输入账号和密码'}), 400
-    # 用Supabase校验账号密码（查password_hash字段）
-    response = supabase.table('users').select('*').eq('username', username).eq('password_hash', password).execute()
-    print('Login debug:', username, password)  # 新增调试输出
-    print('Supabase response:', response.data)  # 新增调试输出
-    user = response.data[0] if response.data else None
-    if user:
-        session['user_id'] = user.get('id') or user.get('uuid')
-        session['username'] = username
-        return jsonify({'success': True, 'message': '登录成功'})
-    else:
-        return jsonify({'success': False, 'message': '账号或密码错误'}), 401
+    try:
+        data = request.get_json()
+        username = data.get('username')
+        password = data.get('password')
+        
+        # 从Supabase获取用户信息
+        response = supabase.table('users').select('*').eq('username', username).execute()
+        
+        if not response.data:
+            return jsonify({'success': False, 'message': '用户名或密码错误'}), 401
+            
+        user = response.data[0]
+        
+        # TODO: 在实际应用中应该进行密码验证
+        # 这里简化处理，直接验证密码是否匹配
+        if password != user.get('password_hash'):  # 实际应用中应该使用proper密码验证
+            return jsonify({'success': False, 'message': '用户名或密码错误'}), 401
+            
+        if user.get('status') != 'active':
+            return jsonify({'success': False, 'message': '账号已被禁用'}), 403
+            
+        # 获取IP和地址信息
+        ip_address = request.remote_addr
+        try:
+            response = requests.get(f'https://ipinfo.io/{ip_address}/json')
+            location_data = response.json()
+            location = f"{location_data.get('city', '')}, {location_data.get('region', '')}, {location_data.get('country', '')}"
+        except:
+            location = '未知位置'
+            
+        # 更新用户登录信息
+        supabase.table('users').update({
+            'last_login': datetime.now(pytz.UTC).isoformat(),
+            'last_login_ip': ip_address,
+            'last_login_location': location
+        }).eq('id', user['id']).execute()
+        
+        # 设置session
+        session['user_id'] = user['id']
+        session['username'] = user['username']
+        session['role'] = user.get('role', 'user')
+        
+        return jsonify({
+            'success': True,
+            'message': '登录成功',
+            'user': {
+                'id': user['id'],
+                'username': user['username'],
+                'role': user.get('role', 'user'),
+                'membership_level': user.get('membership_level', '普通会员')
+            }
+        })
+        
+    except Exception as e:
+        print(f"Login error: {str(e)}")
+        return jsonify({'success': False, 'message': '登录失败'}), 500
 
 # --- 登出接口 ---
-@app.route('/logout')
+@app.route('/api/logout', methods=['POST'])
 def logout():
-    session.clear()
-    return redirect(url_for('vip'))
+    try:
+        # 清除session
+        session.clear()
+        return jsonify({'success': True, 'message': '已成功登出'})
+    except Exception as e:
+        print(f"Logout error: {str(e)}")
+        return jsonify({'success': False, 'message': '登出失败'}), 500
 
 def update_holding_stocks_prices():
     """更新所有持有中股票的实时价格"""
@@ -801,5 +1104,284 @@ scheduler.add_job(
     replace_existing=True
 )
 
+@app.route('/api/check-login', methods=['GET'])
+def check_login():
+    try:
+        if 'user_id' in session:
+            # 获取用户信息
+            response = supabase.table('users').select('*').eq('id', session['user_id']).execute()
+            if response.data:
+                user = response.data[0]
+                return jsonify({
+                    'isLoggedIn': True,
+                    'user': {
+                        'id': user['id'],
+                        'username': user['username'],
+                        'role': user.get('role', 'user'),
+                        'email': user.get('email'),
+                        'avatar_url': user.get('avatar_url')
+                    }
+                })
+        
+        return jsonify({'isLoggedIn': False})
+    except Exception as e:
+        print(f"Check login error: {str(e)}")
+        return jsonify({'isLoggedIn': False}), 500
+
+# --- 管理员接口 ---
+@app.route('/api/admin/users', methods=['GET', 'POST'])
+def manage_users():
+    try:
+        # 检查管理员权限
+        if 'role' not in session or session['role'] != 'admin':
+            return jsonify({'success': False, 'message': '无权限访问'}), 403
+            
+        if request.method == 'GET':
+            # 获取所有用户
+            response = supabase.table('users').select('*').execute()
+            
+            # 过滤敏感信息
+            users = []
+            for user in response.data:
+                users.append({
+                    'id': user['id'],
+                    'username': user['username'],
+                    'email': user.get('email'),
+                    'role': user.get('role', 'user'),
+                    'status': user.get('status', 'active'),
+                    'membership_level': user.get('membership_level', '普通会员'),
+                    'last_login': user.get('last_login'),
+                    'last_login_ip': user.get('last_login_ip'),
+                    'last_login_location': user.get('last_login_location'),
+                    'created_at': user.get('created_at')
+                })
+                
+            return jsonify({
+                'success': True,
+                'users': users
+            })
+            
+        elif request.method == 'POST':
+            # 创建新用户
+            data = request.get_json()
+            
+            # 检查必要字段
+            if not data.get('username') or not data.get('password'):
+                return jsonify({'success': False, 'message': '用户名和密码是必填项'}), 400
+                
+            # 检查用户名是否已存在
+            check_response = supabase.table('users').select('id').eq('username', data['username']).execute()
+            if check_response.data:
+                return jsonify({'success': False, 'message': '用户名已存在'}), 400
+                
+            # 创建新用户
+            new_user = {
+                'username': data['username'],
+                'password_hash': data['password'],  # 在实际应用中应该对密码进行加密
+                'email': data.get('email'),
+                'role': data.get('role', 'user'),
+                'status': 'active',
+                'membership_level': '普通会员',
+                'created_at': datetime.now(pytz.UTC).isoformat()
+            }
+            
+            response = supabase.table('users').insert(new_user).execute()
+            
+            return jsonify({
+                'success': True,
+                'message': '用户创建成功',
+                'user_id': response.data[0]['id']
+            })
+            
+    except Exception as e:
+        print(f"Manage users error: {str(e)}")
+        return jsonify({'success': False, 'message': '操作失败'}), 500
+
+@app.route('/api/admin/users/<user_id>', methods=['PUT', 'DELETE'])
+def update_user(user_id):
+    try:
+        # 检查管理员权限
+        if 'role' not in session or session['role'] != 'admin':
+            return jsonify({'success': False, 'message': '无权限访问'}), 403
+            
+        if request.method == 'PUT':
+            data = request.get_json()
+            
+            # 只允许更新特定字段
+            allowed_fields = ['status', 'role', 'password_hash']
+            update_data = {k: v for k, v in data.items() if k in allowed_fields}
+            
+            if not update_data:
+                return jsonify({'success': False, 'message': '没有可更新的字段'}), 400
+                
+            # 更新用户信息
+            response = supabase.table('users').update(update_data).eq('id', user_id).execute()
+            
+            if not response.data:
+                return jsonify({'success': False, 'message': '用户不存在'}), 404
+                
+            return jsonify({
+                'success': True,
+                'message': '更新成功'
+            })
+            
+        elif request.method == 'DELETE':
+            # 软删除用户（更新状态为inactive）
+            response = supabase.table('users').update({
+                'status': 'inactive',
+                'deleted_at': datetime.now(pytz.UTC).isoformat()
+            }).eq('id', user_id).execute()
+            
+            if not response.data:
+                return jsonify({'success': False, 'message': '用户不存在'}), 404
+                
+            return jsonify({
+                'success': True,
+                'message': '用户已禁用'
+            })
+            
+    except Exception as e:
+        print(f"Update user error: {str(e)}")
+        return jsonify({'success': False, 'message': '操作失败'}), 500
+
+@app.route('/api/admin/users/batch', methods=['POST'])
+def batch_update_users():
+    try:
+        # 检查管理员权限
+        if 'role' not in session or session['role'] != 'admin':
+            return jsonify({'success': False, 'message': '无权限访问'}), 403
+            
+        data = request.get_json()
+        user_ids = data.get('user_ids', [])
+        action = data.get('action')  # 'activate' 或 'deactivate'
+        
+        if not user_ids or action not in ['activate', 'deactivate']:
+            return jsonify({'success': False, 'message': '参数错误'}), 400
+            
+        # 批量更新用户状态
+        status = 'active' if action == 'activate' else 'inactive'
+        response = supabase.table('users').update({
+            'status': status
+        }).in_('id', user_ids).execute()
+        
+        return jsonify({
+            'success': True,
+            'message': f'已{action} {len(response.data)} 个用户'
+        })
+        
+    except Exception as e:
+        print(f"Batch update error: {str(e)}")
+        return jsonify({'success': False, 'message': '批量操作失败'}), 500
+
+@app.route('/api/admin/logs', methods=['GET'])
+def get_login_logs():
+    try:
+        # 检查管理员权限
+        if 'role' not in session or session['role'] != 'admin':
+            return jsonify({'success': False, 'message': '无权限访问'}), 403
+            
+        # 获取最近100条登录记录
+        response = supabase.table('users').select('username, last_login, status').order('last_login', desc=True).limit(100).execute()
+        
+        return jsonify({
+            'success': True,
+            'logs': response.data
+        })
+        
+    except Exception as e:
+        print(f"Get logs error: {str(e)}")
+        return jsonify({'success': False, 'message': '获取日志失败'}), 500
+
+# --- 测试路由 ---
+@app.route('/test/login', methods=['GET'])
+def test_login():
+    test_cases = [
+        {
+            'name': '正常登录',
+            'data': {'username': 'admin', 'password': '123456'},
+            'expected': {'success': True, 'message': '登录成功'}
+        },
+        {
+            'name': '缺少用户名',
+            'data': {'password': '123456'},
+            'expected': {'success': False, 'message': '请输入账号和密码'}
+        },
+        {
+            'name': '缺少密码',
+            'data': {'username': 'admin'},
+            'expected': {'success': False, 'message': '请输入账号和密码'}
+        },
+        {
+            'name': '错误密码',
+            'data': {'username': 'admin', 'password': 'wrong_password'},
+            'expected': {'success': False, 'message': '密码错误'}
+        },
+        {
+            'name': '不存在的用户',
+            'data': {'username': 'non_existent_user', 'password': '123456'},
+            'expected': {'success': False, 'message': '账号不存在'}
+        }
+    ]
+    
+    results = []
+    for test in test_cases:
+        try:
+            # 创建测试请求
+            with app.test_request_context('/api/login', method='POST', json=test['data']):
+                # 调用登录函数
+                response = login()
+                # 如果response是元组，取第一个元素（JSON响应）
+                if isinstance(response, tuple):
+                    data = response[0].get_json()
+                else:
+                    data = response.get_json()
+                
+                # 检查结果
+                passed = (
+                    data['success'] == test['expected']['success'] and
+                    data['message'] == test['expected']['message']
+                )
+                
+                results.append({
+                    'test_case': test['name'],
+                    'passed': passed,
+                    'expected': test['expected'],
+                    'actual': data
+                })
+        except Exception as e:
+            results.append({
+                'test_case': test['name'],
+                'passed': False,
+                'error': str(e),
+                'expected': test['expected'],
+                'actual': '测试执行出错'
+            })
+    
+    return render_template('test_results.html', results=results)
+
+# --- 管理后台路由 ---
+@app.route('/admin')
+def admin_dashboard():
+    print(f"Current session: {dict(session)}")  # Debug info
+    
+    # Check if user is logged in
+    if 'user_id' not in session:
+        print("No user_id in session")  # Debug info
+        return redirect(url_for('vip'))
+        
+    # Check if user is admin
+    if session.get('role') != 'admin':
+        print(f"User role is not admin: {session.get('role')}")  # Debug info
+        return redirect(url_for('vip'))
+    
+    # User is admin, render dashboard
+    return render_template('admin/dashboard.html', admin_name=session.get('username', 'Admin'))
+
 if __name__ == '__main__':
+    # 初始化数据库
+    init_user_db()
+    init_membership_levels_db()
+    init_user_membership_db()
+    
+    # 启动应用
     app.run(debug=True) 
