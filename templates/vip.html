@@ -61,7 +61,7 @@
             align-items: center;
             max-width: 1400px;
             margin: 0 auto;
-            padding: 0 2rem;
+            padding: 0 1rem;
         }
 
         .nav-left {
@@ -94,18 +94,17 @@
         }
 
         .btn-login {
-            background: linear-gradient(90deg, #ffd700 0%, #b8860b 100%);
+            background: #ffd700;
             color: #000;
             border: none;
-            padding: 0.5rem 1.5rem;
-            border-radius: 50px;
-            font-weight: 600;
+            padding: 0.25rem 0.75rem;
+            border-radius: 4px;
+            font-size: 0.9rem;
             transition: all 0.3s ease;
         }
 
         .btn-login:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(255, 215, 0, 0.2);
+            background: #b8860b;
             color: #000;
         }
 
@@ -113,15 +112,17 @@
             background: transparent;
             color: #fff;
             border: 1px solid rgba(255, 255, 255, 0.2);
-            padding: 0.5rem 1.5rem;
-            border-radius: 50px;
-            font-weight: 600;
+            padding: 0.25rem 0.75rem;
+            border-radius: 4px;
+            font-size: 0.9rem;
             transition: all 0.3s ease;
+            text-decoration: none;
         }
 
         .btn-back:hover {
             background: rgba(255, 255, 255, 0.1);
             color: #fff;
+            text-decoration: none;
         }
 
         .modal-content {
@@ -576,6 +577,18 @@
         }
 
         @media (max-width: 768px) {
+            .nav-content {
+                padding: 0 0.75rem;
+            }
+            
+            .nav-center {
+                display: none !important;
+            }
+
+            .btn-back, .btn-login {
+                padding: 0.25rem 0.5rem;
+            }
+
             .membership-card-wrapper {
                 flex: 0 0 100%;
                 max-width: 100%;
@@ -700,17 +713,17 @@
     <nav class="top-nav">
         <div class="nav-content">
             <div class="nav-left">
-                <button class="btn btn-back" onclick="history.back()">
-                    <i class="bi bi-arrow-left me-2"></i>返回
-                </button>
+                <a href="/" class="btn btn-back">
+                    <i class="bi bi-arrow-left me-1"></i>Back to Home
+                </a>
             </div>
-            <div class="nav-center">
+            <div class="nav-center d-none d-md-flex">
                 <i class="bi bi-graph-up header-icon"></i>
                 <h1 class="header-title">Tastylive Internal Performance Battle Rankings</h1>
             </div>
             <div class="nav-right">
                 <button class="btn btn-login" data-bs-toggle="modal" data-bs-target="#loginModal">
-                    <i class="bi bi-person-fill me-2"></i>登录
+                    <i class="bi bi-person-fill me-1"></i>Login
                 </button>
             </div>
         </div>
@@ -721,20 +734,20 @@
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title" id="loginModalLabel">用户登录</h5>
+                    <h5 class="modal-title" id="loginModalLabel">User Login</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
                     <form id="loginForm">
                         <div class="mb-3">
-                            <label for="username" class="form-label">用户名</label>
-                            <input type="text" class="form-control" id="username" placeholder="请输入用户名">
+                            <label for="username" class="form-label">Username</label>
+                            <input type="text" class="form-control" id="username" placeholder="Enter your username">
                         </div>
                         <div class="mb-3">
-                            <label for="password" class="form-label">密码</label>
-                            <input type="password" class="form-control" id="password" placeholder="请输入密码">
+                            <label for="password" class="form-label">Password</label>
+                            <input type="password" class="form-control" id="password" placeholder="Enter your password">
                         </div>
-                        <button type="submit" class="btn btn-submit">登录</button>
+                        <button type="submit" class="btn btn-submit">Login</button>
                     </form>
                 </div>
             </div>
@@ -745,19 +758,19 @@
     <div class="vip-header text-center">
         <div class="container">
             {% if 'username' in session %}
-                {% if trader_info.membership_level == '普通会员' %}
+                {% if trader_info.membership_level == 'Regular Member' %}
                     <div class="vip-title regular">
                         <h1 class="display-4">Dear VIP Member</h1>
                     </div>
-                {% elif trader_info.membership_level == '黄金会员' %}
+                {% elif trader_info.membership_level == 'Gold Member' %}
                     <div class="vip-title gold">
                         <h1 class="display-4">Esteemed Gold Member</h1>
                     </div>
-                {% elif trader_info.membership_level == '钻石会员' %}
+                {% elif trader_info.membership_level == 'Diamond Member' %}
                     <div class="vip-title diamond">
                         <h1 class="display-4">Distinguished Diamond Member</h1>
                     </div>
-                {% elif trader_info.membership_level == '至尊黑卡' %}
+                {% elif trader_info.membership_level == 'Supreme Black Card' %}
                     <div class="vip-title supreme">
                         <h1 class="display-4">Exalted Black Card Member</h1>
                     </div>
@@ -780,7 +793,7 @@
                     <div class="col-md-3">
                         <div class="current-level">
                             <i class="bi bi-star-fill"></i>
-                            <h4 class="text-white mb-0" style="font-size: 1rem;">当前等级</h4>
+                            <h4 class="text-white mb-0" style="font-size: 1rem;">Current Level</h4>
                             <p class="text-gold mb-0">{{ trader_info.membership_level }}</p>
                         </div>
                     </div>
@@ -788,14 +801,14 @@
                         <div class="progress-bar-wrapper">
                             <div class="progress">
                                 {% set target_amount = {
-                                    'VIP会员': 50000,
-                                    '黄金会员': 200000,
-                                    '钻石会员': 1000000
+                                    'Regular Member': 50000,
+                                    'Gold Member': 200000,
+                                    'Diamond Member': 1000000
                                 } %}
                                 {% set next_level = {
-                                    'VIP会员': '黄金会员',
-                                    '黄金会员': '钻石会员',
-                                    '钻石会员': '至尊黑卡'
+                                    'Regular Member': 'Gold Member',
+                                    'Gold Member': 'Diamond Member',
+                                    'Diamond Member': 'Supreme Black Card'
                                 } %}
                                 {% set current_target = target_amount[trader_info.membership_level]|default(50000) %}
                                 {% set progress = ((trader_info.trading_volume|default(0) / current_target * 100)|round|int if current_target > 0 else 0) %}
@@ -808,15 +821,15 @@
                             </div>
                             <div class="progress-labels d-flex justify-content-between">
                                 <span>${{ "{:,.0f}".format(trader_info.trading_volume|default(0)) }} / ${{ "{:,.0f}".format(current_target) }}</span>
-                                <span class="text-gold">下一等级: {{ next_level[trader_info.membership_level]|default('黄金会员') }}</span>
+                                <span class="text-gold">Next Level: {{ next_level[trader_info.membership_level]|default('Gold Member') }}</span>
                             </div>
                         </div>
                     </div>
                     <div class="col-md-3">
                         <div class="next-milestone">
                             <i class="bi bi-crown-fill"></i>
-                            <h4 class="text-white mb-0" style="font-size: 1rem;">下一等级</h4>
-                            <p class="text-gold mb-0">{{ next_level[trader_info.membership_level]|default('黄金会员') }}</p>
+                            <h4 class="text-white mb-0" style="font-size: 1rem;">Next Level</h4>
+                            <p class="text-gold mb-0">{{ next_level[trader_info.membership_level]|default('Gold Member') }}</p>
                         </div>
                     </div>
                 </div>
@@ -829,7 +842,7 @@
             <div class="membership-card-wrapper">
                 <div class="membership-card text-center">
                     <i class="bi bi-star-fill card-icon"></i>
-                    <h3>{% if 'username' in session %}普通会员{% else %}Regular Member{% endif %}</h3>
+                    <h3>{% if 'username' in session %}Regular Member{% else %}Regular Member{% endif %}</h3>
                     <div class="card-requirement">Trading Volume < $50,000</div>
                     <ul class="feature-list">
                         <li><i class="bi bi-check-circle-fill"></i> Basic Trading Tools</li>
@@ -848,7 +861,7 @@
                 <div class="membership-card premium text-center">
                     <span class="vip-badge">Current Popular</span>
                     <i class="bi bi-crown-fill card-icon"></i>
-                    <h3>{% if 'username' in session %}黄金会员{% else %}Gold Member{% endif %}</h3>
+                    <h3>{% if 'username' in session %}Gold Member{% else %}Gold Member{% endif %}</h3>
                     <div class="card-requirement">Trading Volume > $50,000</div>
                     <ul class="feature-list">
                         <li><i class="bi bi-check-circle-fill"></i> Advanced Trading Tools</li>
@@ -867,7 +880,7 @@
             <div class="membership-card-wrapper">
                 <div class="membership-card diamond text-center">
                     <i class="bi bi-gem-fill card-icon"></i>
-                    <h3>{% if 'username' in session %}钻石会员{% else %}Diamond Member{% endif %}</h3>
+                    <h3>{% if 'username' in session %}Diamond Member{% else %}Diamond Member{% endif %}</h3>
                     <div class="card-requirement">Trading Volume > $200,000</div>
                     <ul class="feature-list">
                         <li><i class="bi bi-check-circle-fill"></i> All Gold Features</li>
@@ -887,7 +900,7 @@
                 <div class="membership-card supreme text-center">
                     <span class="vip-badge" style="background: linear-gradient(90deg, #000 0%, #333 100%);">SUPREME</span>
                     <i class="bi bi-credit-card-fill card-icon"></i>
-                    <h3>{% if 'username' in session %}至尊黑卡{% else %}Supreme Black Card{% endif %}</h3>
+                    <h3>{% if 'username' in session %}Supreme Black Card{% else %}Supreme Black Card{% endif %}</h3>
                     <div class="card-requirement">Trading Volume > $1,000,000</div>
                     <ul class="feature-list">
                         <li><i class="bi bi-check-circle-fill"></i> All Diamond Features</li>
@@ -970,12 +983,12 @@
                     window.location.reload();
                 } else {
                     // 登录失败
-                    alert(data.message || '登录失败，请检查用户名和密码');
+                    alert(data.message || 'Login failed. Please check your username and password.');
                 }
             })
             .catch(error => {
                 console.error('Login error:', error);
-                alert('登录过程中发生错误，请稍后重试');
+                alert('An error occurred during login. Please try again later.');
             });
         });
 
@@ -993,12 +1006,12 @@
                     // 登出成功后立即刷新页面
                     window.location.reload();
                 } else {
-                    showToast('登出失败', 'error');
+                    showToast('Logout failed', 'error');
                 }
             })
             .catch(error => {
                 console.error('Logout error:', error);
-                showToast('登出过程中发生错误', 'error');
+                showToast('An error occurred during logout', 'error');
             });
         }
 
