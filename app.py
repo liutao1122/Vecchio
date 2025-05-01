@@ -1362,20 +1362,175 @@ def test_login():
 # --- 管理后台路由 ---
 @app.route('/admin')
 def admin_dashboard():
-    print(f"Current session: {dict(session)}")  # Debug info
-    
-    # Check if user is logged in
     if 'user_id' not in session:
-        print("No user_id in session")  # Debug info
         return redirect(url_for('vip'))
         
-    # Check if user is admin
     if session.get('role') != 'admin':
-        print(f"User role is not admin: {session.get('role')}")  # Debug info
         return redirect(url_for('vip'))
     
-    # User is admin, render dashboard
     return render_template('admin/dashboard.html', admin_name=session.get('username', 'Admin'))
+
+# --- 交易策略管理路由 ---
+@app.route('/admin/strategy')
+def admin_strategy():
+    if 'user_id' not in session or session.get('role') != 'admin':
+        return redirect(url_for('vip'))
+    return render_template('admin/strategy.html', admin_name=session.get('username', 'Admin'))
+
+# --- 策略管理API ---
+@app.route('/api/admin/strategy', methods=['GET', 'POST', 'DELETE'])
+def manage_strategy():
+    try:
+        # 检查管理员权限
+        if 'role' not in session or session['role'] != 'admin':
+            return jsonify({'success': False, 'message': '无权限访问'}), 403
+            
+        if request.method == 'GET':
+            # 获取最新的交易策略
+            strategy_response = supabase.table('trading_strategies').select("*").order('updated_at', desc=True).limit(1).execute()
+            
+            if strategy_response.data:
+                strategy = strategy_response.data[0]
+                # 确保 trading_focus 是列表格式
+                trading_focus = strategy['trading_focus']
+                if isinstance(trading_focus, str):
+                    try:
+                        trading_focus = json.loads(trading_focus)
+                    except:
+                        trading_focus = [trading_focus]
+                        
+                return jsonify({
+                    'success': True,
+                    'strategy': {
+                        'id': strategy['id'],
+                        'market_analysis': strategy['market_analysis'],
+                        'trading_focus': trading_focus,
+                        'risk_warning': strategy['risk_warning'],
+                        'updated_at': strategy['updated_at']
+                    }
+                })
+            return jsonify({'success': True, 'strategy': None})
+            
+        elif request.method == 'POST':
+            # 创建新策略
+            data = request.get_json()
+            required_fields = ['market_analysis', 'trading_focus', 'risk_warning']
+            
+            if not all(field in data for field in required_fields):
+                return jsonify({'success': False, 'message': '缺少必要字段'}), 400
+                
+            # 确保 trading_focus 是列表格式
+            trading_focus = data['trading_focus']
+            if isinstance(trading_focus, str):
+                try:
+                    trading_focus = json.loads(trading_focus)
+                except:
+                    trading_focus = [trading_focus]
+                    
+            # 插入新策略
+            strategy_data = {
+                'market_analysis': data['market_analysis'],
+                'trading_focus': trading_focus,
+                'risk_warning': data['risk_warning'],
+                'updated_at': datetime.now(pytz.UTC).isoformat()
+            }
+            
+            try:
+                response = supabase.table('trading_strategies').insert(strategy_data).execute()
+                
+                if not response.data:
+                    return jsonify({'success': False, 'message': '创建失败'}), 500
+                    
+                return jsonify({'success': True, 'message': '策略保存成功'})
+            except Exception as e:
+                print(f"Error creating strategy: {str(e)}")
+                return jsonify({'success': False, 'message': f'创建失败: {str(e)}'}), 500
+            
+        elif request.method == 'DELETE':
+            strategy_id = request.args.get('id')
+            if not strategy_id:
+                return jsonify({'success': False, 'message': '缺少策略ID'}), 400
+                
+            response = supabase.table('trading_strategies').delete().eq('id', strategy_id).execute()
+            
+            if not response.data:
+                return jsonify({'success': False, 'message': '删除失败'}), 500
+                
+            return jsonify({'success': True, 'message': '策略删除成功'})
+            
+    except Exception as e:
+        print(f"Strategy management error: {str(e)}")
+        return jsonify({'success': False, 'message': '操作失败'}), 500
+
+@app.route('/api/admin/strategy/history', methods=['GET'])
+def get_strategy_history():
+    try:
+        # 检查管理员权限
+        if 'role' not in session or session['role'] != 'admin':
+            return jsonify({'success': False, 'message': '无权限访问'}), 403
+            
+        # 从 Supabase 获取所有策略记录，按时间倒序排列
+        response = supabase.table('trading_strategies').select("*").order('updated_at', desc=True).execute()
+        
+        if not response.data:
+            return jsonify({
+                'success': True,
+                'history': []
+            })
+        
+        history = []
+        for record in response.data:
+            # 确保 trading_focus 是列表格式
+            trading_focus = record['trading_focus']
+            if isinstance(trading_focus, str):
+                try:
+                    trading_focus = json.loads(trading_focus)
+                except:
+                    trading_focus = [trading_focus]
+                    
+            history.append({
+                'id': record['id'],
+                'market_analysis': record['market_analysis'],
+                'trading_focus': trading_focus,
+                'risk_warning': record['risk_warning'],
+                'modified_at': record['updated_at'],
+                'modified_by': 'admin'  # 暂时固定为admin
+            })
+            
+        return jsonify({
+            'success': True,
+            'history': history
+        })
+        
+    except Exception as e:
+        print(f"Get strategy history error: {str(e)}")
+        return jsonify({'success': False, 'message': '获取历史记录失败'}), 500
+
+@app.route('/admin/strategy/permissions')
+def strategy_permissions():
+    if 'role' not in session or session['role'] != 'admin':
+        return redirect(url_for('login'))
+    return render_template('admin/strategy_permissions.html', admin_name=session.get('username', 'Admin'))
+
+# --- 删除策略历史记录 ---
+@app.route('/api/admin/strategy/history/<int:history_id>', methods=['DELETE'])
+def delete_strategy_history(history_id):
+    try:
+        # 检查管理员权限
+        if 'role' not in session or session['role'] != 'admin':
+            return jsonify({'success': False, 'message': '无权限访问'}), 403
+            
+        # 从 Supabase 删除历史记录
+        response = supabase.table('strategy_history').delete().eq('id', history_id).execute()
+        
+        if not response.data:
+            return jsonify({'success': False, 'message': '删除失败，记录不存在'}), 404
+            
+        return jsonify({'success': True, 'message': '历史记录删除成功'})
+        
+    except Exception as e:
+        print(f"Delete strategy history error: {str(e)}")
+        return jsonify({'success': False, 'message': '删除失败'}), 500
 
 if __name__ == '__main__':
     # 初始化数据库

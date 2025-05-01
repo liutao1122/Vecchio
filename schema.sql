@@ -137,4 +137,98 @@ $$ language 'plpgsql';
 CREATE TRIGGER update_traders_updated_at
     BEFORE UPDATE ON traders
     FOR EACH ROW
-    EXECUTE FUNCTION update_updated_at_column(); 
+    EXECUTE FUNCTION update_updated_at_column();
+
+-- 创建用户表
+CREATE TABLE IF NOT EXISTS users (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    username TEXT UNIQUE NOT NULL,
+    password_hash TEXT NOT NULL,
+    email TEXT,
+    role TEXT DEFAULT 'user',
+    status TEXT DEFAULT 'active',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- 创建会员等级表
+CREATE TABLE IF NOT EXISTS membership_levels (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL,
+    level INTEGER NOT NULL,
+    min_trading_volume REAL NOT NULL,
+    benefits TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- 创建用户会员关系表
+CREATE TABLE IF NOT EXISTS user_membership (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL,
+    level_id INTEGER NOT NULL,
+    start_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    end_date TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users (id),
+    FOREIGN KEY (level_id) REFERENCES membership_levels (id)
+);
+
+-- 创建交易策略表
+CREATE TABLE IF NOT EXISTS trading_strategies (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    market_analysis TEXT NOT NULL,
+    trading_focus TEXT NOT NULL,
+    risk_warning TEXT NOT NULL,
+    created_by INTEGER NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    status TEXT DEFAULT 'active',
+    FOREIGN KEY (created_by) REFERENCES users (id)
+);
+
+-- 创建策略历史记录表
+CREATE TABLE IF NOT EXISTS strategy_history (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    strategy_id INTEGER NOT NULL,
+    market_analysis TEXT NOT NULL,
+    trading_focus TEXT NOT NULL,
+    risk_warning TEXT NOT NULL,
+    modified_by INTEGER NOT NULL,
+    modified_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (strategy_id) REFERENCES trading_strategies (id),
+    FOREIGN KEY (modified_by) REFERENCES users (id)
+);
+
+-- 创建策略权限表
+CREATE TABLE IF NOT EXISTS strategy_permissions (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL,
+    can_create BOOLEAN DEFAULT FALSE,
+    can_update BOOLEAN DEFAULT FALSE,
+    can_delete BOOLEAN DEFAULT FALSE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users (id)
+);
+
+-- 为管理员用户添加默认权限
+INSERT INTO strategy_permissions (user_id, can_create, can_update, can_delete)
+SELECT id, TRUE, TRUE, TRUE
+FROM users
+WHERE role = 'admin';
+
+-- 创建策略权限触发器
+CREATE TRIGGER IF NOT EXISTS check_strategy_permissions
+BEFORE INSERT OR UPDATE OR DELETE ON trading_strategies
+FOR EACH ROW
+BEGIN
+    SELECT CASE
+        WHEN NOT EXISTS (
+            SELECT 1 FROM strategy_permissions
+            WHERE user_id = NEW.created_by
+            AND (
+                (TG_OP = 'INSERT' AND can_create = TRUE) OR
+                (TG_OP = 'UPDATE' AND can_update = TRUE) OR
+                (TG_OP = 'DELETE' AND can_delete = TRUE)
+            )
+        )
+        THEN RAISE(ABORT, 'Permission denied')
+    END;
+END; 
