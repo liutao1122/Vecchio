@@ -25,14 +25,14 @@ INSERT INTO traders (
     likes_count
 ) VALUES 
     (
-        'Kathy Wilson',
+        'Tom Preston',
         'Senior Forex Trader',
-        'https://example.com/avatars/kathy.jpg',
-        258432.50,
+        'https://example.com/avatars/tom.jpg',
+        181172.00,
         1250,
         92.5,
         4521,
-        15678
+        25678
     ),
     (
         'Michael Chen',
