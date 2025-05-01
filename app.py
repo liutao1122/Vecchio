@@ -1532,6 +1532,293 @@ def delete_strategy_history(history_id):
         print(f"Delete strategy history error: {str(e)}")
         return jsonify({'success': False, 'message': '删除失败'}), 500
 
+# --- 股票交易管理路由 ---
+@app.route('/admin/trading')
+def admin_trading():
+    if 'user_id' not in session or session.get('role') != 'admin':
+        return redirect(url_for('vip'))
+    return render_template('admin/trading.html', admin_name=session.get('username', 'Admin'))
+
+# --- 股票交易管理API ---
+@app.route('/api/admin/trading', methods=['GET', 'POST', 'PUT', 'DELETE'])
+def manage_trading():
+    try:
+        # 检查管理员权限
+        if 'role' not in session or session['role'] != 'admin':
+            return jsonify({'success': False, 'message': '无权限访问'}), 403
+            
+        if request.method == 'GET':
+            # 获取所有交易记录
+            response = supabase.table('trades1').select("*").order('entry_date', desc=True).execute()
+            
+            trades = []
+            for trade in response.data:
+                trades.append({
+                    'id': trade['id'],
+                    'symbol': trade['symbol'],
+                    'entry_price': trade['entry_price'],
+                    'exit_price': trade.get('exit_price'),
+                    'size': trade['size'],
+                    'entry_date': trade['entry_date'],
+                    'exit_date': trade.get('exit_date'),
+                    'status': 'Closed' if trade.get('exit_price') else 'Active',
+                    'profit_amount': (trade.get('exit_price', 0) - trade['entry_price']) * trade['size'] if trade.get('exit_price') else 0
+                })
+                
+            return jsonify({
+                'success': True,
+                'trades': trades
+            })
+            
+        elif request.method == 'POST':
+            # 创建新交易记录
+            data = request.get_json()
+            required_fields = ['symbol', 'entry_price', 'size']
+            
+            if not all(field in data for field in required_fields):
+                return jsonify({'success': False, 'message': '缺少必要字段'}), 400
+                
+            trade_data = {
+                'symbol': data['symbol'],
+                'entry_price': data['entry_price'],
+                'size': data['size'],
+                'entry_date': datetime.now(pytz.UTC).isoformat(),
+                'current_price': data['entry_price']
+            }
+            
+            response = supabase.table('trades1').insert(trade_data).execute()
+            
+            return jsonify({
+                'success': True,
+                'message': '交易记录创建成功'
+            })
+            
+        elif request.method == 'PUT':
+            # 更新交易记录
+            data = request.get_json()
+            trade_id = data.get('id')
+            
+            if not trade_id:
+                return jsonify({'success': False, 'message': '缺少交易ID'}), 400
+                
+            update_data = {}
+            if 'exit_price' in data:
+                update_data['exit_price'] = data['exit_price']
+                update_data['exit_date'] = datetime.now(pytz.UTC).isoformat()
+                
+            if update_data:
+                response = supabase.table('trades1').update(update_data).eq('id', trade_id).execute()
+                
+            return jsonify({
+                'success': True,
+                'message': '交易记录更新成功'
+            })
+            
+        elif request.method == 'DELETE':
+            trade_id = request.args.get('id')
+            if not trade_id:
+                return jsonify({'success': False, 'message': '缺少交易ID'}), 400
+                
+            response = supabase.table('trades1').delete().eq('id', trade_id).execute()
+            
+            return jsonify({
+                'success': True,
+                'message': '交易记录删除成功'
+            })
+            
+    except Exception as e:
+        print(f"Trading management error: {str(e)}")
+        return jsonify({'success': False, 'message': '操作失败'}), 500
+
+# --- 排行榜管理路由 ---
+@app.route('/admin/leaderboard')
+def admin_leaderboard():
+    if 'user_id' not in session or session.get('role') != 'admin':
+        return redirect(url_for('vip'))
+    return render_template('admin/leaderboard.html', admin_name=session.get('username', 'Admin'))
+
+# --- 排行榜管理API ---
+@app.route('/api/admin/leaderboard', methods=['GET', 'POST', 'PUT', 'DELETE'])
+def manage_leaderboard():
+    try:
+        # 检查管理员权限
+        if 'role' not in session or session['role'] != 'admin':
+            return jsonify({'success': False, 'message': '无权限访问'}), 403
+            
+        if request.method == 'GET':
+            # 获取排行榜数据
+            response = supabase.table('leaderboard_traders').select("*").order('profit', desc=True).execute()
+            
+            return jsonify({
+                'success': True,
+                'leaderboard': response.data
+            })
+            
+        elif request.method == 'POST':
+            # 添加新的排行榜记录
+            data = request.get_json()
+            required_fields = ['user_id', 'profit', 'win_rate']
+            
+            if not all(field in data for field in required_fields):
+                return jsonify({'success': False, 'message': '缺少必要字段'}), 400
+                
+            leaderboard_data = {
+                'user_id': data['user_id'],
+                'profit': data['profit'],
+                'win_rate': data['win_rate'],
+                'updated_at': datetime.now(pytz.UTC).isoformat()
+            }
+            
+            response = supabase.table('leaderboard_traders').insert(leaderboard_data).execute()
+            
+            return jsonify({
+                'success': True,
+                'message': '排行榜记录添加成功'
+            })
+            
+        elif request.method == 'PUT':
+            # 更新排行榜记录
+            data = request.get_json()
+            record_id = data.get('id')
+            
+            if not record_id:
+                return jsonify({'success': False, 'message': '缺少记录ID'}), 400
+                
+            update_data = {
+                'profit': data.get('profit'),
+                'win_rate': data.get('win_rate'),
+                'updated_at': datetime.now(pytz.UTC).isoformat()
+            }
+            
+            response = supabase.table('leaderboard_traders').update(update_data).eq('id', record_id).execute()
+            
+            return jsonify({
+                'success': True,
+                'message': '排行榜记录更新成功'
+            })
+            
+        elif request.method == 'DELETE':
+            record_id = request.args.get('id')
+            if not record_id:
+                return jsonify({'success': False, 'message': '缺少记录ID'}), 400
+                
+            response = supabase.table('leaderboard_traders').delete().eq('id', record_id).execute()
+            
+            return jsonify({
+                'success': True,
+                'message': '排行榜记录删除成功'
+            })
+            
+    except Exception as e:
+        print(f"Leaderboard management error: {str(e)}")
+        return jsonify({'success': False, 'message': '操作失败'}), 500
+
+# --- 交易记录表自动建表 ---
+def init_trading_db():
+    try:
+        # 创建交易记录表
+        response = supabase.table('trades1').select("*").limit(1).execute()
+    except:
+        # 如果表不存在，创建表
+        supabase.table('trades1').create({
+            'id': 'uuid',
+            'symbol': 'text',
+            'entry_price': 'numeric',
+            'exit_price': 'numeric',
+            'size': 'numeric',
+            'entry_date': 'timestamp with time zone',
+            'exit_date': 'timestamp with time zone',
+            'current_price': 'numeric',
+            'user_id': 'uuid',
+            'created_at': 'timestamp with time zone',
+            'updated_at': 'timestamp with time zone'
+        })
+
+# --- 排行榜表自动建表 ---
+def init_leaderboard_db():
+    try:
+        # 创建排行榜表
+        response = supabase.table('leaderboard').select("*").limit(1).execute()
+    except:
+        # 如果表不存在，创建表
+        supabase.table('leaderboard').create({
+            'id': 'uuid',
+            'user_id': 'uuid',
+            'profit': 'numeric',
+            'win_rate': 'numeric',
+            'total_trades': 'integer',
+            'winning_trades': 'integer',
+            'losing_trades': 'integer',
+            'created_at': 'timestamp with time zone',
+            'updated_at': 'timestamp with time zone'
+        })
+
+# --- 添加测试数据 ---
+def add_test_data():
+    try:
+        # 添加测试交易记录
+        trades_data = [
+            {
+                'symbol': 'AAPL',
+                'entry_price': 150.25,
+                'size': 100,
+                'entry_date': datetime.now(pytz.UTC).isoformat(),
+                'current_price': 155.30,
+                'created_at': datetime.now(pytz.UTC).isoformat(),
+                'updated_at': datetime.now(pytz.UTC).isoformat()
+            },
+            {
+                'symbol': 'GOOGL',
+                'entry_price': 2750.00,
+                'exit_price': 2800.00,
+                'size': 10,
+                'entry_date': datetime.now(pytz.UTC).isoformat(),
+                'exit_date': datetime.now(pytz.UTC).isoformat(),
+                'current_price': 2800.00,
+                'created_at': datetime.now(pytz.UTC).isoformat(),
+                'updated_at': datetime.now(pytz.UTC).isoformat()
+            }
+        ]
+        
+        # 检查是否已有交易记录
+        response = supabase.table('trades1').select("*").execute()
+        if not response.data:
+            for trade in trades_data:
+                supabase.table('trades1').insert(trade).execute()
+                
+        # 添加测试排行榜数据
+        leaderboard_data = [
+            {
+                'user_id': '1',
+                'profit': 15000.00,
+                'win_rate': 85.5,
+                'total_trades': 100,
+                'winning_trades': 85,
+                'losing_trades': 15,
+                'created_at': datetime.now(pytz.UTC).isoformat(),
+                'updated_at': datetime.now(pytz.UTC).isoformat()
+            },
+            {
+                'user_id': '2',
+                'profit': 8500.00,
+                'win_rate': 75.0,
+                'total_trades': 80,
+                'winning_trades': 60,
+                'losing_trades': 20,
+                'created_at': datetime.now(pytz.UTC).isoformat(),
+                'updated_at': datetime.now(pytz.UTC).isoformat()
+            }
+        ]
+        
+        # 检查是否已有排行榜数据
+        response = supabase.table('leaderboard').select("*").execute()
+        if not response.data:
+            for record in leaderboard_data:
+                supabase.table('leaderboard').insert(record).execute()
+                
+    except Exception as e:
+        print(f"Error adding test data: {str(e)}")
+
 if __name__ == '__main__':
     # 初始化数据库
     init_user_db()
@@ -1539,4 +1826,4 @@ if __name__ == '__main__':
     init_user_membership_db()
     
     # 启动应用
-    app.run(debug=True) 
+    app.run(debug=True)

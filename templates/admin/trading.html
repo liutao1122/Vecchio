@@ -1,0 +1,216 @@
+{% extends "admin/base.html" %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">股票交易管理</h3>
+                    <button class="btn btn-primary float-right" data-toggle="modal" data-target="#addTradeModal">
+                        添加交易记录
+                    </button>
+                </div>
+                <div class="card-body">
+                    <table class="table table-bordered table-striped">
+                        <thead>
+                            <tr>
+                                <th>股票代码</th>
+                                <th>买入价格</th>
+                                <th>卖出价格</th>
+                                <th>数量</th>
+                                <th>买入时间</th>
+                                <th>卖出时间</th>
+                                <th>状态</th>
+                                <th>盈亏金额</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tradesList">
+                            <!-- 交易记录将通过JavaScript动态加载 -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 添加交易记录模态框 -->
+<div class="modal fade" id="addTradeModal" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">添加交易记录</h5>
+                <button type="button" class="close" data-dismiss="modal">
+                    <span>&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="addTradeForm">
+                    <div class="form-group">
+                        <label>股票代码</label>
+                        <input type="text" class="form-control" name="symbol" required>
+                    </div>
+                    <div class="form-group">
+                        <label>买入价格</label>
+                        <input type="number" class="form-control" name="entry_price" step="0.01" required>
+                    </div>
+                    <div class="form-group">
+                        <label>数量</label>
+                        <input type="number" class="form-control" name="size" required>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">取消</button>
+                <button type="button" class="btn btn-primary" onclick="addTrade()">保存</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 平仓模态框 -->
+<div class="modal fade" id="closeTradeModal" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">平仓</h5>
+                <button type="button" class="close" data-dismiss="modal">
+                    <span>&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="closeTradeForm">
+                    <input type="hidden" name="trade_id">
+                    <div class="form-group">
+                        <label>卖出价格</label>
+                        <input type="number" class="form-control" name="exit_price" step="0.01" required>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">取消</button>
+                <button type="button" class="btn btn-primary" onclick="closeTrade()">确认</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+// 加载交易记录
+function loadTrades() {
+    fetch('/api/admin/trading')
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                const tbody = document.getElementById('tradesList');
+                tbody.innerHTML = '';
+                
+                data.trades.forEach(trade => {
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td>${trade.symbol}</td>
+                        <td>${trade.entry_price}</td>
+                        <td>${trade.exit_price || '-'}</td>
+                        <td>${trade.size}</td>
+                        <td>${trade.entry_date}</td>
+                        <td>${trade.exit_date || '-'}</td>
+                        <td>${trade.status}</td>
+                        <td>${trade.profit_amount.toFixed(2)}</td>
+                        <td>
+                            ${trade.status === 'Active' ? 
+                                `<button class="btn btn-warning btn-sm" onclick="showCloseTradeModal('${trade.id}')">平仓</button>` : 
+                                ''}
+                            <button class="btn btn-danger btn-sm" onclick="deleteTrade('${trade.id}')">删除</button>
+                        </td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            }
+        });
+}
+
+// 添加交易记录
+function addTrade() {
+    const form = document.getElementById('addTradeForm');
+    const formData = new FormData(form);
+    const data = Object.fromEntries(formData.entries());
+    
+    fetch('/api/admin/trading', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(data)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            $('#addTradeModal').modal('hide');
+            form.reset();
+            loadTrades();
+        } else {
+            alert(data.message);
+        }
+    });
+}
+
+// 显示平仓模态框
+function showCloseTradeModal(tradeId) {
+    document.querySelector('#closeTradeForm input[name="trade_id"]').value = tradeId;
+    $('#closeTradeModal').modal('show');
+}
+
+// 平仓操作
+function closeTrade() {
+    const form = document.getElementById('closeTradeForm');
+    const formData = new FormData(form);
+    const data = {
+        id: formData.get('trade_id'),
+        exit_price: parseFloat(formData.get('exit_price'))
+    };
+    
+    fetch('/api/admin/trading', {
+        method: 'PUT',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(data)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            $('#closeTradeModal').modal('hide');
+            form.reset();
+            loadTrades();
+        } else {
+            alert(data.message);
+        }
+    });
+}
+
+// 删除交易记录
+function deleteTrade(tradeId) {
+    if (confirm('确定要删除这条交易记录吗？')) {
+        fetch(`/api/admin/trading?id=${tradeId}`, {
+            method: 'DELETE'
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                loadTrades();
+            } else {
+                alert(data.message);
+            }
+        });
+    }
+}
+
+// 页面加载完成后加载交易记录
+document.addEventListener('DOMContentLoaded', loadTrades);
+</script>
+{% endblock %} 
