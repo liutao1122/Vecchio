@@ -234,6 +234,11 @@
                     <div class="position-sticky">
                         <ul class="nav flex-column">
                             <li class="nav-item">
+                                <a class="nav-link" href="#" onclick="showSection('strategy')">
+                                    <i class="bi bi-lightbulb"></i>交易策略
+                                </a>
+                            </li>
+                            <li class="nav-item">
                                 <a class="nav-link active" href="#" onclick="showSection('users')">
                                     <i class="bi bi-people-fill"></i>用户管理
                                 </a>
@@ -424,6 +429,69 @@
                                             <!-- 排行榜数据将通过JavaScript动态加载 -->
                                         </tbody>
                                     </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 交易策略部分 -->
+                    <div id="strategy-section" class="section-content" style="display: none;">
+                        <div class="card">
+                            <div class="card-header d-flex justify-content-between align-items-center">
+                                <h5 class="card-title"><i class="bi bi-lightbulb me-2"></i>交易策略管理</h5>
+                                <button class="btn btn-primary" onclick="showStrategyModal()">
+                                    <i class="bi bi-plus"></i> 新建策略
+                                </button>
+                            </div>
+                            <div class="card-body">
+                                <div class="table-responsive">
+                                    <table class="table">
+                                        <thead>
+                                            <tr>
+                                                <th>市场分析</th>
+                                                <th>关注重点</th>
+                                                <th>风险提示</th>
+                                                <th>更新时间</th>
+                                                <th>操作</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="strategy-table-body">
+                                            <!-- 策略列表将通过JavaScript动态加载 -->
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- 新建/编辑策略模态框 -->
+                        <div class="modal fade" id="strategyModal" tabindex="-1">
+                            <div class="modal-dialog">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title" id="strategyModalTitle">新建策略</h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                    </div>
+                                    <div class="modal-body">
+                                        <form id="strategyForm">
+                                            <input type="hidden" id="strategyId">
+                                            <div class="mb-3">
+                                                <label for="marketAnalysis" class="form-label">市场分析</label>
+                                                <textarea class="form-control" id="marketAnalysis" rows="2" required></textarea>
+                                            </div>
+                                            <div class="mb-3">
+                                                <label class="form-label">关注重点</label>
+                                                <div id="focusAreas"></div>
+                                                <button type="button" class="btn btn-sm btn-outline-primary mt-2" onclick="addFocusArea()">添加关注点</button>
+                                            </div>
+                                            <div class="mb-3">
+                                                <label for="riskWarning" class="form-label">风险提示</label>
+                                                <textarea class="form-control" id="riskWarning" rows="2" required></textarea>
+                                            </div>
+                                        </form>
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                                        <button type="button" class="btn btn-primary" onclick="saveStrategy()">保存</button>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -1288,6 +1356,109 @@
                 console.error('Error adding trade:', error);
                 alert('添加失败，请稍后重试');
             });
+        }
+
+        // 交易策略管理JS
+        function loadStrategies() {
+            fetch('/api/admin/strategy/history')
+                .then(res => res.json())
+                .then(data => {
+                    const tbody = document.getElementById('strategy-table-body');
+                    tbody.innerHTML = '';
+                    if (data.success && data.history.length) {
+                        data.history.forEach(strategy => {
+                            tbody.innerHTML += `
+                                <tr>
+                                    <td>${strategy.market_analysis}</td>
+                                    <td>${Array.isArray(strategy.trading_focus) ? strategy.trading_focus.join('<br>') : strategy.trading_focus}</td>
+                                    <td>${strategy.risk_warning}</td>
+                                    <td>${strategy.modified_at ? strategy.modified_at.replace('T', ' ').slice(0, 19) : ''}</td>
+                                    <td>
+                                        <button class="btn btn-sm btn-info me-1" onclick="editStrategy(${strategy.id})">编辑</button>
+                                        <button class="btn btn-sm btn-danger" onclick="deleteStrategy(${strategy.id})">删除</button>
+                                    </td>
+                                </tr>`;
+                        });
+                    } else {
+                        tbody.innerHTML = '<tr><td colspan="5" class="text-center">暂无策略</td></tr>';
+                    }
+                });
+        }
+        function showStrategyModal(edit=false) {
+            document.getElementById('strategyForm').reset();
+            document.getElementById('strategyId').value = '';
+            document.getElementById('focusAreas').innerHTML = '';
+            document.getElementById('strategyModalTitle').textContent = edit ? '编辑策略' : '新建策略';
+            addFocusArea();
+            new bootstrap.Modal(document.getElementById('strategyModal')).show();
+        }
+        function addFocusArea(val='') {
+            const div = document.createElement('div');
+            div.className = 'input-group mb-1';
+            div.innerHTML = `<input type="text" class="form-control focus-area" value="${val}"><button class="btn btn-outline-danger" type="button" onclick="this.parentNode.remove()">删除</button>`;
+            document.getElementById('focusAreas').appendChild(div);
+        }
+        function editStrategy(id) {
+            fetch('/api/admin/strategy/history')
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success && data.history.length) {
+                        const strategy = data.history.find(s => s.id === id);
+                        if (strategy) {
+                            document.getElementById('strategyId').value = strategy.id;
+                            document.getElementById('marketAnalysis').value = strategy.market_analysis;
+                            document.getElementById('riskWarning').value = strategy.risk_warning;
+                            document.getElementById('focusAreas').innerHTML = '';
+                            (Array.isArray(strategy.trading_focus) ? strategy.trading_focus : [strategy.trading_focus]).forEach(focus => addFocusArea(focus));
+                            document.getElementById('strategyModalTitle').textContent = '编辑策略';
+                            new bootstrap.Modal(document.getElementById('strategyModal')).show();
+                        }
+                    }
+                });
+        }
+        function saveStrategy() {
+            const id = document.getElementById('strategyId').value;
+            const marketAnalysis = document.getElementById('marketAnalysis').value.trim();
+            const riskWarning = document.getElementById('riskWarning').value.trim();
+            const focusAreas = Array.from(document.getElementsByClassName('focus-area')).map(i => i.value.trim()).filter(Boolean);
+            if (!marketAnalysis || !focusAreas.length || !riskWarning) {
+                alert('请填写所有必要字段');
+                return;
+            }
+            fetch('/api/admin/strategy', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ market_analysis: marketAnalysis, trading_focus: focusAreas, risk_warning: riskWarning })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    bootstrap.Modal.getInstance(document.getElementById('strategyModal')).hide();
+                    loadStrategies();
+                } else {
+                    alert(data.message || '保存失败');
+                }
+            });
+        }
+        function deleteStrategy(id) {
+            if (!confirm('确定要删除该策略吗？')) return;
+            fetch(`/api/admin/strategy?id=${id}`, { method: 'DELETE' })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        loadStrategies();
+                    } else {
+                        alert(data.message || '删除失败');
+                    }
+                });
+        }
+        // 切换到策略管理时自动加载
+        if (typeof showSection === 'function') {
+            const oldShowSection = showSection;
+            window.showSection = function(sectionId) {
+                oldShowSection(sectionId);
+                if (sectionId === 'strategy') loadStrategies();
+            }
         }
     </script>
 </body>
