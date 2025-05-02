@@ -10,7 +10,6 @@ import os
 import uuid
 import random
 import sqlite3
-from supabase_client import get_traders
 import requests
 from dotenv import load_dotenv
 from apscheduler.schedulers.background import BackgroundScheduler
@@ -18,6 +17,8 @@ from apscheduler.triggers.interval import IntervalTrigger
 from flask_cors import CORS
 import mysql.connector
 from mysql.connector import Error
+from werkzeug.utils import secure_filename
+import supabase_client  # 用 supabase_client.get_traders 代替
 
 # Flask应用配置
 app = Flask(__name__)
@@ -26,7 +27,7 @@ CORS(app, supports_credentials=True)
 
 # Supabase配置
 url = 'https://rwlziuinlbazgoajkcme.supabase.co'
-key = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ3bHppdWlubGJhemdvYWprY21lIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDUxODAwNjIsImV4cCI6MjA2MDc1NjA2Mn0.Y1KiIiUXmDiDSFYFQLHmyd1Oe86SxSfvHJcKrJmz2gI'
+key = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ3bHppdWlubGJhemdvYWprY21lIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc0NTE4MDA2MiwiZXhwIjoyMDYwNzU2MDYyfQ.HAAXKlwasbIoq27IHRUn4gZoMfzGvUfsI4pt4NqCThk'
 supabase = create_client(url, key)
 
 # 股票图片映射
@@ -565,14 +566,11 @@ def trader_profile():
 def leaderboard():
     # Get sort parameter from query string, default to 'profit'
     sort_by = request.args.get('sort', 'profit')
-    
     # Get traders from Supabase
-    traders = get_traders(sort_by)
-    
+    traders = supabase_client.get_traders(sort_by)
     # If no traders found, return empty list
     if not traders:
         traders = []
-        
     return render_template('leaderboard.html', traders=traders)
 
 @app.route('/api/upload-avatar', methods=['POST'])
@@ -603,14 +601,14 @@ def upload_avatar():
 
         # 上传到Supabase存储
         file_bytes = file.read()
-        result = supabase.storage.from_('avatars').upload(
+        result = supabase.storage().from_('avatars').upload(
             unique_filename,
             file_bytes,
             file_options={"content-type": file.content_type}
         )
 
         # 获取文件URL
-        file_url = supabase.storage.from_('avatars').get_public_url(unique_filename)
+        file_url = supabase.storage().from_('avatars').get_public_url(unique_filename)
 
         # 获取第一个交易员的ID（因为目前是单用户系统）
         profile_response = supabase.table('trader_profiles').select('id').limit(1).execute()
@@ -1884,6 +1882,33 @@ def like_trader(trader_name):
             'success': False,
             'message': 'Error updating likes'
         }), 500
+
+@app.route('/api/admin/trade/upload-image', methods=['POST'])
+def upload_trade_image():
+    try:
+        print('supabase type:', type(supabase))
+        trade_id = request.form.get('trade_id')
+        file = request.files.get('image')
+        if not trade_id or not file:
+            return jsonify({'success': False, 'message': 'Missing trade_id or image'}), 400
+        # 生成唯一文件名
+        ext = os.path.splitext(secure_filename(file.filename))[1] or '.jpg'
+        unique_name = f"avatars/trade_{trade_id}_{uuid.uuid4().hex}{ext}"
+        # 上传到Supabase Storage
+        file_bytes = file.read()
+        result = supabase.storage().from_('avatars').upload(
+            unique_name,
+            file_bytes,
+            file_options={"content-type": file.content_type}
+        )
+        # 获取图片URL
+        file_url = supabase.storage().from_('avatars').get_public_url(unique_name)
+        # 更新trades1表
+        supabase.table('trades1').update({'image_url': file_url}).eq('id', trade_id).execute()
+        return jsonify({'success': True, 'url': file_url})
+    except Exception as e:
+        print(f"Trade image upload error: {str(e)}")
+        return jsonify({'success': False, 'message': 'Upload failed'}), 500
 
 if __name__ == '__main__':
     # 初始化数据库

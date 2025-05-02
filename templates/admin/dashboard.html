@@ -388,6 +388,7 @@
                                                 <th>卖出时间</th>
                                                 <th>状态</th>
                                                 <th>盈亏</th>
+                                                <th>图片</th>
                                                 <th>操作</th>
                                             </tr>
                                         </thead>
@@ -634,6 +635,10 @@
                             <label class="form-label">买入时间</label>
                             <input type="datetime-local" class="form-control" name="entry_date" required>
                         </div>
+                        <div class="mb-3">
+                            <label class="form-label">交易图片</label>
+                            <input type="file" class="form-control" name="image" id="add_trade_image" accept="image/*">
+                        </div>
                     </form>
                 </div>
                 <div class="modal-footer">
@@ -678,6 +683,11 @@
                         <div class="mb-3">
                             <label class="form-label">卖出时间</label>
                             <input type="datetime-local" class="form-control" name="exit_date" id="edit_exit_date">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">交易图片</label>
+                            <input type="file" class="form-control" name="image" id="edit_trade_image" accept="image/*">
+                            <img id="edit_trade_image_preview" src="" style="width:40px;height:40px;object-fit:cover;border-radius:4px;display:none;margin-top:5px;" />
                         </div>
                     </form>
                 </div>
@@ -846,6 +856,11 @@
                                     </span>
                                 </td>
                                 <td>${calculateProfit(trade)}</td>
+                                <td>
+                                    <img src="${trade.image_url ? trade.image_url + '?t=' + Date.now() : ''}" alt="交易图片" style="width:40px;height:40px;object-fit:cover;border-radius:4px;${trade.image_url ? '' : 'display:none;'}" onclick="if(this.src) window.open(this.src)" title="点击放大">
+                                    <button class="btn btn-sm btn-secondary ms-1" onclick="showUploadImageModal('${trade.id}')">${trade.image_url ? '更换图片' : '上传图片'}</button>
+                                    <input type="file" accept="image/*" style="display:none" id="upload-image-input-${trade.id}" onchange="uploadTradeImage('${trade.id}')">
+                                </td>
                                 <td>
                                     <button type="button" class="btn btn-sm btn-warning me-1" onclick="editTrade(${trade.id})">
                                         <i class="bi bi-pencil"></i>
@@ -1326,15 +1341,13 @@
                 symbol: formData.get('symbol'),
                 entry_price: parseFloat(formData.get('entry_price')),
                 size: parseInt(formData.get('size')),
-                entry_date: formData.get('entry_date')
+                entry_date: formData.get('entry_date'),
+                image: formData.get('image')
             };
 
             fetch('/api/admin/trading', {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(data)
+                body: formData
             })
             .then(response => {
                 if (!response.ok) {
@@ -1459,6 +1472,46 @@
                 oldShowSection(sectionId);
                 if (sectionId === 'strategy') loadStrategies();
             }
+        }
+
+        // 上传图片相关逻辑
+        function showUploadImageModal(tradeId) {
+            document.getElementById('upload-image-input-' + tradeId).click();
+        }
+        function uploadTradeImage(tradeId) {
+            const input = document.getElementById('upload-image-input-' + tradeId);
+            if (!input.files.length) return;
+            const file = input.files[0];
+            const formData = new FormData();
+            formData.append('trade_id', tradeId);
+            formData.append('image', file);
+            const uploadBtn = input.previousElementSibling;
+            if (uploadBtn) uploadBtn.disabled = true;
+            fetch('/api/admin/trade/upload-image', {
+                method: 'POST',
+                body: formData
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    alert('图片上传成功！');
+                    // 只更新当前行的图片缩略图
+                    const img = input.parentElement.querySelector('img');
+                    if (img && data.url) {
+                        img.src = data.url + '?t=' + Date.now();
+                        img.style.display = '';
+                    }
+                    loadTrades();
+                    if (uploadBtn) setTimeout(() => { uploadBtn.disabled = false; }, 3000);
+                } else {
+                    alert(data.message || '图片上传失败');
+                    if (uploadBtn) uploadBtn.disabled = false;
+                }
+            })
+            .catch(() => {
+                alert('图片上传失败');
+                if (uploadBtn) uploadBtn.disabled = false;
+            });
         }
     </script>
 </body>

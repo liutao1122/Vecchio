@@ -951,6 +951,28 @@
             60% { opacity: 1; transform: translate(-50%, -30px) scale(1.2); }
             100% { opacity: 0; transform: translate(-50%, -50px) scale(1.1); }
         }
+
+        /* 在 style 区域末尾添加发光动画 */
+        .glow-bulb {
+            color: #ffd700;
+            filter: drop-shadow(0 0 8px #ffd700) drop-shadow(0 0 16px #fff200);
+            animation: bulb-glow 1.2s infinite alternate;
+            transition: color 0.3s;
+        }
+        @keyframes bulb-glow {
+            0% {
+                filter: drop-shadow(0 0 4px #ffd700) drop-shadow(0 0 8px #fff200);
+                color: #ffd700;
+            }
+            50% {
+                filter: drop-shadow(0 0 16px #fff200) drop-shadow(0 0 32px #fffbe0);
+                color: #fffbe0;
+            }
+            100% {
+                filter: drop-shadow(0 0 4px #ffd700) drop-shadow(0 0 8px #fff200);
+                color: #ffd700;
+            }
+        }
     </style>
 </head>
 <body>
@@ -1029,7 +1051,7 @@
             <!-- Strategy Update Section -->
             <div class="strategy-update">
                 <div class="strategy-header">
-                    <h3><i class="bi bi-lightbulb"></i> Today's Trading Strategy</h3>
+                    <h3><i class="bi bi-lightbulb glow-bulb"></i> Today's Trading Strategy</h3>
                     <span class="update-time">Updated at: {{ trader_info.strategy_info.formatted_time }}</span>
                 </div>
                 <div class="strategy-content">
