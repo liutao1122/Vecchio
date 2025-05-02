@@ -1582,7 +1582,7 @@ def manage_trading():
                 'symbol': data['symbol'],
                 'entry_price': data['entry_price'],
                 'size': data['size'],
-                'entry_date': datetime.now(pytz.UTC).isoformat(),
+                'entry_date': data.get('entry_date') or datetime.now(pytz.UTC).isoformat(),
                 'current_price': data['entry_price']
             }
             
