@@ -932,6 +932,25 @@
             -webkit-animation: fadeInOut 3s ease-in-out forwards;
             animation: fadeInOut 3s ease-in-out forwards;
         }
+
+        .plus-one-effect {
+            position: absolute;
+            left: 50%;
+            top: 55%;
+            transform: translate(-50%, 0);
+            color: #FFD700;
+            font-size: 1.3rem;
+            font-weight: 900;
+            pointer-events: none;
+            opacity: 1;
+            animation: plusOneUp 1s ease-out forwards;
+            z-index: 9999;
+        }
+        @keyframes plusOneUp {
+            0% { opacity: 1; transform: translate(-50%, 0) scale(1); }
+            60% { opacity: 1; transform: translate(-50%, -30px) scale(1.2); }
+            100% { opacity: 0; transform: translate(-50%, -50px) scale(1.1); }
+        }
     </style>
 </head>
 <body>
@@ -1288,12 +1307,12 @@
                     <img src="/static/badges/vip.png" alt="VIP" class="badge-icon" />
                     <span class="badge-label">VIP</span>
                 </div>
-                <span class="badge-value-vip">2435</span>
+                <span class="badge-value-vip" id="vip-count">Loading...</span>
             </div>
         </a>
-        <div class="badge-item">
+        <div class="badge-item" id="like-badge" style="cursor:pointer;">
             <div class="badge-row">
-                <span class="badge-icon-svg">
+                <span class="badge-icon-svg" id="like-icon">
                     <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
                         <defs>
                             <linearGradient id="likeGold" x1="0" y1="0" x2="22" y2="22" gradientUnits="userSpaceOnUse">
@@ -1307,7 +1326,7 @@
                 </span>
                 <span class="badge-label">Likes</span>
             </div>
-            <span class="badge-value-alt">2.4K</span>
+            <span class="badge-value-alt" id="likes-count">Loading...</span>
         </div>
     </div>
 
@@ -1536,6 +1555,78 @@
             if (badges) {
                 // Initially opaque
                 badges.classList.remove('scrolling');
+            }
+        });
+
+        // Add this script to fetch and update the counts
+        document.addEventListener('DOMContentLoaded', function() {
+            fetch('/api/trader/Tom Preston')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        const trader = data.trader;
+                        document.getElementById('vip-count').textContent = trader.followers_count.toLocaleString();
+                        document.getElementById('likes-count').textContent = (trader.likes_count / 1000).toFixed(1) + 'K';
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching trader data:', error);
+                    document.getElementById('vip-count').textContent = 'Error';
+                    document.getElementById('likes-count').textContent = 'Error';
+                });
+        });
+
+        function likeTrader() {
+            // 检查本地是否已经点过赞
+            var today = new Date().toISOString().slice(0, 10);
+            var likeKey = 'likeTrader_TomPreston_' + today;
+            if (localStorage.getItem(likeKey)) {
+                alert('You have already liked today. Thank you for your support and trust!');
+                return;
+            }
+            fetch('/api/like-trader/Tom Preston', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    document.getElementById('likes-count').textContent = (data.likes_count / 1000).toFixed(1) + 'K';
+                    showPlusOneEffect();
+                    localStorage.setItem(likeKey, '1');
+                } else if (data.message && data.message.includes('already liked')) {
+                    alert('You have already liked today. Thank you for your support and trust!');
+                } else {
+                    alert('点赞失败: ' + data.message);
+                }
+            })
+            .catch(error => {
+                alert('点赞失败，请重试');
+            });
+        }
+
+        function showPlusOneEffect() {
+            var badge = document.getElementById('like-badge');
+            if (!badge) return;
+            // 创建+1元素
+            var plusOne = document.createElement('span');
+            plusOne.className = 'plus-one-effect';
+            plusOne.textContent = '+1';
+            // 设置定位父级
+            badge.style.position = 'relative';
+            badge.appendChild(plusOne);
+            // 动画结束后移除
+            plusOne.addEventListener('animationend', function() {
+                plusOne.remove();
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            var likeBadge = document.getElementById('like-badge');
+            if (likeBadge) {
+                likeBadge.onclick = likeTrader;
             }
         });
     </script>

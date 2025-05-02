@@ -1819,6 +1819,72 @@ def add_test_data():
     except Exception as e:
         print(f"Error adding test data: {str(e)}")
 
+@app.route('/api/trader/<trader_name>')
+def get_trader_data(trader_name):
+    try:
+        # Get trader data from Supabase
+        response = supabase.table('leaderboard_traders')\
+            .select('*')\
+            .eq('trader_name', trader_name)\
+            .single()\
+            .execute()
+            
+        if response.data:
+            return jsonify({
+                'success': True,
+                'trader': response.data
+            })
+        else:
+            return jsonify({
+                'success': False,
+                'message': 'Trader not found'
+            }), 404
+            
+    except Exception as e:
+        print(f"Error fetching trader data: {e}")
+        return jsonify({
+            'success': False,
+            'message': 'Error fetching trader data'
+        }), 500
+
+@app.route('/api/like-trader/<trader_name>', methods=['POST'])
+def like_trader(trader_name):
+    try:
+        # Get trader data from Supabase
+        response = supabase.table('leaderboard_traders')\
+            .select('*')\
+            .eq('trader_name', trader_name)\
+            .single()\
+            .execute()
+            
+        if response.data:
+            # Update likes count
+            current_likes = response.data.get('likes_count', 0)
+            updated_likes = current_likes + 1
+            
+            # Update in database
+            supabase.table('leaderboard_traders')\
+                .update({'likes_count': updated_likes})\
+                .eq('trader_name', trader_name)\
+                .execute()
+                
+            return jsonify({
+                'success': True,
+                'likes_count': updated_likes
+            })
+        else:
+            return jsonify({
+                'success': False,
+                'message': 'Trader not found'
+            }), 404
+            
+    except Exception as e:
+        print(f"Error updating likes: {e}")
+        return jsonify({
+            'success': False,
+            'message': 'Error updating likes'
+        }), 500
+
 if __name__ == '__main__':
     # 初始化数据库
     init_user_db()
