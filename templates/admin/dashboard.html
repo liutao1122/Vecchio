@@ -635,10 +635,6 @@
                             <label class="form-label">买入时间</label>
                             <input type="datetime-local" class="form-control" name="entry_date" required>
                         </div>
-                        <div class="mb-3">
-                            <label class="form-label">交易图片</label>
-                            <input type="file" class="form-control" name="image" id="add_trade_image" accept="image/*">
-                        </div>
                     </form>
                 </div>
                 <div class="modal-footer">
@@ -1328,6 +1324,14 @@
             });
         }
 
+        // 用于保存已上传图片的URL
+        let uploadedTradeImageUrl = '';
+
+        // 监听图片选择并自动上传
+        document.addEventListener('DOMContentLoaded', function() {
+            // 删除添加交易图片自动上传逻辑
+        });
+
         // 添加交易
         function addTrade() {
             const form = document.getElementById('addTradeForm');
@@ -1335,19 +1339,19 @@
                 form.reportValidity();
                 return;
             }
-
             const formData = new FormData(form);
             const data = {
                 symbol: formData.get('symbol'),
                 entry_price: parseFloat(formData.get('entry_price')),
                 size: parseInt(formData.get('size')),
-                entry_date: formData.get('entry_date'),
-                image: formData.get('image')
+                entry_date: formData.get('entry_date')
             };
-
             fetch('/api/admin/trading', {
                 method: 'POST',
-                body: formData
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(data)
             })
             .then(response => {
                 if (!response.ok) {
