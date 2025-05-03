@@ -407,6 +407,9 @@
                             <div class="card-header d-flex justify-content-between align-items-center">
                                 <h5 class="card-title">交易员排行榜</h5>
                                 <div>
+                                    <button class="btn btn-primary" onclick="showAddLeaderboardModal()">
+                                        <i class="bi bi-plus"></i> 添加
+                                    </button>
                                     <button class="btn btn-primary" onclick="refreshLeaderboard()">
                                         <i class="bi bi-arrow-clockwise"></i> 刷新
                                     </button>
@@ -418,11 +421,11 @@
                                         <thead>
                                             <tr>
                                                 <th>排名</th>
+                                                <th>头像</th>
                                                 <th>交易员</th>
                                                 <th>总收益</th>
                                                 <th>胜率</th>
                                                 <th>交易次数</th>
-                                                <th>状态</th>
                                                 <th>操作</th>
                                             </tr>
                                         </thead>
@@ -690,6 +693,47 @@
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
                     <button type="button" class="btn btn-primary" onclick="updateTrade()">保存</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 添加/编辑排行榜记录模态框 -->
+    <div class="modal fade" id="leaderboardModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="leaderboardModalTitle">添加排行榜记录</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="leaderboardForm">
+                        <input type="hidden" id="leaderboardId">
+                        <div class="mb-3">
+                            <label class="form-label">头像URL</label>
+                            <input type="text" class="form-control" id="profileImageUrl" name="profile_image_url">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">交易员名字</label>
+                            <input type="text" class="form-control" id="traderName" name="trader_name" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">总收益</label>
+                            <input type="number" class="form-control" id="totalProfit" name="total_profit" step="0.01" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">胜率 (%)</label>
+                            <input type="number" class="form-control" id="winRate" name="win_rate" min="0" max="100" step="0.01" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">交易次数</label>
+                            <input type="number" class="form-control" id="totalTrades" name="total_trades" required>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                    <button type="button" class="btn btn-primary" onclick="saveLeaderboardRecord()">保存</button>
                 </div>
             </div>
         </div>
@@ -1014,19 +1058,21 @@
                     if(data.success) {
                         const leaderboardList = document.getElementById('leaderboardList');
                         leaderboardList.innerHTML = '';
-                        
                         data.leaderboard.forEach((trader, index) => {
                             const row = document.createElement('tr');
                             row.innerHTML = `
                                 <td>${index + 1}</td>
-                                <td>${trader.user_id}</td>
-                                <td>${trader.profit.toFixed(2)}</td>
-                                <td>${trader.win_rate.toFixed(2)}%</td>
+                                <td><img src="${trader.profile_image_url || ''}" style="width:40px;height:40px;object-fit:cover;border-radius:50%;background:#eee;" onerror="this.src='https://via.placeholder.com/40'"/></td>
+                                <td>${trader.trader_name || ''}</td>
+                                <td>${trader.total_profit?.toFixed(2) || '0.00'}</td>
+                                <td>${trader.win_rate?.toFixed(2) || '0.00'}%</td>
                                 <td>${trader.total_trades || 0}</td>
-                                <td><span class="status-badge status-active">活跃</span></td>
                                 <td>
-                                    <button class="btn btn-sm btn-info" onclick="viewTraderDetails('${trader.user_id}')">
-                                        <i class="bi bi-eye"></i>
+                                    <button class="btn btn-sm btn-info me-1" onclick="showEditLeaderboardModal('${trader.id}', '${trader.profile_image_url}', '${trader.trader_name}', ${trader.total_profit}, ${trader.win_rate}, ${trader.total_trades})">
+                                        <i class="bi bi-pencil"></i>
+                                    </button>
+                                    <button class="btn btn-sm btn-danger" onclick="deleteLeaderboardRecord('${trader.id}')">
+                                        <i class="bi bi-trash"></i>
                                     </button>
                                 </td>
                             `;
@@ -1042,9 +1088,69 @@
             loadLeaderboard();
         }
 
-        // 查看交易员详情
-        function viewTraderDetails(userId) {
-            // TODO: 实现查看交易员详情的功能
+        // 显示添加排行榜记录模态框
+        function showAddLeaderboardModal() {
+            document.getElementById('leaderboardModalTitle').textContent = '添加排行榜记录';
+            document.getElementById('leaderboardForm').reset();
+            document.getElementById('leaderboardId').value = '';
+            new bootstrap.Modal(document.getElementById('leaderboardModal')).show();
+        }
+
+        // 显示编辑排行榜记录模态框
+        function showEditLeaderboardModal(id, profileImageUrl, traderName, totalProfit, winRate, totalTrades) {
+            document.getElementById('leaderboardModalTitle').textContent = '编辑排行榜记录';
+            document.getElementById('leaderboardId').value = id;
+            document.getElementById('profileImageUrl').value = profileImageUrl;
+            document.getElementById('traderName').value = traderName;
+            document.getElementById('totalProfit').value = totalProfit;
+            document.getElementById('winRate').value = winRate;
+            document.getElementById('totalTrades').value = totalTrades;
+            new bootstrap.Modal(document.getElementById('leaderboardModal')).show();
+        }
+
+        // 保存排行榜记录（添加或编辑）
+        function saveLeaderboardRecord() {
+            const id = document.getElementById('leaderboardId').value;
+            const data = {
+                profile_image_url: document.getElementById('profileImageUrl').value,
+                trader_name: document.getElementById('traderName').value,
+                total_profit: parseFloat(document.getElementById('totalProfit').value),
+                win_rate: parseFloat(document.getElementById('winRate').value),
+                total_trades: parseInt(document.getElementById('totalTrades').value)
+            };
+            let method = 'POST';
+            if (id) {
+                data.id = id;
+                method = 'PUT';
+            }
+            fetch('/api/admin/leaderboard', {
+                method: method,
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    bootstrap.Modal.getInstance(document.getElementById('leaderboardModal')).hide();
+                    loadLeaderboard();
+                } else {
+                    alert(data.message || '保存失败');
+                }
+            });
+        }
+
+        // 删除排行榜记录
+        function deleteLeaderboardRecord(id) {
+            if (!confirm('确定要删除该排行榜记录吗？')) return;
+            fetch(`/api/admin/leaderboard?id=${id}`, { method: 'DELETE' })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        loadLeaderboard();
+                    } else {
+                        alert(data.message || '删除失败');
+                    }
+                });
         }
 
         // 页面加载完成后显示默认部分

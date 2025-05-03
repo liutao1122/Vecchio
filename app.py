@@ -1604,7 +1604,13 @@ def manage_trading():
             update_data = {}
             if 'exit_price' in data:
                 update_data['exit_price'] = data['exit_price']
-                update_data['exit_date'] = datetime.now(pytz.UTC).isoformat()
+                # 使用用户提供的 exit_date，如果没有提供则使用当前时间
+                if 'exit_date' in data and data['exit_date']:
+                    # 将本地时间转换为 UTC 时间
+                    local_date = datetime.fromisoformat(data['exit_date'].replace('Z', '+00:00'))
+                    update_data['exit_date'] = local_date.astimezone(pytz.UTC).isoformat()
+                else:
+                    update_data['exit_date'] = datetime.now(pytz.UTC).isoformat()
                 
             if update_data:
                 response = supabase.table('trades1').update(update_data).eq('id', trade_id).execute()
@@ -1647,7 +1653,7 @@ def manage_leaderboard():
             
         if request.method == 'GET':
             # 获取排行榜数据
-            response = supabase.table('leaderboard_traders').select("*").order('profit', desc=True).execute()
+            response = supabase.table('leaderboard_traders').select("*").order('total_profit', desc=True).execute()
             
             return jsonify({
                 'success': True,
@@ -1657,15 +1663,17 @@ def manage_leaderboard():
         elif request.method == 'POST':
             # 添加新的排行榜记录
             data = request.get_json()
-            required_fields = ['user_id', 'profit', 'win_rate']
+            required_fields = ['trader_name', 'total_profit', 'win_rate', 'total_trades', 'profile_image_url']
             
             if not all(field in data for field in required_fields):
                 return jsonify({'success': False, 'message': '缺少必要字段'}), 400
                 
             leaderboard_data = {
-                'user_id': data['user_id'],
-                'profit': data['profit'],
+                'trader_name': data['trader_name'],
+                'total_profit': data['total_profit'],
                 'win_rate': data['win_rate'],
+                'total_trades': data['total_trades'],
+                'profile_image_url': data['profile_image_url'],
                 'updated_at': datetime.now(pytz.UTC).isoformat()
             }
             
@@ -1685,8 +1693,11 @@ def manage_leaderboard():
                 return jsonify({'success': False, 'message': '缺少记录ID'}), 400
                 
             update_data = {
-                'profit': data.get('profit'),
+                'trader_name': data.get('trader_name'),
+                'total_profit': data.get('total_profit'),
                 'win_rate': data.get('win_rate'),
+                'total_trades': data.get('total_trades'),
+                'profile_image_url': data.get('profile_image_url'),
                 'updated_at': datetime.now(pytz.UTC).isoformat()
             }
             

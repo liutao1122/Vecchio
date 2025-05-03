@@ -16,9 +16,12 @@
                         <thead>
                             <tr>
                                 <th>排名</th>
+                                <th>头像</th>
+                                <th>名字</th>
                                 <th>用户ID</th>
                                 <th>盈利金额</th>
                                 <th>胜率</th>
+                                <th>交易次数</th>
                                 <th>更新时间</th>
                                 <th>操作</th>
                             </tr>
@@ -51,7 +54,7 @@
                     </div>
                     <div class="form-group">
                         <label>盈利金额</label>
-                        <input type="number" class="form-control" name="profit" step="0.01" required>
+                        <input type="number" class="form-control" name="total_profit" step="0.01" required>
                     </div>
                     <div class="form-group">
                         <label>胜率 (%)</label>
@@ -81,12 +84,24 @@
                 <form id="editRecordForm">
                     <input type="hidden" name="record_id">
                     <div class="form-group">
+                        <label>头像</label>
+                        <input type="text" class="form-control" name="profile_image_url">
+                    </div>
+                    <div class="form-group">
+                        <label>名字</label>
+                        <input type="text" class="form-control" name="trader_name">
+                    </div>
+                    <div class="form-group">
                         <label>盈利金额</label>
-                        <input type="number" class="form-control" name="profit" step="0.01" required>
+                        <input type="number" class="form-control" name="total_profit" step="0.01" required>
                     </div>
                     <div class="form-group">
                         <label>胜率 (%)</label>
                         <input type="number" class="form-control" name="win_rate" min="0" max="100" step="0.01" required>
+                    </div>
+                    <div class="form-group">
+                        <label>交易次数</label>
+                        <input type="number" class="form-control" name="total_trades" required>
                     </div>
                 </form>
             </div>
@@ -115,12 +130,15 @@ function loadLeaderboard() {
                     const tr = document.createElement('tr');
                     tr.innerHTML = `
                         <td>${index + 1}</td>
+                        <td><img src="${record.profile_image_url || ''}" style="width:40px;height:40px;object-fit:cover;border-radius:50%;background:#eee;" onerror="this.src='https://via.placeholder.com/40'"/></td>
+                        <td>${record.trader_name || ''}</td>
                         <td>${record.user_id}</td>
-                        <td>${record.profit.toFixed(2)}</td>
-                        <td>${record.win_rate.toFixed(2)}%</td>
-                        <td>${record.updated_at}</td>
+                        <td>${record.total_profit?.toFixed(2) || '0.00'}</td>
+                        <td>${record.win_rate?.toFixed(2) || '0.00'}%</td>
+                        <td>${record.total_trades || 0}</td>
+                        <td>${record.updated_at || ''}</td>
                         <td>
-                            <button class="btn btn-info btn-sm" onclick="showEditModal('${record.id}', ${record.profit}, ${record.win_rate})">编辑</button>
+                            <button class="btn btn-info btn-sm" onclick="showEditModal('${record.id}', '${record.profile_image_url}', '${record.trader_name}', ${record.total_profit}, ${record.win_rate}, ${record.total_trades})">编辑</button>
                             <button class="btn btn-danger btn-sm" onclick="deleteRecord('${record.id}')">删除</button>
                         </td>
                     `;
@@ -156,11 +174,14 @@ function addRecord() {
 }
 
 // 显示编辑模态框
-function showEditModal(recordId, profit, winRate) {
+function showEditModal(recordId, avatarUrl, traderName, profit, winRate, totalTrades) {
     const form = document.getElementById('editRecordForm');
     form.querySelector('input[name="record_id"]').value = recordId;
-    form.querySelector('input[name="profit"]').value = profit;
+    form.querySelector('input[name="profile_image_url"]').value = avatarUrl;
+    form.querySelector('input[name="trader_name"]').value = traderName;
+    form.querySelector('input[name="total_profit"]').value = profit;
     form.querySelector('input[name="win_rate"]').value = winRate;
+    form.querySelector('input[name="total_trades"]').value = totalTrades;
     $('#editRecordModal').modal('show');
 }
 
@@ -170,8 +191,11 @@ function updateRecord() {
     const formData = new FormData(form);
     const data = {
         id: formData.get('record_id'),
-        profit: parseFloat(formData.get('profit')),
-        win_rate: parseFloat(formData.get('win_rate'))
+        profile_image_url: formData.get('profile_image_url'),
+        trader_name: formData.get('trader_name'),
+        total_profit: parseFloat(formData.get('total_profit')),
+        win_rate: parseFloat(formData.get('win_rate')),
+        total_trades: parseInt(formData.get('total_trades'))
     };
     
     fetch('/api/admin/leaderboard', {
