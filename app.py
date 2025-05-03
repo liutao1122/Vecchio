@@ -601,14 +601,16 @@ def upload_avatar():
 
         # 上传到Supabase存储
         file_bytes = file.read()
+        # 修正调用方式，兼容本地 supabase-py 版本
         result = supabase.storage().from_('avatars').upload(
             unique_filename,
             file_bytes,
             file_options={"content-type": file.content_type}
         )
-
-        # 获取文件URL
+        # 获取图片URL
         file_url = supabase.storage().from_('avatars').get_public_url(unique_filename)
+        # 更新trades1表
+        supabase.table('trades1').update({'image_url': file_url}).eq('id', trade_id).execute()
 
         # 获取第一个交易员的ID（因为目前是单用户系统）
         profile_response = supabase.table('trader_profiles').select('id').limit(1).execute()
@@ -1896,6 +1898,7 @@ def upload_trade_image():
         unique_name = f"avatars/trade_{trade_id}_{uuid.uuid4().hex}{ext}"
         # 上传到Supabase Storage
         file_bytes = file.read()
+        # 修正调用方式，兼容本地 supabase-py 版本
         result = supabase.storage().from_('avatars').upload(
             unique_name,
             file_bytes,
