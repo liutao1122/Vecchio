@@ -1898,14 +1898,14 @@ def upload_trade_image():
         unique_name = f"avatars/trade_{trade_id}_{uuid.uuid4().hex}{ext}"
         # 上传到Supabase Storage
         file_bytes = file.read()
-        # 修正调用方式，兼容本地 supabase-py 版本
-        result = supabase.storage().from_('avatars').upload(
+        # 修正调用方式，兼容 supabase-py 1.x 版本
+        result = supabase.storage.from_('avatars').upload(
             unique_name,
             file_bytes,
             file_options={"content-type": file.content_type}
         )
         # 获取图片URL
-        file_url = supabase.storage().from_('avatars').get_public_url(unique_name)
+        file_url = supabase.storage.from_('avatars').get_public_url(unique_name)
         # 更新trades1表
         supabase.table('trades1').update({'image_url': file_url}).eq('id', trade_id).execute()
         return jsonify({'success': True, 'url': file_url})
