@@ -718,21 +718,21 @@ def vip():
             user = response.data[0]
             trader_info = {
                 'trader_name': user['username'],
-                'membership_level': user.get('membership_level', 'VIP会员'),
+                'membership_level': user.get('membership_level', 'VIP Member'),
                 'trading_volume': user.get('trading_volume', 0),
                 'profile_image_url': 'https://via.placeholder.com/180'
             }
         else:
             trader_info = {
                 'trader_name': session['username'],
-                'membership_level': 'VIP会员',
+                'membership_level': 'VIP Member',
                 'trading_volume': 0,
                 'profile_image_url': 'https://via.placeholder.com/180'
             }
     else:
         # 未登录用户的默认信息
         trader_info = {
-            'membership_level': 'VIP会员',
+            'membership_level': 'VIP Member',
             'trading_volume': 0,
             'profile_image_url': 'https://via.placeholder.com/180'
         }
@@ -779,8 +779,8 @@ def init_membership_levels_db():
     # 插入默认会员等级
     default_levels = [
         ('普通会员', 1, 0.00, '基础交易工具,标准市场分析,社区访问,标准支持'),
-        ('黄金会员', 2, 50000.00, '高级交易工具,实时市场分析,优先支持,VIP社区访问,交易策略分享'),
-        ('钻石会员', 3, 200000.00, '所有黄金会员权益,个人交易顾问,定制策略开发,新功能优先体验,专属交易活动'),
+        ('黄金会员', 2, 100000.00, '高级交易工具,实时市场分析,优先支持,VIP社区访问,交易策略分享'),
+        ('钻石会员', 3, 500000.00, '所有黄金会员权益,个人交易顾问,定制策略开发,新功能优先体验,专属交易活动'),
         ('至尊黑卡', 4, 1000000.00, '所有钻石会员权益,24/7专属交易顾问,AI量化策略定制,全球金融峰会邀请,专属投资机会,一对一交易指导')
     ]
     
