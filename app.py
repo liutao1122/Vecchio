@@ -101,16 +101,14 @@ def format_date_for_db(dt):
     return dt.astimezone(pytz.UTC).strftime('%Y-%m-%d %H:%M:%S.%f+00:00')
 
 def get_real_time_price(symbol):
-    """获取股票价格（15分钟延迟）"""
+    """获取股票实时价格"""
     try:
-        api_key = "ob6wG6eBtzdzL0TGVwzz4dDfuIAPaZwM"
-        # 使用聚合数据端点获取最近15分钟的数据
-        current_timestamp = int(datetime.now().timestamp() * 1000)
-        from_timestamp = current_timestamp - (15 * 60 * 1000)  # 15分钟前
-        
-        url = f"https://api.polygon.io/v2/aggs/ticker/{symbol}/range/1/minute/{from_timestamp}/{current_timestamp}?adjusted=true&sort=desc&limit=1&apiKey={api_key}"
-        print(f"\n=== 开始获取 {symbol} 的价格（15分钟延迟）===")
+        api_key = "E7pSY5mZfHuHtXsDmbk8TORK_XHN6ffq"
+        # 使用实时数据端点
+        url = f"https://api.polygon.io/v2/last/trade/{symbol}?apiKey={api_key}"
+        print(f"\n=== 开始获取 {symbol} 的实时价格 ===")
         print(f"请求URL: {url}")
+        
         response = requests.get(url)
         print(f"响应状态码: {response.status_code}")
         print(f"完整响应内容: {response.text}")
@@ -119,9 +117,9 @@ def get_real_time_price(symbol):
             data = response.json()
             print(f"解析后的JSON数据: {data}")
             
-            if data.get('results') and len(data['results']) > 0:
-                price = float(data['results'][0]['c'])  # 使用最近一分钟的收盘价
-                print(f"成功获取 {symbol} 的价格: {price}")
+            if data.get('results'):
+                price = float(data['results']['p'])  # 使用最新成交价
+                print(f"成功获取 {symbol} 的实时价格: {price}")
                 return price
             else:
                 print(f"在响应中未找到价格数据: {data}")
@@ -376,9 +374,18 @@ def index():
                 if current_price:
                     trade['current_price'] = current_price
                     # 更新数据库中的价格
-                    supabase.table('trades1').update({
-                        'current_price': current_price
-                    }).eq('id', trade['id']).execute()
+                    print(f"\n=== 更新数据库中的价格 ===")
+                    print(f"交易ID: {trade['id']}")
+                    print(f"股票代码: {trade['symbol']}")
+                    print(f"新价格: {current_price}")
+                    try:
+                        update_response = supabase.table('trades1').update({
+                            'current_price': current_price,
+                            'updated_at': datetime.now(pytz.UTC).isoformat()
+                        }).eq('id', trade['id']).execute()
+                        print(f"数据库更新响应: {update_response.data}")
+                    except Exception as e:
+                        print(f"更新数据库时发生错误: {str(e)}")
             
             # 计算当前市值和盈亏
             trade['current_amount'] = trade['current_price'] * trade['size'] if trade.get('current_price') else trade['entry_amount']
@@ -1053,6 +1060,7 @@ def logout():
 def update_holding_stocks_prices():
     """更新所有持有中股票的实时价格"""
     try:
+        print("\n=== 开始更新持有股票价格 ===")
         # 获取所有持有中的股票
         response = supabase.table('trades1').select("*").execute()
         trades = response.data
@@ -1061,48 +1069,83 @@ def update_holding_stocks_prices():
             print("No trades found")
             return
         
+        print(f"找到 {len(trades)} 条交易记录")
+        
         # 遍历每个持有中的股票
         for trade in trades:
             # 检查是否是持有中的股票
             if trade.get('exit_price') is None and trade.get('exit_date') is None:
                 symbol = trade['symbol']
+                print(f"\n处理股票: {symbol}")
+                print(f"交易ID: {trade['id']}")
+                print(f"当前价格: {trade.get('current_price')}")
+                
                 # 获取实时价格
                 current_price = get_real_time_price(symbol)
                 
                 if current_price:
+                    print(f"获取到新价格: {current_price}")
                     # 计算新的数据
                     entry_amount = trade['entry_price'] * trade['size']
                     current_amount = current_price * trade['size']
                     profit_amount = current_amount - entry_amount
                     profit_ratio = (profit_amount / entry_amount) * 100 if entry_amount else 0
                     
-                    # 更新数据库中的价格
-                    eastern = pytz.timezone('America/New_York')
-                    current_time = datetime.now(eastern)
-                    update_response = supabase.table('trades1').update({
-                        'current_price': current_price,
-                        'updated_at': format_date_for_db(current_time)
-                    }).eq('id', trade['id']).execute()
+                    print(f"计算得到:")
+                    print(f"入场金额: {entry_amount}")
+                    print(f"当前金额: {current_amount}")
+                    print(f"盈亏金额: {profit_amount}")
+                    print(f"盈亏比例: {profit_ratio}%")
+                    
+                    try:
+                        # 只更新current_price字段
+                        update_data = {
+                            'current_price': current_price
+                        }
+                        print(f"准备更新数据: {update_data}")
+                        
+                        update_response = supabase.table('trades1').update(update_data).eq('id', trade['id']).execute()
+                        
+                        if update_response.data:
+                            print(f"数据库更新成功: {update_response.data}")
+                            # 验证更新是否成功
+                            verify_response = supabase.table('trades1').select('current_price').eq('id', trade['id']).execute()
+                            if verify_response.data:
+                                print(f"验证更新后的价格: {verify_response.data[0]['current_price']}")
+                        else:
+                            print("数据库更新失败，没有返回数据")
+                            
+                    except Exception as e:
+                        print(f"更新数据库时发生错误: {str(e)}")
+                        print(f"错误详情: {type(e).__name__}")
+                        import traceback
+                        print(f"错误堆栈: {traceback.format_exc()}")
                 
-                    print(f"Updated price for {symbol}: {current_price}")
+                    print(f"成功更新 {symbol} 的价格: {current_price}")
                 else:
-                    print(f"Failed to get price for {symbol}")
+                    print(f"获取 {symbol} 价格失败")
+            else:
+                print(f"\n跳过已平仓的股票: {trade['symbol']}")
                 
     except Exception as e:
-        print(f"Error updating stock prices: {str(e)}")
+        print(f"更新股票价格时发生错误: {str(e)}")
+        import traceback
+        print(f"错误堆栈: {traceback.format_exc()}")
 
 # 创建调度器
 scheduler = BackgroundScheduler()
 scheduler.start()
 
-# 添加定时任务，每一分钟更新一次价格
+# 添加定时任务，每30秒更新一次价格
 scheduler.add_job(
     func=update_holding_stocks_prices,
-    trigger=IntervalTrigger(minutes=1),
+    trigger=IntervalTrigger(seconds=30),  # 改为30秒
     id='update_stock_prices',
-    name='Update holding stocks prices every minute',
+    name='Update holding stocks prices every 30 seconds',
     replace_existing=True
 )
+
+print("价格更新定时任务已启动，每30秒更新一次")
 
 @app.route('/api/check-login', methods=['GET'])
 def check_login():
@@ -1909,7 +1952,7 @@ def upload_trade_image():
         unique_name = f"avatars/trade_{trade_id}_{uuid.uuid4().hex}{ext}"
         # 上传到Supabase Storage
         file_bytes = file.read()
-        # 修正调用方式，兼容 supabase-py 1.x 版本
+        # 修正调用方式，兼容本地 supabase-py 版本
         result = supabase.storage.from_('avatars').upload(
             unique_name,
             file_bytes,
