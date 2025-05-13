@@ -358,39 +358,6 @@
                                 </div>
                             </div>
                         </div>
-                        <!-- 独立访客统计卡片 -->
-                        <div class="row mt-4">
-                          <div class="col-md-4">
-                            <div class="card">
-                              <div class="card-body text-center">
-                                <h3 class="text-warning mb-3">独立访客数</h3>
-                                <h2 class="mb-0" id="unique-visitors-count">0</h2>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                        <!-- 独立IP访问明细表格 -->
-                        <div class="card mt-4">
-                          <div class="card-header">
-                            <h5 class="card-title mb-0">独立IP访问明细</h5>
-                          </div>
-                          <div class="card-body">
-                            <div class="table-responsive">
-                              <table class="table table-bordered table-hover">
-                                <thead>
-                                  <tr>
-                                    <th>IP地址</th>
-                                    <th>最后访问时间</th>
-                                    <th>归属地</th>
-                                  </tr>
-                                </thead>
-                                <tbody id="unique-visitors-table">
-                                  <!-- 独立访客数据将通过JS动态加载 -->
-                                </tbody>
-                              </table>
-                            </div>
-                          </div>
-                        </div>
                     </div>
 
                     <!-- 数据统计部分 -->
@@ -1206,24 +1173,6 @@
                         document.getElementById('vip-users').textContent = vipUsers;
                     }
                 });
-
-            // 加载独立访客统计
-            fetch('/api/admin/unique-visitors')
-              .then(res => res.json())
-              .then(data => {
-                if (data.success) {
-                  document.getElementById('unique-visitors-count').innerText = data.total_unique;
-                  let html = '';
-                  data.data.forEach(item => {
-                    html += `<tr>
-                      <td>${item.ip_address}</td>
-                      <td>${formatDateTime(item.visit_time)}</td>
-                      <td>${item.location || '-'}</td>
-                    </tr>`;
-                  });
-                  document.getElementById('unique-visitors-table').innerHTML = html;
-                }
-              });
         }
 
         // 创建用户

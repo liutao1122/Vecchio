@@ -1967,239 +1967,101 @@ def upload_trade_image():
         print(f"Trade image upload error: {str(e)}")
         return jsonify({'success': False, 'message': 'Upload failed'}), 500
 
-def init_visit_stats_db():
-    try:
-        # 尝试查询表是否存在
-        response = supabase.table('visit_stats').select("*").limit(1).execute()
-        print("Visit stats table exists")
-    except Exception as e:
-        print(f"Visit stats table does not exist: {str(e)}")
-        print("Please create the visit_stats table in Supabase with the following SQL:")
-        print("""
-        CREATE TABLE IF NOT EXISTS visit_stats (
-            id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
-            ip_address TEXT NOT NULL,
-            visit_date DATE NOT NULL,
-            visit_time TIMESTAMP WITH TIME ZONE NOT NULL,
-            user_agent TEXT,
-            page_visited TEXT NOT NULL,
-            created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-        );
-        """)
-        print("You can execute this SQL in the Supabase SQL editor.")
-
-@app.before_request
-def record_visit():
-    try:
-        # 获取访问信息
-        ip_address = request.remote_addr
-        user_agent = request.headers.get('User-Agent', '')
-        page_visited = request.path
-        
-        # 获取当前时间
-        current_time = datetime.now(pytz.UTC)
-        
-        # 记录访问信息
-        visit_data = {
-            'ip_address': ip_address,
-            'visit_date': current_time.date().isoformat(),
-            'visit_time': current_time.isoformat(),
-            'user_agent': user_agent,
-            'page_visited': page_visited,
-            'created_at': current_time.isoformat()
-        }
-        
-        # 插入访问记录
-        supabase.table('visit_stats').insert(visit_data).execute()
-    except Exception as e:
-        print(f"Error recording visit: {str(e)}")
-
-@app.route('/api/admin/visit-stats', methods=['GET'])
-def get_visit_stats():
+@app.route('/api/admin/whatsapp-agents', methods=['GET', 'POST', 'PUT', 'DELETE'])
+def manage_whatsapp_agents():
     try:
         # 检查管理员权限
         if 'role' not in session or session['role'] != 'admin':
             return jsonify({'success': False, 'message': '无权限访问'}), 403
             
-        # 获取查询参数
-        start_date = request.args.get('start_date')
-        end_date = request.args.get('end_date')
-        
-        # 构建查询
-        query = supabase.table('visit_stats').select("*")
-        
-        # 如果提供了日期范围，添加日期过滤
-        if start_date and end_date:
-            query = query.gte('visit_date', start_date).lte('visit_date', end_date)
-            
-        # 执行查询
-        response = query.order('visit_time', desc=True).execute()
-        
-        if not response.data:
+        if request.method == 'GET':
+            # 获取所有WhatsApp客服
+            response = supabase.table('whatsapp_agents').select("*").execute()
             return jsonify({
                 'success': True,
-                'stats': [],
-                'summary': {
-                    'total_visits': 0,
-                    'unique_ips': 0,
-                    'daily_visits': {}
-                }
+                'agents': response.data
             })
             
-        # 处理数据
-        visits = response.data
-        
-        # 计算总访问量
-        total_visits = len(visits)
-        
-        # 计算独立IP数
-        unique_ips = len(set(visit['ip_address'] for visit in visits))
-        
-        # 计算每日访问量
-        daily_visits = {}
-        for visit in visits:
-            date = visit['visit_date']
-            if date not in daily_visits:
-                daily_visits[date] = {
-                    'total_visits': 0,
-                    'unique_ips': set()
-                }
-            daily_visits[date]['total_visits'] += 1
-            daily_visits[date]['unique_ips'].add(visit['ip_address'])
+        elif request.method == 'POST':
+            # 添加新的WhatsApp客服
+            data = request.get_json()
+            required_fields = ['name', 'phone_number']
             
-        # 转换每日访问量数据格式
-        for date in daily_visits:
-            daily_visits[date]['unique_ips'] = len(daily_visits[date]['unique_ips'])
-            
-        return jsonify({
-            'success': True,
-            'stats': visits,
-            'summary': {
-                'total_visits': total_visits,
-                'unique_ips': unique_ips,
-                'daily_visits': daily_visits
+            if not all(field in data for field in required_fields):
+                return jsonify({'success': False, 'message': '缺少必要字段'}), 400
+                
+            # 验证电话号码格式
+            phone_number = data['phone_number']
+            if not phone_number.startswith('+'):
+                phone_number = '+' + phone_number
+                
+            agent_data = {
+                'name': data['name'],
+                'phone_number': phone_number,
+                'is_active': data.get('is_active', True),
+                'created_at': datetime.now(pytz.UTC).isoformat(),
+                'updated_at': datetime.now(pytz.UTC).isoformat()
             }
-        })
-        
+            
+            response = supabase.table('whatsapp_agents').insert(agent_data).execute()
+            
+            return jsonify({
+                'success': True,
+                'message': 'WhatsApp客服添加成功',
+                'agent': response.data[0] if response.data else None
+            })
+            
+        elif request.method == 'PUT':
+            # 更新WhatsApp客服信息
+            data = request.get_json()
+            agent_id = data.get('id')
+            
+            if not agent_id:
+                return jsonify({'success': False, 'message': '缺少客服ID'}), 400
+                
+            update_data = {}
+            if 'name' in data:
+                update_data['name'] = data['name']
+            if 'phone_number' in data:
+                phone_number = data['phone_number']
+                if not phone_number.startswith('+'):
+                    phone_number = '+' + phone_number
+                update_data['phone_number'] = phone_number
+            if 'is_active' in data:
+                update_data['is_active'] = data['is_active']
+                
+            update_data['updated_at'] = datetime.now(pytz.UTC).isoformat()
+            
+            response = supabase.table('whatsapp_agents').update(update_data).eq('id', agent_id).execute()
+            
+            return jsonify({
+                'success': True,
+                'message': 'WhatsApp客服更新成功',
+                'agent': response.data[0] if response.data else None
+            })
+            
+        elif request.method == 'DELETE':
+            # 删除WhatsApp客服
+            agent_id = request.args.get('id')
+            if not agent_id:
+                return jsonify({'success': False, 'message': '缺少客服ID'}), 400
+                
+            response = supabase.table('whatsapp_agents').delete().eq('id', agent_id).execute()
+            
+            return jsonify({
+                'success': True,
+                'message': 'WhatsApp客服删除成功'
+            })
+            
     except Exception as e:
-        print(f"Get visit stats error: {str(e)}")
-        return jsonify({'success': False, 'message': '获取访问统计失败'}), 500
-
-@app.route('/api/admin/visit-stats/export', methods=['GET'])
-def export_visit_stats():
-    try:
-        # 检查管理员权限
-        if 'role' not in session or session['role'] != 'admin':
-            return jsonify({'success': False, 'message': '无权限访问'}), 403
-            
-        # 获取查询参数
-        start_date = request.args.get('start_date')
-        end_date = request.args.get('end_date')
-        
-        # 构建查询
-        query = supabase.table('visit_stats').select("*")
-        
-        # 如果提供了日期范围，添加日期过滤
-        if start_date and end_date:
-            query = query.gte('visit_date', start_date).lte('visit_date', end_date)
-            
-        # 执行查询
-        response = query.order('visit_time', desc=True).execute()
-        
-        if not response.data:
-            return jsonify({'success': False, 'message': '没有数据可导出'}), 404
-            
-        # 创建CSV数据
-        csv_data = []
-        headers = ['访问时间', 'IP地址', '访问页面', '用户代理']
-        
-        for visit in response.data:
-            csv_data.append([
-                visit['visit_time'],
-                visit['ip_address'],
-                visit['page_visited'],
-                visit['user_agent']
-            ])
-            
-        # 生成CSV文件
-        import csv
-        import io
-        
-        output = io.StringIO()
-        writer = csv.writer(output)
-        writer.writerow(headers)
-        writer.writerows(csv_data)
-        
-        # 设置响应头
-        output.seek(0)
-        return Response(
-            output,
-            mimetype='text/csv',
-            headers={
-                'Content-Disposition': 'attachment; filename=visit_stats.csv'
-            }
-        )
-        
-    except Exception as e:
-        print(f"Export visit stats error: {str(e)}")
-        return jsonify({'success': False, 'message': '导出访问统计失败'}), 500
-
-def get_ip_location(ip):
-    try:
-        if ip == '127.0.0.1' or ip.startswith('192.168.') or ip.startswith('10.'):
-            return '本地局域网'
-        resp = requests.get(f"https://ipinfo.io/{ip}/json")
-        if resp.status_code == 200:
-            data = resp.json()
-            location = ', '.join(filter(None, [
-                data.get('city'),
-                data.get('region'),
-                data.get('country')
-            ]))
-            return location or '未知'
-        else:
-            return '未知'
-    except Exception:
-        return '未知'
-
-@app.route('/api/admin/unique-visitors', methods=['GET'])
-def get_unique_visitors():
-    try:
-        if 'role' not in session or session['role'] != 'admin':
-            return jsonify({'success': False, 'message': '无权限访问'}), 403
-
-        response = supabase.table('visit_stats').select('ip_address, visit_time').order('ip_address', desc=False).order('visit_time', desc=True).execute()
-        visits = response.data if response.data else []
-
-        unique_visitors = {}
-        for v in visits:
-            ip = v['ip_address']
-            if ip not in unique_visitors:
-                unique_visitors[ip] = v['visit_time']
-
-        # 查询每个IP的归属地
-        result = []
-        for ip, visit_time in unique_visitors.items():
-            location = get_ip_location(ip)
-            result.append({'ip_address': ip, 'visit_time': visit_time, 'location': location})
-
-        return jsonify({
-            'success': True,
-            'total_unique': len(result),
-            'data': result
-        })
-    except Exception as e:
-        import traceback
-        print("Get unique visitors error:", str(e))
-        print(traceback.format_exc())
-        return jsonify({'success': False, 'message': '获取独立访客失败'}), 500
+        print(f"Manage WhatsApp agents error: {str(e)}")
+        return jsonify({'success': False, 'message': '操作失败'}), 500
 
 if __name__ == '__main__':
     # 初始化数据库
     init_user_db()
     init_membership_levels_db()
     init_user_membership_db()
-    init_visit_stats_db()  # 添加访问统计表初始化
     
     # 启动应用
     app.run(debug=True)
