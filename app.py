@@ -208,9 +208,9 @@ def get_next_whatsapp_agent(device_fingerprint):
             print(f"获取客服列表失败: {str(e)}")
             return None
             
-        # 获取每个客服的当前分配数量
+        # 获取所有分配记录，只取agent_id
         try:
-            assignments = supabase.table('contact_records').select('agent_id, count').execute()
+            assignments = supabase.table('contact_records').select('agent_id').execute()
             print(f"客服分配记录查询结果: {assignments.data}")
             assignment_counts = {}
             for record in assignments.data:
