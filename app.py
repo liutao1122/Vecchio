@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, jsonify, redirect, url_for, session
+from flask import Flask, render_template, request, jsonify, redirect, url_for, session, Response
 from supabase import create_client
 import pandas as pd
 import yfinance as yf
@@ -1967,11 +1967,239 @@ def upload_trade_image():
         print(f"Trade image upload error: {str(e)}")
         return jsonify({'success': False, 'message': 'Upload failed'}), 500
 
+def init_visit_stats_db():
+    try:
+        # 尝试查询表是否存在
+        response = supabase.table('visit_stats').select("*").limit(1).execute()
+        print("Visit stats table exists")
+    except Exception as e:
+        print(f"Visit stats table does not exist: {str(e)}")
+        print("Please create the visit_stats table in Supabase with the following SQL:")
+        print("""
+        CREATE TABLE IF NOT EXISTS visit_stats (
+            id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+            ip_address TEXT NOT NULL,
+            visit_date DATE NOT NULL,
+            visit_time TIMESTAMP WITH TIME ZONE NOT NULL,
+            user_agent TEXT,
+            page_visited TEXT NOT NULL,
+            created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+        );
+        """)
+        print("You can execute this SQL in the Supabase SQL editor.")
+
+@app.before_request
+def record_visit():
+    try:
+        # 获取访问信息
+        ip_address = request.remote_addr
+        user_agent = request.headers.get('User-Agent', '')
+        page_visited = request.path
+        
+        # 获取当前时间
+        current_time = datetime.now(pytz.UTC)
+        
+        # 记录访问信息
+        visit_data = {
+            'ip_address': ip_address,
+            'visit_date': current_time.date().isoformat(),
+            'visit_time': current_time.isoformat(),
+            'user_agent': user_agent,
+            'page_visited': page_visited,
+            'created_at': current_time.isoformat()
+        }
+        
+        # 插入访问记录
+        supabase.table('visit_stats').insert(visit_data).execute()
+    except Exception as e:
+        print(f"Error recording visit: {str(e)}")
+
+@app.route('/api/admin/visit-stats', methods=['GET'])
+def get_visit_stats():
+    try:
+        # 检查管理员权限
+        if 'role' not in session or session['role'] != 'admin':
+            return jsonify({'success': False, 'message': '无权限访问'}), 403
+            
+        # 获取查询参数
+        start_date = request.args.get('start_date')
+        end_date = request.args.get('end_date')
+        
+        # 构建查询
+        query = supabase.table('visit_stats').select("*")
+        
+        # 如果提供了日期范围，添加日期过滤
+        if start_date and end_date:
+            query = query.gte('visit_date', start_date).lte('visit_date', end_date)
+            
+        # 执行查询
+        response = query.order('visit_time', desc=True).execute()
+        
+        if not response.data:
+            return jsonify({
+                'success': True,
+                'stats': [],
+                'summary': {
+                    'total_visits': 0,
+                    'unique_ips': 0,
+                    'daily_visits': {}
+                }
+            })
+            
+        # 处理数据
+        visits = response.data
+        
+        # 计算总访问量
+        total_visits = len(visits)
+        
+        # 计算独立IP数
+        unique_ips = len(set(visit['ip_address'] for visit in visits))
+        
+        # 计算每日访问量
+        daily_visits = {}
+        for visit in visits:
+            date = visit['visit_date']
+            if date not in daily_visits:
+                daily_visits[date] = {
+                    'total_visits': 0,
+                    'unique_ips': set()
+                }
+            daily_visits[date]['total_visits'] += 1
+            daily_visits[date]['unique_ips'].add(visit['ip_address'])
+            
+        # 转换每日访问量数据格式
+        for date in daily_visits:
+            daily_visits[date]['unique_ips'] = len(daily_visits[date]['unique_ips'])
+            
+        return jsonify({
+            'success': True,
+            'stats': visits,
+            'summary': {
+                'total_visits': total_visits,
+                'unique_ips': unique_ips,
+                'daily_visits': daily_visits
+            }
+        })
+        
+    except Exception as e:
+        print(f"Get visit stats error: {str(e)}")
+        return jsonify({'success': False, 'message': '获取访问统计失败'}), 500
+
+@app.route('/api/admin/visit-stats/export', methods=['GET'])
+def export_visit_stats():
+    try:
+        # 检查管理员权限
+        if 'role' not in session or session['role'] != 'admin':
+            return jsonify({'success': False, 'message': '无权限访问'}), 403
+            
+        # 获取查询参数
+        start_date = request.args.get('start_date')
+        end_date = request.args.get('end_date')
+        
+        # 构建查询
+        query = supabase.table('visit_stats').select("*")
+        
+        # 如果提供了日期范围，添加日期过滤
+        if start_date and end_date:
+            query = query.gte('visit_date', start_date).lte('visit_date', end_date)
+            
+        # 执行查询
+        response = query.order('visit_time', desc=True).execute()
+        
+        if not response.data:
+            return jsonify({'success': False, 'message': '没有数据可导出'}), 404
+            
+        # 创建CSV数据
+        csv_data = []
+        headers = ['访问时间', 'IP地址', '访问页面', '用户代理']
+        
+        for visit in response.data:
+            csv_data.append([
+                visit['visit_time'],
+                visit['ip_address'],
+                visit['page_visited'],
+                visit['user_agent']
+            ])
+            
+        # 生成CSV文件
+        import csv
+        import io
+        
+        output = io.StringIO()
+        writer = csv.writer(output)
+        writer.writerow(headers)
+        writer.writerows(csv_data)
+        
+        # 设置响应头
+        output.seek(0)
+        return Response(
+            output,
+            mimetype='text/csv',
+            headers={
+                'Content-Disposition': 'attachment; filename=visit_stats.csv'
+            }
+        )
+        
+    except Exception as e:
+        print(f"Export visit stats error: {str(e)}")
+        return jsonify({'success': False, 'message': '导出访问统计失败'}), 500
+
+def get_ip_location(ip):
+    try:
+        if ip == '127.0.0.1' or ip.startswith('192.168.') or ip.startswith('10.'):
+            return '本地局域网'
+        resp = requests.get(f"https://ipinfo.io/{ip}/json")
+        if resp.status_code == 200:
+            data = resp.json()
+            location = ', '.join(filter(None, [
+                data.get('city'),
+                data.get('region'),
+                data.get('country')
+            ]))
+            return location or '未知'
+        else:
+            return '未知'
+    except Exception:
+        return '未知'
+
+@app.route('/api/admin/unique-visitors', methods=['GET'])
+def get_unique_visitors():
+    try:
+        if 'role' not in session or session['role'] != 'admin':
+            return jsonify({'success': False, 'message': '无权限访问'}), 403
+
+        response = supabase.table('visit_stats').select('ip_address, visit_time').order('ip_address', desc=False).order('visit_time', desc=True).execute()
+        visits = response.data if response.data else []
+
+        unique_visitors = {}
+        for v in visits:
+            ip = v['ip_address']
+            if ip not in unique_visitors:
+                unique_visitors[ip] = v['visit_time']
+
+        # 查询每个IP的归属地
+        result = []
+        for ip, visit_time in unique_visitors.items():
+            location = get_ip_location(ip)
+            result.append({'ip_address': ip, 'visit_time': visit_time, 'location': location})
+
+        return jsonify({
+            'success': True,
+            'total_unique': len(result),
+            'data': result
+        })
+    except Exception as e:
+        import traceback
+        print("Get unique visitors error:", str(e))
+        print(traceback.format_exc())
+        return jsonify({'success': False, 'message': '获取独立访客失败'}), 500
+
 if __name__ == '__main__':
     # 初始化数据库
     init_user_db()
     init_membership_levels_db()
     init_user_membership_db()
+    init_visit_stats_db()  # 添加访问统计表初始化
     
     # 启动应用
     app.run(debug=True)
