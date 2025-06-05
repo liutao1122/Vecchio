@@ -2073,13 +2073,13 @@ document.getElementById('change-password-form').onsubmit = async function(e) {
     });
     const res = await resp.json();
     if (res.success) {
-        alert(res.message || '密码修改成功！');
+        alert(res.message || 'Password changed successfully!');
         var modal = bootstrap.Modal.getInstance(document.getElementById('settingsModal'));
         if (modal) modal.hide();
         this.reset();
         location.reload();
     } else {
-        alert(res.message || '密码修改失败！');
+        alert(res.message || 'Password change failed!');
     }
 };
 </script>
@@ -2094,13 +2094,13 @@ document.getElementById('set-asset-form').onsubmit = async function(e) {
     });
     const res = await resp.json();
     if (res.success) {
-        alert(res.message || '初始资金设置成功！');
+        alert(res.message || 'Initial asset set successfully!');
         var modal = bootstrap.Modal.getInstance(document.getElementById('settingsModal'));
         if (modal) modal.hide();
         this.reset();
         location.reload();
     } else {
-        alert(res.message || '初始资金设置失败！');
+        alert(res.message || 'Failed to set initial asset!');
     }
 };
 </script>
@@ -2115,7 +2115,11 @@ document.getElementById('set-asset-form').onsubmit = async function(e) {
       <div class="modal-body center">
         <img id="avatar-preview-img" src="{{ trader_info.avatar_url or 'https://api.dicebear.com/7.x/avataaars/svg?seed=1' }}" alt="avatar" style="width:180px;height:180px;border-radius:50%;background:#232b3e;box-shadow:0 0 24px #FFD70099;">
         <form id="upload-avatar-form" method="POST" action="/api/upload-avatar" enctype="multipart/form-data" style="margin-top:24px;">
-          <input name="avatar" id="avatar" type="file" accept="image/*" class="form-control" required style="margin-bottom:12px;">
+          <label class="btn btn-secondary w-100" style="margin-bottom:12px;cursor:pointer;">
+            Choose File
+            <input name="avatar" id="avatar" type="file" accept="image/*" class="form-control" required style="display:none;">
+          </label>
+          <span id="avatar-file-name" style="display:block;margin-bottom:12px;color:#FFD700;text-align:center;"></span>
           <button type="submit" class="btn btn-primary w-100">Change Avatar</button>
         </form>
       </div>
@@ -2123,32 +2127,9 @@ document.getElementById('set-asset-form').onsubmit = async function(e) {
   </div>
 </div>
 <script>
-// 头像点击弹出预览
-const avatarTrigger = document.getElementById('avatar-preview-trigger');
-const avatarModal = new bootstrap.Modal(document.getElementById('avatarModal'));
-avatarTrigger.onclick = function() {
-  document.getElementById('avatar-preview-img').src = avatarTrigger.querySelector('img').src;
-  avatarModal.show();
-};
-// 上传头像表单AJAX
-const uploadAvatarForm = document.getElementById('upload-avatar-form');
-uploadAvatarForm.onsubmit = async function(e) {
-  e.preventDefault();
-  const formData = new FormData(this);
-  const resp = await fetch('/api/upload-avatar', {
-    method: 'POST',
-    body: formData,
-    credentials: 'include'
-  });
-  const res = await resp.json();
-  if (res.success) {
-    document.getElementById('avatar-preview-img').src = res.url;
-    avatarTrigger.querySelector('img').src = res.url;
-    alert('头像更换成功！');
-    avatarModal.hide();
-  } else {
-    alert(res.message || '头像上传失败！');
-  }
+document.getElementById('avatar').onchange = function() {
+  var fileName = this.files[0] ? this.files[0].name : '';
+  document.getElementById('avatar-file-name').textContent = fileName;
 };
 </script>
 <script>
@@ -2162,12 +2143,12 @@ document.getElementById('trade-upload-form').onsubmit = async function(e) {
     });
     const res = await resp.json();
     if (res.success) {
-        alert(res.message || '上传成功！');
+        alert(res.message || 'Upload successful!');
         var modal = bootstrap.Modal.getInstance(document.getElementById('tradeUploadModal'));
         if (modal) modal.hide();
         location.reload();
     } else {
-        alert(res.message || '上传失败！');
+        alert(res.message || 'Upload failed!');
     }
 };
 </script>
@@ -2182,12 +2163,12 @@ document.getElementById('close-trade-form').onsubmit = async function(e) {
     });
     const res = await resp.json();
     if (res.success) {
-        alert(res.message || '平仓成功！');
+        alert(res.message || 'Closed successfully!');
         var modal = bootstrap.Modal.getInstance(document.getElementById('closeTradeModal'));
         if (modal) modal.hide();
         location.reload();
     } else {
-        alert(res.message || '平仓失败！');
+        alert(res.message || 'Close failed!');
     }
 };
 </script>

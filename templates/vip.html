@@ -875,6 +875,18 @@
     </style>
 </head>
 <body>
+{% set level_map = {
+    'VIP': 'Regular Member',
+    'Regular Member': 'Regular Member',
+    'Gold Member': 'Gold Member',
+    'Diamond Member': 'Diamond Member',
+    'Supreme Black Card': 'Supreme Black Card',
+    '黄金会员': 'Gold Member',
+    '钻石会员': 'Diamond Member',
+    '至尊黑卡': 'Supreme Black Card',
+    '普通会员': 'Regular Member',
+} %}
+{% set display_level = level_map.get(trader_info.membership_level, trader_info.membership_level) %}
     <!-- Top Navigation -->
     <nav class="top-nav">
         <div class="nav-content">
@@ -965,7 +977,7 @@
                             <div class="current-level">
                                 <i class="bi bi-star-fill"></i>
                                 <h4 class="text-white mb-0" style="font-size: 1rem;">Current Level</h4>
-                                <p class="text-gold mb-0">{{ trader_info.membership_level }}</p>
+                                <p class="text-gold mb-0">{{ display_level }}</p>
                             </div>
                         </div>
                         <div class="col-md-6">

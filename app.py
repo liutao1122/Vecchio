@@ -579,6 +579,10 @@ def leaderboard():
     # If no traders found, return empty list
     if not traders:
         traders = []
+    # 补充默认头像
+    for trader in traders:
+        if not trader.get('profile_image_url'):
+            trader['profile_image_url'] = DEFAULT_AVATAR_URL
     return render_template('leaderboard.html', traders=traders)
 
 @app.route('/api/upload-avatar', methods=['POST'])
@@ -635,9 +639,11 @@ def get_avatar():
         if not user_id:
             return jsonify({'success': False, 'message': '请先登录'}), 401
         user_resp = supabase.table('users').select('avatar_url').eq('id', user_id).single().execute()
-        if user_resp.data and user_resp.data.get('avatar_url'):
-            return jsonify({'success': True, 'url': user_resp.data['avatar_url']})
-        return jsonify({'success': False, 'message': 'Avatar not found'})
+        default_avatar = 'https://cdn.jsdelivr.net/gh/realzhangm/oss@main/avatar/default.png'
+        avatar_url = user_resp.data.get('avatar_url') if user_resp.data else None
+        if not avatar_url:
+            avatar_url = default_avatar
+        return jsonify({'success': True, 'url': avatar_url})
     except Exception as e:
         print(f"Failed to get avatar: {str(e)}")
         return jsonify({'success': False, 'message': 'Failed to get avatar'}), 500
@@ -674,10 +680,10 @@ def membership_level_class(level):
         'Gold Member': 'gold-member',
         'Diamond Member': 'diamond-member',
         'Supreme Black Card': 'black-card-member',
-        '黄金会员': 'gold-member',
-        '钻石会员': 'diamond-member',
-        '至尊黑卡': 'black-card-member',
-        '普通会员': 'regular-member'
+        'gold-member': 'gold-member',
+        'diamond-member': 'diamond-member',
+        'black-card-member': 'black-card-member',
+        'regular-member': 'regular-member'
     }
     return level_map.get(level, 'regular-member')
 
@@ -712,12 +718,13 @@ def vip():
 def vip_dashboard():
     if 'username' not in session:
         return redirect(url_for('vip'))
-
-    # 获取用户信息
     user_resp = supabase.table('users').select('*').eq('username', session['username']).execute()
     user = user_resp.data[0] if user_resp.data else {}
+    user = fill_default_avatar(user)
+    avatar_url = user.get('avatar_url')
+    level_cn = user.get('membership_level', '普通会员')
+    level_en = get_level_en(level_cn)
     initial_asset = float(user.get('initial_asset', 0) or 0)
-    avatar_url = user.get('avatar_url') or 'https://via.placeholder.com/180'
 
     # 用 user_id 查询交易记录
     trades_resp = supabase.table('trades').select('*').eq('user_id', user['id']).execute()
@@ -758,7 +765,7 @@ def vip_dashboard():
 
     trader_info = {
         'trader_name': user.get('username', ''),
-        'membership_level': user.get('membership_level', 'VIP Member'),
+        'membership_level': level_en,
         'trading_volume': user.get('trading_volume', 0),
         'profile_image_url': avatar_url
     }
@@ -1187,7 +1194,9 @@ def check_login():
             # 获取用户信息
             response = supabase.table('users').select('*').eq('id', session['user_id']).execute()
             if response.data:
-                user = response.data[0]
+                user = fill_default_avatar(response.data[0])
+                level_cn = user.get('membership_level', '普通会员')
+                level_en = get_level_en(level_cn)
                 return jsonify({
                     'isLoggedIn': True,
                     'user': {
@@ -1195,10 +1204,10 @@ def check_login():
                         'username': user['username'],
                         'role': user.get('role', 'user'),
                         'email': user.get('email'),
-                        'avatar_url': user.get('avatar_url')
+                        'avatar_url': user.get('avatar_url'),
+                        'membership_level': level_en
                     }
                 })
-        
         return jsonify({'isLoggedIn': False})
     except Exception as e:
         print(f"Check login error: {str(e)}")
@@ -1215,27 +1224,26 @@ def manage_users():
         if request.method == 'GET':
             # 获取所有用户
             response = supabase.table('users').select('*').execute()
-            
             # 过滤敏感信息
             users = []
             for user in response.data:
+                user = fill_default_avatar(user)
+                level_cn = user.get('membership_level', '普通会员')
+                level_en = get_level_en(level_cn)
                 users.append({
                     'id': user['id'],
                     'username': user['username'],
                     'email': user.get('email'),
                     'role': user.get('role', 'user'),
                     'status': user.get('status', 'active'),
-                    'membership_level': user.get('membership_level', '普通会员'),
+                    'membership_level': level_en,
                     'last_login': user.get('last_login'),
                     'last_login_ip': user.get('last_login_ip'),
                     'last_login_location': user.get('last_login_location'),
-                    'created_at': user.get('created_at')
+                    'created_at': user.get('created_at'),
+                    'avatar_url': user.get('avatar_url')
                 })
-                
-            return jsonify({
-                'success': True,
-                'users': users
-            })
+            return jsonify({'success': True, 'users': users})
             
         elif request.method == 'POST':
             # 创建新用户
@@ -2272,33 +2280,72 @@ def manage_videos():
             title = request.form.get('title')
             description = request.form.get('description')
             now = datetime.now(pytz.UTC).isoformat()
+            
             if not file or not title:
                 return jsonify({'success': False, 'message': '标题和视频为必填项'}), 400
+                
+            # 检查文件大小（限制为50MB）
+            file_bytes = file.read()
+            if len(file_bytes) > 50 * 1024 * 1024:  # 50MB
+                return jsonify({'success': False, 'message': '文件大小不能超过50MB'}), 400
+                
             filename = secure_filename(file.filename)
             file_ext = filename.rsplit('.', 1)[-1].lower() if '.' in filename else ''
-            bucket = 'videos'
+            
+            # 检查文件类型
+            allowed_extensions = {'mp4', 'mov', 'avi', 'wmv', 'flv', 'mkv'}
+            if file_ext not in allowed_extensions:
+                return jsonify({'success': False, 'message': f'不支持的文件类型，仅支持: {", ".join(allowed_extensions)}'}), 400
+            
             file_path = f"{uuid.uuid4().hex}_{filename}"
-            file_bytes = file.read()
-            result = supabase.storage.from_('videos').upload(
-                file_path,
-                file_bytes,
-                file_options={"content-type": file.mimetype}
-            )
-            if hasattr(result, 'error') and result.error:
-                return jsonify({'success': False, 'message': f'视频上传失败: {result.error}'}), 500
-            public_url = supabase.storage.from_('videos').get_public_url(file_path)
-            video_data = {
-                'title': title,
-                'description': description,
-                'video_url': public_url,
-                'last_update': now
-            }
-            insert_resp = supabase.table('videos').insert(video_data).execute()
-            if hasattr(insert_resp, 'error') and insert_resp.error:
-                return jsonify({'success': False, 'message': f'写入数据库失败: {insert_resp.error}'}), 500
-            return jsonify({'success': True, 'message': '上传成功', 'video': insert_resp.data[0]})
+            
+            try:
+                # 上传到 Supabase Storage
+                result = supabase.storage.from_('videos').upload(
+                    file_path,
+                    file_bytes,
+                    file_options={"content-type": file.mimetype}
+                )
+                
+                if hasattr(result, 'error') and result.error:
+                    print(f"Storage上传错误: {result.error}")
+                    return jsonify({'success': False, 'message': f'视频上传失败: {result.error}'}), 500
+                    
+                # 获取公开URL
+                public_url = supabase.storage.from_('videos').get_public_url(file_path)
+                
+                # 写入数据库
+                video_data = {
+                    'title': title,
+                    'description': description,
+                    'video_url': public_url,
+                    'last_update': now
+                }
+                
+                insert_resp = supabase.table('videos').insert(video_data).execute()
+                
+                if hasattr(insert_resp, 'error') and insert_resp.error:
+                    print(f"数据库写入错误: {insert_resp.error}")
+                    # 如果数据库写入失败，尝试删除已上传的文件
+                    try:
+                        supabase.storage.from_('videos').remove([file_path])
+                    except Exception as e:
+                        print(f"清理文件失败: {str(e)}")
+                    return jsonify({'success': False, 'message': f'写入数据库失败: {insert_resp.error}'}), 500
+                    
+                return jsonify({'success': True, 'message': '上传成功', 'video': insert_resp.data[0]})
+                
+            except Exception as e:
+                print(f"上传过程异常: {str(e)}")
+                # 尝试清理已上传的文件
+                try:
+                    supabase.storage.from_('videos').remove([file_path])
+                except:
+                    pass
+                return jsonify({'success': False, 'message': f'上传失败: {str(e)}'}), 500
+                
     except Exception as e:
-        print(f"视频上传异常: {str(e)}")
+        print(f"视频管理异常: {str(e)}")
         return jsonify({'success': False, 'message': str(e)}), 500
 
 @app.route('/api/admin/videos/<int:video_id>', methods=['PUT', 'DELETE'])
@@ -2333,6 +2380,28 @@ def update_video(video_id):
     except Exception as e:
         print(f"视频管理异常: {str(e)}")
         return jsonify({'success': False, 'message': str(e)}), 500
+
+# 默认头像URL和补头像函数
+DEFAULT_AVATAR_URL = 'https://cdn.jsdelivr.net/gh/realzhangm/oss@main/avatar/default.png'
+def fill_default_avatar(user):
+    if not user.get('avatar_url'):
+        user['avatar_url'] = DEFAULT_AVATAR_URL
+    return user
+
+# 会员等级中英文映射
+LEVEL_EN_MAP = {
+    '至尊黑卡': 'Supreme Black Card',
+    '钻石会员': 'Diamond Member',
+    '黄金会员': 'Gold Member',
+    '普通会员': 'Regular Member',
+    'Supreme Black Card': 'Supreme Black Card',
+    'Diamond Member': 'Diamond Member',
+    'Gold Member': 'Gold Member',
+    'Regular Member': 'Regular Member'
+}
+
+def get_level_en(level_cn):
+    return LEVEL_EN_MAP.get(level_cn, level_cn)
 
 if __name__ == '__main__':
     # 初始化数据库
