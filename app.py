@@ -19,6 +19,7 @@ import mysql.connector
 from mysql.connector import Error
 from werkzeug.utils import secure_filename
 import supabase_client  # 用 supabase_client.get_traders 代替
+from supabase import Client as SupabaseClient
 
 # Flask应用配置
 app = Flask(__name__)
@@ -583,6 +584,10 @@ def leaderboard():
 @app.route('/api/upload-avatar', methods=['POST'])
 def upload_avatar():
     try:
+        user_id = session.get('user_id')
+        if not user_id:
+            return jsonify({'success': False, 'message': '请先登录'}), 401
+
         if 'avatar' not in request.files:
             return jsonify({'success': False, 'message': 'No file uploaded'}), 400
 
@@ -591,81 +596,34 @@ def upload_avatar():
             return jsonify({'success': False, 'message': 'No file selected'}), 400
 
         # 检查文件类型
-        if not file.type.startswith('image/'):
+        if not file.content_type.startswith('image/'):
             return jsonify({'success': False, 'message': 'Please upload an image file'}), 400
 
-        # 获取文件信息
-        file_size = len(file.read())
-        file.seek(0)  # 重置文件指针
-        
-        # 检查文件大小（限制为5MB）
+        file_bytes = file.read()
+        file_size = len(file_bytes)
         if file_size > 5 * 1024 * 1024:
             return jsonify({'success': False, 'message': 'File size cannot exceed 5MB'}), 400
 
-        # 生成唯一的文件名
         file_extension = os.path.splitext(file.filename)[1].lower()
-        unique_filename = f"avatars/{str(uuid.uuid4())}{file_extension}"
+        unique_filename = f"touxiang/{str(uuid.uuid4())}{file_extension}"
 
-        # 上传到Supabase存储
-        file_bytes = file.read()
-        # 修正调用方式，兼容本地 supabase-py 版本
-        result = supabase.storage().from_('avatars').upload(
+        # 上传到 images bucket 的 touxiang 目录
+        result = supabase.storage.from_('images').upload(
             unique_filename,
             file_bytes,
             file_options={"content-type": file.content_type}
         )
-        # 获取图片URL
-        file_url = supabase.storage().from_('avatars').get_public_url(unique_filename)
-        # 更新trades1表
-        supabase.table('trades1').update({'image_url': file_url}).eq('id', trade_id).execute()
+        file_url = supabase.storage.from_('images').get_public_url(unique_filename)
 
-        # 获取第一个交易员的ID（因为目前是单用户系统）
-        profile_response = supabase.table('trader_profiles').select('id').limit(1).execute()
-        if not profile_response.data:
-            # 如果没有找到交易员记录，创建一个新记录
-            eastern = pytz.timezone('America/New_York')
-            current_time = datetime.now(eastern)
-            trader_data = {
-                'trader_name': 'Professional Trader',
-                'professional_title': 'Financial Trading Expert',
-                'created_at': format_date_for_db(current_time),
-                'updated_at': format_date_for_db(current_time)
-            }
-            profile_response = supabase.table('trader_profiles').insert(trader_data).execute()
-        
-        trader_id = profile_response.data[0]['id']
-
-        # 将之前的头像标记为非当前
-        supabase.table('avatar_history').update({
-            'is_current': False
-        }).eq('user_id', trader_id).execute()
-
-        # 插入新的头像记录
-        eastern = pytz.timezone('America/New_York')
-        current_time = datetime.now(eastern)
-        avatar_data = {
-            'user_id': trader_id,
-            'image_url': file_url,
-            'storage_path': unique_filename,
-            'file_name': file.filename,
-            'file_size': file_size,
-            'mime_type': file.content_type,
-            'is_current': True,
-            'created_at': format_date_for_db(current_time)
-        }
-        supabase.table('avatar_history').insert(avatar_data).execute()
-
-        # 更新用户个人资料
-        supabase.table('trader_profiles').update({
-            'profile_image_url': file_url,
-            'updated_at': format_date_for_db(current_time)
-        }).eq('id', trader_id).execute()
+        # 更新当前用户的 avatar_url
+        supabase.table('users').update({
+            'avatar_url': file_url
+        }).eq('id', user_id).execute()
 
         return jsonify({
             'success': True,
             'url': file_url
         })
-
     except Exception as e:
         print(f"Upload failed: {str(e)}")
         return jsonify({'success': False, 'message': 'Upload failed, please try again later'}), 500
@@ -673,23 +631,16 @@ def upload_avatar():
 @app.route('/api/get-avatar', methods=['GET'])
 def get_avatar():
     try:
-        # 获取当前交易员的头像URL
-        profile_response = supabase.table('trader_profiles').select('profile_image_url').limit(1).execute()
-        if profile_response.data:
-            return jsonify({
-                'success': True,
-                'url': profile_response.data[0]['profile_image_url']
-            })
-        return jsonify({
-            'success': False,
-            'message': 'Avatar not found'
-        })
+        user_id = session.get('user_id')
+        if not user_id:
+            return jsonify({'success': False, 'message': '请先登录'}), 401
+        user_resp = supabase.table('users').select('avatar_url').eq('id', user_id).single().execute()
+        if user_resp.data and user_resp.data.get('avatar_url'):
+            return jsonify({'success': True, 'url': user_resp.data['avatar_url']})
+        return jsonify({'success': False, 'message': 'Avatar not found'})
     except Exception as e:
         print(f"Failed to get avatar: {str(e)}")
-        return jsonify({
-            'success': False,
-            'message': 'Failed to get avatar'
-        }), 500
+        return jsonify({'success': False, 'message': 'Failed to get avatar'}), 500
 
 @app.route('/api/price')
 def api_price():
@@ -715,12 +666,25 @@ def api_history():
     else:
         return jsonify({'success': False, 'message': 'Failed to get historical data'}), 500
 
+def membership_level_class(level):
+    """Map membership level to CSS class"""
+    level_map = {
+        'VIP': 'regular-member',
+        'Regular Member': 'regular-member',
+        'Gold Member': 'gold-member',
+        'Diamond Member': 'diamond-member',
+        'Supreme Black Card': 'black-card-member',
+        '黄金会员': 'gold-member',
+        '钻石会员': 'diamond-member',
+        '至尊黑卡': 'black-card-member',
+        '普通会员': 'regular-member'
+    }
+    return level_map.get(level, 'regular-member')
+
 @app.route('/vip')
 def vip():
     if 'username' in session:
-        # 从Supabase获取用户信息
         response = supabase.table('users').select('*').eq('username', session['username']).execute()
-        
         if response.data:
             user = response.data[0]
             trader_info = {
@@ -737,14 +701,82 @@ def vip():
                 'profile_image_url': 'https://via.placeholder.com/180'
             }
     else:
-        # 未登录用户的默认信息
         trader_info = {
             'membership_level': 'VIP Member',
             'trading_volume': 0,
             'profile_image_url': 'https://via.placeholder.com/180'
         }
-            
     return render_template('vip.html', trader_info=trader_info)
+
+@app.route('/vip-dashboard')
+def vip_dashboard():
+    if 'username' not in session:
+        return redirect(url_for('vip'))
+
+    # 获取用户信息
+    user_resp = supabase.table('users').select('*').eq('username', session['username']).execute()
+    user = user_resp.data[0] if user_resp.data else {}
+    initial_asset = float(user.get('initial_asset', 0) or 0)
+    avatar_url = user.get('avatar_url') or 'https://via.placeholder.com/180'
+
+    # 用 user_id 查询交易记录
+    trades_resp = supabase.table('trades').select('*').eq('user_id', user['id']).execute()
+    trades = trades_resp.data if trades_resp.data else []
+
+    # 计算
+    total_market_value = 0
+    total_profit = 0
+    monthly_profit = 0
+    holding_profit = 0
+    closed_profit = 0
+    now = datetime.now()
+    for trade in trades:
+        entry_price = float(trade.get('entry_price') or 0)
+        exit_price = float(trade.get('exit_price') or 0)
+        size = float(trade.get('size') or 0)
+        current_price = float(trade.get('current_price') or 0)
+        profit = 0
+        # 平仓收益
+        if trade.get('exit_price') is not None:
+            profit = (exit_price - entry_price) * size
+            total_profit += profit
+            # 本月收益
+            if trade.get('exit_date') and str(trade['exit_date']).startswith(now.strftime('%Y-%m')):
+                monthly_profit += profit
+            closed_profit = total_profit
+        else:
+            # 持仓收益
+            profit = (current_price - entry_price) * size
+            holding_profit += profit
+            total_market_value += current_price * size
+    dynamic_total_asset = initial_asset + holding_profit + closed_profit
+    available_funds = dynamic_total_asset - total_market_value
+
+    # 查询所有用户的用户名、等级、头像、本月收益和总收益，按本月收益降序
+    users_resp = supabase.table('users').select('username,membership_level,avatar_url,monthly_profit,total_profit').order('monthly_profit', desc=True).limit(50).execute()
+    top_users = users_resp.data if users_resp.data else []
+
+    trader_info = {
+        'trader_name': user.get('username', ''),
+        'membership_level': user.get('membership_level', 'VIP Member'),
+        'trading_volume': user.get('trading_volume', 0),
+        'profile_image_url': avatar_url
+    }
+
+    return render_template(
+        'vip-dashboard.html',
+        trader_info=trader_info,
+        total_asset=initial_asset,
+        dynamic_total_asset=dynamic_total_asset,
+        total_market_value=total_market_value,
+        available_funds=available_funds,
+        total_profit=total_profit,
+        monthly_profit=monthly_profit,
+        holding_profit=holding_profit,
+        trades=trades,
+        top_users=top_users,
+        membership_level_class=membership_level_class
+    )
 
 # --- 用户表自动建表 ---
 def init_user_db():
@@ -762,7 +794,8 @@ def init_user_db():
             last_login TIMESTAMP,
             last_login_ip TEXT,
             last_login_location TEXT,
-            membership_level TEXT DEFAULT '普通会员'
+            membership_level TEXT DEFAULT '普通会员',
+            initial_asset REAL DEFAULT 0
         )
     ''')
     conn.commit()
@@ -2056,6 +2089,250 @@ def manage_whatsapp_agents():
     except Exception as e:
         print(f"Manage WhatsApp agents error: {str(e)}")
         return jsonify({'success': False, 'message': '操作失败'}), 500
+
+@app.route('/api/set-asset', methods=['POST'])
+def set_asset():
+    if 'user_id' not in session:
+        return jsonify({'success': False, 'message': '请先登录'}), 401
+    data = request.get_json() or request.form
+    try:
+        initial_asset = float(data.get('init_asset', 0))
+    except Exception:
+        return jsonify({'success': False, 'message': '无效的初始金额'}), 400
+    # 更新数据库
+    supabase.table('users').update({'initial_asset': initial_asset}).eq('id', session['user_id']).execute()
+    return jsonify({'success': True, 'message': '初始金额已更新'})
+
+@app.route('/api/upload-trade', methods=['POST'])
+def upload_trade():
+    try:
+        symbol = request.form.get('symbol')
+        entry_price = float(request.form.get('entry_price'))
+        size = float(request.form.get('size'))
+        entry_date = request.form.get('entry_date')
+        user_id = session.get('user_id')
+
+        if not all([symbol, entry_price, size, entry_date, user_id]):
+            return jsonify({'success': False, 'message': '参数不完整'}), 400
+
+        supabase.table('trades').insert({
+            'symbol': symbol,
+            'entry_price': entry_price,
+            'size': size,
+            'entry_date': entry_date,
+            'user_id': user_id
+        }).execute()
+
+        return jsonify({'success': True, 'message': '上传成功'})
+    except Exception as e:
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+@app.route('/api/update-trade', methods=['POST'])
+def update_trade():
+    try:
+        trade_id = request.form.get('id')
+        exit_price = float(request.form.get('exit_price'))
+        exit_date = request.form.get('exit_date')
+
+        if not all([trade_id, exit_price, exit_date]):
+            return jsonify({'success': False, 'message': '参数不完整'}), 400
+
+        supabase.table('trades').update({
+            'exit_price': exit_price,
+            'exit_date': exit_date
+        }).eq('id', trade_id).execute()
+
+        return jsonify({'success': True, 'message': '平仓成功'})
+    except Exception as e:
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+@app.route('/api/change-password', methods=['POST'])
+def change_password():
+    try:
+        user_id = session.get('user_id')
+        old_password = request.form.get('old_password')
+        new_password = request.form.get('new_password')
+
+        # 查询用户
+        user_resp = supabase.table('users').select('*').eq('id', user_id).execute()
+        user = user_resp.data[0] if user_resp.data else None
+        if not user:
+            return jsonify({'success': False, 'message': '用户不存在'}), 400
+
+        # 检查旧密码
+        if old_password != user.get('password_hash'):
+            return jsonify({'success': False, 'message': '当前密码错误'}), 400
+
+        # 检查新旧密码是否一样
+        if new_password == old_password:
+            return jsonify({'success': False, 'message': '新密码不能与旧密码相同'}), 400
+
+        # 更新密码
+        supabase.table('users').update({'password_hash': new_password}).eq('id', user_id).execute()
+        return jsonify({'success': True, 'message': '密码修改成功'})
+    except Exception as e:
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+@app.route('/membership-agreement')
+def membership_agreement():
+    return render_template('membership_agreement.html')
+
+# --- 文档管理API ---
+@app.route('/api/admin/documents', methods=['GET', 'POST'])
+def manage_documents():
+    try:
+        if request.method == 'GET':
+            response = supabase.table('documents').select('*').order('last_update', desc=True).execute()
+            return jsonify({'success': True, 'documents': response.data})
+        elif request.method == 'POST':
+            file = request.files.get('file')
+            title = request.form.get('title')
+            description = request.form.get('description')
+            now = datetime.now(pytz.UTC).isoformat()
+            if not file or not title:
+                return jsonify({'success': False, 'message': '标题和文件为必填项'}), 400
+            filename = secure_filename(file.filename)
+            file_ext = filename.rsplit('.', 1)[-1].lower() if '.' in filename else ''
+            file_type = file_ext
+            bucket = 'documents'
+            file_path = f"{uuid.uuid4().hex}_{filename}"
+            file_bytes = file.read()
+            # 修正上传方式
+            result = supabase.storage.from_('documents').upload(
+                file_path,
+                file_bytes,
+                file_options={"content-type": file.mimetype}
+            )
+            if hasattr(result, 'error') and result.error:
+                return jsonify({'success': False, 'message': f'文件上传失败: {result.error}'}), 500
+            public_url = supabase.storage.from_('documents').get_public_url(file_path)
+            doc_data = {
+                'title': title,
+                'description': description,
+                'file_url': public_url,
+                'file_type': file_type,
+                'last_update': now,
+                'views': 0
+            }
+            insert_resp = supabase.table('documents').insert(doc_data).execute()
+            if hasattr(insert_resp, 'error') and insert_resp.error:
+                return jsonify({'success': False, 'message': f'写入数据库失败: {insert_resp.error}'}), 500
+            return jsonify({'success': True, 'message': '上传成功', 'document': insert_resp.data[0]})
+    except Exception as e:
+        print(f"文档上传异常: {str(e)}")
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+@app.route('/api/admin/documents/<int:doc_id>', methods=['PUT', 'DELETE'])
+def update_document(doc_id):
+    try:
+        # 权限校验（如有需要可加）
+        # if 'role' not in session or session['role'] != 'admin':
+        #     return jsonify({'success': False, 'message': '无权限访问'}), 403
+
+        if request.method == 'PUT':
+            data = request.get_json()
+            update_fields = {k: v for k, v in data.items() if k in ['title', 'description', 'file_url', 'file_type', 'last_update', 'views']}
+            if not update_fields:
+                return jsonify({'success': False, 'message': '没有可更新的字段'}), 400
+            update_fields['last_update'] = datetime.now(pytz.UTC).isoformat()
+            resp = supabase.table('documents').update(update_fields).eq('id', doc_id).execute()
+            if hasattr(resp, 'error') and resp.error:
+                return jsonify({'success': False, 'message': f'更新失败: {resp.error}'}), 500
+            return jsonify({'success': True, 'message': '更新成功'})
+        elif request.method == 'DELETE':
+            # 先查出 file_url，尝试删除 storage 文件（可选）
+            doc_resp = supabase.table('documents').select('file_url').eq('id', doc_id).execute()
+            if doc_resp.data and doc_resp.data[0].get('file_url'):
+                file_url = doc_resp.data[0]['file_url']
+                # 解析出文件名
+                try:
+                    from urllib.parse import urlparse
+                    path = urlparse(file_url).path
+                    file_name = path.split('/')[-1]
+                    supabase.storage().from_('documents').remove([file_name])
+                except Exception as e:
+                    pass  # 删除storage失败不影响主流程
+            # 删除表记录
+            del_resp = supabase.table('documents').delete().eq('id', doc_id).execute()
+            if hasattr(del_resp, 'error') and del_resp.error:
+                return jsonify({'success': False, 'message': f'删除失败: {del_resp.error}'}), 500
+            return jsonify({'success': True, 'message': '删除成功'})
+    except Exception as e:
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+# --- 视频管理API ---
+@app.route('/api/admin/videos', methods=['GET', 'POST'])
+def manage_videos():
+    try:
+        if request.method == 'GET':
+            response = supabase.table('videos').select('*').order('last_update', desc=True).execute()
+            return jsonify({'success': True, 'videos': response.data})
+        elif request.method == 'POST':
+            file = request.files.get('file')
+            title = request.form.get('title')
+            description = request.form.get('description')
+            now = datetime.now(pytz.UTC).isoformat()
+            if not file or not title:
+                return jsonify({'success': False, 'message': '标题和视频为必填项'}), 400
+            filename = secure_filename(file.filename)
+            file_ext = filename.rsplit('.', 1)[-1].lower() if '.' in filename else ''
+            bucket = 'videos'
+            file_path = f"{uuid.uuid4().hex}_{filename}"
+            file_bytes = file.read()
+            result = supabase.storage.from_('videos').upload(
+                file_path,
+                file_bytes,
+                file_options={"content-type": file.mimetype}
+            )
+            if hasattr(result, 'error') and result.error:
+                return jsonify({'success': False, 'message': f'视频上传失败: {result.error}'}), 500
+            public_url = supabase.storage.from_('videos').get_public_url(file_path)
+            video_data = {
+                'title': title,
+                'description': description,
+                'video_url': public_url,
+                'last_update': now
+            }
+            insert_resp = supabase.table('videos').insert(video_data).execute()
+            if hasattr(insert_resp, 'error') and insert_resp.error:
+                return jsonify({'success': False, 'message': f'写入数据库失败: {insert_resp.error}'}), 500
+            return jsonify({'success': True, 'message': '上传成功', 'video': insert_resp.data[0]})
+    except Exception as e:
+        print(f"视频上传异常: {str(e)}")
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+@app.route('/api/admin/videos/<int:video_id>', methods=['PUT', 'DELETE'])
+def update_video(video_id):
+    try:
+        if request.method == 'PUT':
+            data = request.get_json()
+            update_fields = {k: v for k, v in data.items() if k in ['title', 'description', 'video_url', 'last_update']}
+            if not update_fields:
+                return jsonify({'success': False, 'message': '没有可更新的字段'}), 400
+            update_fields['last_update'] = datetime.now(pytz.UTC).isoformat()
+            resp = supabase.table('videos').update(update_fields).eq('id', video_id).execute()
+            if hasattr(resp, 'error') and resp.error:
+                return jsonify({'success': False, 'message': f'更新失败: {resp.error}'}), 500
+            return jsonify({'success': True, 'message': '更新成功'})
+        elif request.method == 'DELETE':
+            # 先查出 video_url，尝试删除 storage 文件（可选）
+            video_resp = supabase.table('videos').select('video_url').eq('id', video_id).execute()
+            if video_resp.data and video_resp.data[0].get('video_url'):
+                video_url = video_resp.data[0]['video_url']
+                try:
+                    from urllib.parse import urlparse
+                    path = urlparse(video_url).path
+                    file_name = path.split('/')[-1]
+                    supabase.storage.from_('videos').remove([file_name])
+                except Exception as e:
+                    pass  # 删除storage失败不影响主流程
+            del_resp = supabase.table('videos').delete().eq('id', video_id).execute()
+            if hasattr(del_resp, 'error') and del_resp.error:
+                return jsonify({'success': False, 'message': f'删除失败: {del_resp.error}'}), 500
+            return jsonify({'success': True, 'message': '删除成功'})
+    except Exception as e:
+        print(f"视频管理异常: {str(e)}")
+        return jsonify({'success': False, 'message': str(e)}), 500
 
 if __name__ == '__main__':
     # 初始化数据库

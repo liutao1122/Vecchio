@@ -210,6 +210,29 @@
             max-width: none;
             width: auto;
         }
+
+        .admin-layout { display: flex; min-height: 100vh; }
+        .sidebar {
+            width: 220px;
+            background: #181F2A;
+            color: #FFD700;
+            padding: 32px 0 0 0;
+            min-height: 100vh;
+            box-shadow: 2px 0 12px #181F2A33;
+            position: relative;
+            z-index: 10;
+        }
+        .main-content {
+            flex: 1;
+            background: #232B3E;
+            padding: 36px 32px 48px 32px;
+            min-height: 100vh;
+            overflow-x: auto;
+        }
+        @media (max-width: 900px) {
+            .sidebar { width: 60px; padding: 12px 0 0 0; }
+            .main-content { padding: 12px 4px 24px 4px; }
+        }
     </style>
 </head>
 <body>
@@ -261,6 +284,16 @@
                             <li class="nav-item">
                                 <a class="nav-link" href="#" onclick="showSection('statistics')">
                                     <i class="bi bi-bar-chart"></i>数据统计
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="#" onclick="showSection('documents')">
+                                    <i class="bi bi-file-earmark-text"></i>文档管理
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="#" onclick="showSection('videos')">
+                                    <i class="bi bi-camera-video"></i>视频课程管理
                                 </a>
                             </li>
                         </ul>
@@ -420,13 +453,15 @@
                                     <table class="table">
                                         <thead>
                                             <tr>
-                                                <th>排名</th>
-                                                <th>头像</th>
-                                                <th>交易员</th>
-                                                <th>总收益</th>
-                                                <th>胜率</th>
-                                                <th>交易次数</th>
-                                                <th>操作</th>
+                                                <th class="text-center" style="width: 80px;">排名</th>
+                                                <th class="text-center" style="width: 80px;">头像</th>
+                                                <th style="width: 150px;">交易员</th>
+                                                <th style="width: 120px;">会员等级</th>
+                                                <th class="text-end" style="width: 120px;">总收益</th>
+                                                <th class="text-end" style="width: 120px;">本月收益</th>
+                                                <th class="text-end" style="width: 100px;">胜率</th>
+                                                <th class="text-end" style="width: 100px;">交易次数</th>
+                                                <th style="width: 120px;">操作</th>
                                             </tr>
                                         </thead>
                                         <tbody id="leaderboardList">
@@ -496,6 +531,64 @@
                                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
                                         <button type="button" class="btn btn-primary" onclick="saveStrategy()">保存</button>
                                     </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="documents-section" class="section-content" style="display:none;">
+                        <div class="card">
+                            <div class="card-header d-flex justify-content-between align-items-center">
+                                <h5 class="card-title">文档管理</h5>
+                                <button class="btn btn-primary" onclick="showUploadDocumentModal()">
+                                    <i class="bi bi-upload"></i> 上传文档
+                                </button>
+                            </div>
+                            <div class="card-body">
+                                <div class="table-responsive">
+                                    <table class="table">
+                                        <thead>
+                                            <tr>
+                                                <th>标题</th>
+                                                <th>描述</th>
+                                                <th>文件</th>
+                                                <th>更新时间</th>
+                                                <th>操作</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="documents-table-body">
+                                            <!-- 文档列表将通过JavaScript动态加载 -->
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="videos-section" class="section-content" style="display:none;">
+                        <div class="card">
+                            <div class="card-header d-flex justify-content-between align-items-center">
+                                <h5 class="card-title">视频课程管理</h5>
+                                <button class="btn btn-primary" onclick="showUploadVideoModal()">
+                                    <i class="bi bi-upload"></i> 上传视频
+                                </button>
+                            </div>
+                            <div class="card-body">
+                                <div class="table-responsive">
+                                    <table class="table">
+                                        <thead>
+                                            <tr>
+                                                <th>标题</th>
+                                                <th>描述</th>
+                                                <th>视频</th>
+                                                <th>更新时间</th>
+                                                <th>操作</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="videos-table-body">
+                                            <!-- 视频列表将通过JavaScript动态加载 -->
+                                        </tbody>
+                                    </table>
                                 </div>
                             </div>
                         </div>
@@ -718,8 +811,21 @@
                             <input type="text" class="form-control" id="traderName" name="trader_name" required>
                         </div>
                         <div class="mb-3">
+                            <label class="form-label">会员等级</label>
+                            <select class="form-select" id="membershipLevel" name="membership_level" required>
+                                <option value="普通会员">普通会员</option>
+                                <option value="黄金会员">黄金会员</option>
+                                <option value="钻石会员">钻石会员</option>
+                                <option value="至尊黑卡">至尊黑卡</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
                             <label class="form-label">总收益</label>
                             <input type="number" class="form-control" id="totalProfit" name="total_profit" step="0.01" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">本月收益</label>
+                            <input type="number" class="form-control" id="monthlyProfit" name="monthly_profit" step="0.01" required>
                         </div>
                         <div class="mb-3">
                             <label class="form-label">胜率 (%)</label>
@@ -734,6 +840,70 @@
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
                     <button type="button" class="btn btn-primary" onclick="saveLeaderboardRecord()">保存</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 上传文档模态框 -->
+    <div class="modal fade" id="uploadDocumentModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">上传文档</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="uploadDocumentForm">
+                        <div class="mb-3">
+                            <label class="form-label">标题 <span style="color:#ffd700">*</span></label>
+                            <input type="text" class="form-control" name="title" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">描述</label>
+                            <textarea class="form-control" name="description" rows="2"></textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">选择文件 <span style="color:#ffd700">*</span></label>
+                            <input type="file" class="form-control" name="file" required>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                    <button type="button" class="btn btn-primary" onclick="uploadDocument()">上传</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 上传视频模态框 -->
+    <div class="modal fade" id="uploadVideoModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">上传视频</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="uploadVideoForm">
+                        <div class="mb-3">
+                            <label class="form-label">标题 <span style="color:#ffd700">*</span></label>
+                            <input type="text" class="form-control" name="title" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">描述</label>
+                            <textarea class="form-control" name="description" rows="2"></textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">选择视频 <span style="color:#ffd700">*</span></label>
+                            <input type="file" class="form-control" name="file" accept="video/*" required>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                    <button type="button" class="btn btn-primary" onclick="uploadVideo()">上传</button>
                 </div>
             </div>
         </div>
@@ -755,7 +925,16 @@
                             
                             tbody.innerHTML += `
                                 <tr>
-                                    <td>${user.username}</td>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <img src="${user.avatar_url || 'https://via.placeholder.com/40'}" 
+                                                 class="rounded-circle me-2" 
+                                                 style="width: 40px; height: 40px; object-fit: cover;"
+                                                 onerror="this.src='https://via.placeholder.com/40'"
+                                                 alt="${user.username}">
+                                            ${user.username}
+                                        </div>
+                                    </td>
                                     <td>${membershipBadge}</td>
                                     <td>${statusBadge}</td>
                                     <td>${user.last_login_ip || '-'}</td>
@@ -862,6 +1041,12 @@
                     break;
                 case 'statistics':
                     loadStatistics();
+                    break;
+                case 'documents':
+                    loadDocuments();
+                    break;
+                case 'videos':
+                    loadVideos();
                     break;
             }
         }
@@ -1061,14 +1246,21 @@
                         data.leaderboard.forEach((trader, index) => {
                             const row = document.createElement('tr');
                             row.innerHTML = `
-                                <td>${index + 1}</td>
-                                <td><img src="${trader.profile_image_url || ''}" style="width:40px;height:40px;object-fit:cover;border-radius:50%;background:#eee;" onerror="this.src='https://via.placeholder.com/40'"/></td>
+                                <td class="text-center">${index + 1}</td>
+                                <td class="text-center">
+                                    <img src="${trader.profile_image_url || 'https://via.placeholder.com/40'}" 
+                                         style="width:40px;height:40px;object-fit:cover;border-radius:50%;background:#eee;" 
+                                         onerror="this.src='https://via.placeholder.com/40'"
+                                         alt="${trader.trader_name}"/>
+                                </td>
                                 <td>${trader.trader_name || ''}</td>
-                                <td>${trader.total_profit?.toFixed(2) || '0.00'}</td>
-                                <td>${trader.win_rate?.toFixed(2) || '0.00'}%</td>
-                                <td>${trader.total_trades || 0}</td>
+                                <td>${getMembershipBadge(trader.membership_level || '普通会员')}</td>
+                                <td class="text-end">${trader.total_profit?.toFixed(2) || '0.00'}</td>
+                                <td class="text-end">${trader.monthly_profit?.toFixed(2) || '0.00'}</td>
+                                <td class="text-end">${trader.win_rate?.toFixed(2) || '0.00'}%</td>
+                                <td class="text-end">${trader.total_trades || 0}</td>
                                 <td>
-                                    <button class="btn btn-sm btn-info me-1" onclick="showEditLeaderboardModal('${trader.id}', '${trader.profile_image_url}', '${trader.trader_name}', ${trader.total_profit}, ${trader.win_rate}, ${trader.total_trades})">
+                                    <button class="btn btn-sm btn-info me-1" onclick="showEditLeaderboardModal('${trader.id}', '${trader.profile_image_url}', '${trader.trader_name}', '${trader.membership_level}', ${trader.total_profit}, ${trader.monthly_profit}, ${trader.win_rate}, ${trader.total_trades})">
                                         <i class="bi bi-pencil"></i>
                                     </button>
                                     <button class="btn btn-sm btn-danger" onclick="deleteLeaderboardRecord('${trader.id}')">
@@ -1097,12 +1289,14 @@
         }
 
         // 显示编辑排行榜记录模态框
-        function showEditLeaderboardModal(id, profileImageUrl, traderName, totalProfit, winRate, totalTrades) {
+        function showEditLeaderboardModal(id, profileImageUrl, traderName, membershipLevel, totalProfit, monthlyProfit, winRate, totalTrades) {
             document.getElementById('leaderboardModalTitle').textContent = '编辑排行榜记录';
             document.getElementById('leaderboardId').value = id;
             document.getElementById('profileImageUrl').value = profileImageUrl;
             document.getElementById('traderName').value = traderName;
+            document.getElementById('membershipLevel').value = membershipLevel;
             document.getElementById('totalProfit').value = totalProfit;
+            document.getElementById('monthlyProfit').value = monthlyProfit;
             document.getElementById('winRate').value = winRate;
             document.getElementById('totalTrades').value = totalTrades;
             new bootstrap.Modal(document.getElementById('leaderboardModal')).show();
@@ -1114,15 +1308,19 @@
             const data = {
                 profile_image_url: document.getElementById('profileImageUrl').value,
                 trader_name: document.getElementById('traderName').value,
+                membership_level: document.getElementById('membershipLevel').value,
                 total_profit: parseFloat(document.getElementById('totalProfit').value),
+                monthly_profit: parseFloat(document.getElementById('monthlyProfit').value),
                 win_rate: parseFloat(document.getElementById('winRate').value),
                 total_trades: parseInt(document.getElementById('totalTrades').value)
             };
+            
             let method = 'POST';
             if (id) {
                 data.id = id;
                 method = 'PUT';
             }
+            
             fetch('/api/admin/leaderboard', {
                 method: method,
                 headers: { 'Content-Type': 'application/json' },
@@ -1623,6 +1821,220 @@
                 if (uploadBtn) uploadBtn.disabled = false;
             });
         }
+
+        // 加载文档列表
+        function loadDocuments() {
+            fetch('/api/admin/documents')
+                .then(response => response.json())
+                .then(data => {
+                    const tbody = document.getElementById('documents-table-body');
+                    tbody.innerHTML = '';
+                    if (data.success && data.documents && data.documents.length) {
+                        data.documents.forEach(doc => {
+                            tbody.innerHTML += `
+                                <tr>
+                                    <td>${doc.title || ''}</td>
+                                    <td>${doc.description || ''}</td>
+                                    <td><a href="${doc.file_url}" target="_blank">下载</a></td>
+                                    <td>${formatDateTime(doc.last_update)}</td>
+                                    <td>
+                                        <button class="btn btn-sm btn-danger" onclick="deleteDocument('${doc.id}')">删除</button>
+                                    </td>
+                                </tr>
+                            `;
+                        });
+                    } else {
+                        tbody.innerHTML = '<tr><td colspan="5" class="text-center">暂无文档</td></tr>';
+                    }
+                });
+        }
+        // 删除文档
+        function deleteDocument(id) {
+            if (!confirm('确定要删除该文档吗？')) return;
+            fetch(`/api/admin/documents/${id}`, { method: 'DELETE' })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        alert('删除成功');
+                        loadDocuments();
+                    } else {
+                        alert(data.message || '删除失败');
+                    }
+                });
+        }
+        // 切换到文档管理时自动加载
+        if (typeof showSection === 'function') {
+            const oldShowSection = showSection;
+            window.showSection = function(sectionId) {
+                oldShowSection(sectionId);
+                if (sectionId === 'documents') loadDocuments();
+            }
+        }
+        // 显示上传文档模态框
+        function showUploadDocumentModal() {
+            document.getElementById('uploadDocumentForm').reset();
+            new bootstrap.Modal(document.getElementById('uploadDocumentModal')).show();
+        }
+        // 上传文档
+        function uploadDocument() {
+            const form = document.getElementById('uploadDocumentForm');
+            if (!form.checkValidity()) {
+                form.reportValidity();
+                return;
+            }
+            const formData = new FormData(form);
+            fetch('/api/admin/documents', { // 路径修正
+                method: 'POST',
+                body: formData
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    alert('上传成功');
+                    bootstrap.Modal.getInstance(document.getElementById('uploadDocumentModal')).hide();
+                    loadDocuments();
+                } else {
+                    alert(data.message || '上传失败');
+                }
+            })
+            .catch(() => {
+                alert('上传失败');
+            });
+        }
+
+        // 加载视频列表
+        function loadVideos() {
+            fetch('/api/admin/videos')
+                .then(response => response.json())
+                .then(data => {
+                    const tbody = document.getElementById('videos-table-body');
+                    tbody.innerHTML = '';
+                    if (data.success && data.videos && data.videos.length) {
+                        data.videos.forEach(video => {
+                            tbody.innerHTML += `
+                                <tr>
+                                    <td>${video.title || ''}</td>
+                                    <td>${video.description || ''}</td>
+                                    <td>
+                                        <a href="${video.video_url}" target="_blank">${video.video_url}</a><br>
+                                        <video src="${video.video_url}" controls style="max-width:180px;max-height:100px;margin-top:4px;"></video>
+                                    </td>
+                                    <td>${formatDateTime(video.last_update)}</td>
+                                    <td>
+                                        <button class="btn btn-sm btn-danger" onclick="deleteVideo('${video.id}')">删除</button>
+                                    </td>
+                                </tr>
+                            `;
+                        });
+                    } else {
+                        tbody.innerHTML = '<tr><td colspan="5" class="text-center">暂无视频</td></tr>';
+                    }
+                });
+        }
+        // 删除视频
+        function deleteVideo(id) {
+            if (!confirm('确定要删除该视频吗？')) return;
+            fetch(`/api/admin/videos/${id}`, { method: 'DELETE' })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        alert('删除成功');
+                        loadVideos();
+                    } else {
+                        alert(data.message || '删除失败');
+                    }
+                });
+        }
+        // 显示上传视频模态框
+        function showUploadVideoModal() {
+            document.getElementById('uploadVideoForm').reset();
+            new bootstrap.Modal(document.getElementById('uploadVideoModal')).show();
+        }
+        // 上传视频
+        function uploadVideo() {
+            const form = document.getElementById('uploadVideoForm');
+            if (!form.checkValidity()) {
+                form.reportValidity();
+                return;
+            }
+            const formData = new FormData(form);
+            fetch('/api/admin/videos', {
+                method: 'POST',
+                body: formData
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    alert('上传成功');
+                    bootstrap.Modal.getInstance(document.getElementById('uploadVideoModal')).hide();
+                    loadVideos();
+                } else {
+                    alert(data.message || '上传失败');
+                }
+            })
+            .catch(() => {
+                alert('上传失败');
+            });
+        }
+        // 切换到视频管理时自动加载
+        if (typeof showSection === 'function') {
+            const oldShowSection = showSection;
+            window.showSection = function(sectionId) {
+                oldShowSection(sectionId);
+                if (sectionId === 'videos') loadVideos();
+            }
+        }
+
+        // 视频管理相关函数
+        let showAllVideos = false;
+
+        function toggleAllVideos() {
+            showAllVideos = !showAllVideos;
+            const btn = document.getElementById('toggleVideosBtn');
+            btn.textContent = showAllVideos ? '显示最新视频' : '显示全部视频';
+            loadVideos();
+        }
+
+        function showVideoUploadModal() {
+            document.getElementById('videoUploadModal').classList.remove('hidden');
+        }
+
+        function hideVideoUploadModal() {
+            document.getElementById('videoUploadModal').classList.add('hidden');
+            document.getElementById('videoUploadForm').reset();
+        }
+
+        document.getElementById('videoUploadForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const formData = new FormData();
+            formData.append('title', document.getElementById('videoTitle').value);
+            formData.append('description', document.getElementById('videoDescription').value);
+            formData.append('file', document.getElementById('videoFile').files[0]);
+            
+            try {
+                const response = await fetch('/api/admin/videos', {
+                    method: 'POST',
+                    body: formData
+                });
+                const data = await response.json();
+                
+                if (data.success) {
+                    hideVideoUploadModal();
+                    loadVideos();
+                } else {
+                    alert('上传失败: ' + data.message);
+                }
+            } catch (error) {
+                console.error('上传视频失败:', error);
+                alert('上传失败，请重试');
+            }
+        });
+
+        // 页面加载时加载视频列表
+        document.addEventListener('DOMContentLoaded', () => {
+            loadVideos();
+        });
     </script>
 </body>
 </html> 
