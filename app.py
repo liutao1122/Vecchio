@@ -101,37 +101,30 @@ def format_date_for_db(dt):
         dt = eastern.localize(dt)
     return dt.astimezone(pytz.UTC).strftime('%Y-%m-%d %H:%M:%S.%f+00:00')
 
-def get_real_time_price(symbol):
-    """获取股票实时价格"""
-    try:
-        api_key = "E7pSY5mZfHuHtXsDmbk8TORK_XHN6ffq"
-        # 使用实时数据端点
+def get_real_time_price(symbol, asset_type=None):
+    symbol = str(symbol).upper().split(":")[0]
+    api_key = "YIQDtez6a6OhyWsg2xtbRbOUp3Akhlp4"
+    # 加密货币部分略...
+    # 股票查法兜底：asset_type为stock或未传但symbol像股票代码
+    if (asset_type and ("stock" in asset_type.lower())) or (not asset_type and symbol.isalpha() and 2 <= len(symbol) <= 5):
         url = f"https://api.polygon.io/v2/last/trade/{symbol}?apiKey={api_key}"
-        print(f"\n=== 开始获取 {symbol} 的实时价格 ===")
-        print(f"请求URL: {url}")
-        
-        response = requests.get(url)
-        print(f"响应状态码: {response.status_code}")
-        print(f"完整响应内容: {response.text}")
-        
-        if response.status_code == 200:
-            data = response.json()
-            print(f"解析后的JSON数据: {data}")
-            
-            if data.get('results'):
-                price = float(data['results']['p'])  # 使用最新成交价
-                print(f"成功获取 {symbol} 的实时价格: {price}")
-                return price
-            else:
-                print(f"在响应中未找到价格数据: {data}")
-        elif response.status_code == 403:
-            print(f"API权限错误，请检查API密钥权限")
-        else:
-            print(f"API请求失败，状态码: {response.status_code}")
+        try:
+            resp = requests.get(url, timeout=5)
+            data = resp.json()
+            print(f"Polygon股票查价: symbol={symbol}, asset_type={asset_type}, data={data}")
+            price = None
+            if data.get("results") and "p" in data["results"]:
+                price = data["results"]["p"]
+            elif data.get("last") and "price" in data["last"]:
+                price = data["last"]["price"]
+            if price is not None:
+                return float(price)
+            print(f"Polygon返回数据无法解析价格: {data}")
+        except Exception as e:
+            print(f"股票API获取{symbol}价格失败: {e}")
         return None
-    except Exception as e:
-        print(f"获取 {symbol} 价格时发生错误: {str(e)}")
-        return None
+    # 默认返回None
+    return None
 
 def get_historical_data(symbol):
     """获取历史数据"""
@@ -651,10 +644,30 @@ def get_avatar():
 @app.route('/api/price')
 def api_price():
     symbol = request.args.get('symbol')
+    trade_id = request.args.get('trade_id')
+    asset_type = None
+
+    # 优先用trade_id查表获取asset_type和symbol
+    if trade_id:
+        # 先查vip_trades表
+        trade = supabase.table('vip_trades').select('asset_type,symbol').eq('id', trade_id).execute()
+        if trade.data:
+            asset_type = trade.data[0].get('asset_type')
+            symbol = trade.data[0].get('symbol')
+        else:
+            # 可选：查trades1等其他表
+            trade = supabase.table('trades1').select('asset_type,symbol').eq('id', trade_id).execute()
+            if trade.data:
+                asset_type = trade.data[0].get('asset_type')
+                symbol = trade.data[0].get('symbol')
+    else:
+        # 没有trade_id时，symbol必须有，asset_type可选
+        asset_type = request.args.get('asset_type')
+
     if not symbol:
         return jsonify({'success': False, 'message': 'No symbol provided'}), 400
 
-    price = get_real_time_price(symbol)
+    price = get_real_time_price(symbol, asset_type)
     if price is not None:
         return jsonify({'success': True, 'price': float(price)})
     else:
@@ -699,6 +712,11 @@ def vip():
                 'trading_volume': user.get('trading_volume', 0),
                 'profile_image_url': 'https://via.placeholder.com/180'
             }
+            user_id = user['id']
+            initial_asset = float(user.get('initial_asset', 0) or 0)
+            # 获取该用户的交易记录
+            trades_resp = supabase.table('trades').select('*').eq('user_id', user_id).execute()
+            trades = trades_resp.data if trades_resp.data else []
         else:
             trader_info = {
                 'trader_name': session['username'],
@@ -706,13 +724,39 @@ def vip():
                 'trading_volume': 0,
                 'profile_image_url': 'https://via.placeholder.com/180'
             }
+            trades = []
+            initial_asset = 0
     else:
         trader_info = {
             'membership_level': 'VIP Member',
             'trading_volume': 0,
             'profile_image_url': 'https://via.placeholder.com/180'
         }
-    return render_template('vip.html', trader_info=trader_info)
+        trades = []
+        initial_asset = 0
+    # 计算dynamic_total_asset
+    total_market_value = 0
+    holding_cost = 0
+    closed_profit_sum = 0
+    for trade in trades:
+        entry_price = float(trade.get('entry_price') or 0)
+        exit_price = float(trade.get('exit_price') or 0)
+        size = float(trade.get('size') or 0)
+        current_price = float(trade.get('current_price') or 0)
+        if not trade.get('exit_price'):
+            total_market_value += current_price * size
+            holding_cost += entry_price * size
+        else:
+            profit = (exit_price - entry_price) * size
+            closed_profit_sum += profit
+    available_funds = initial_asset + closed_profit_sum - holding_cost
+    dynamic_total_asset = total_market_value + available_funds
+    return render_template(
+        'vip.html',
+        trader_info=trader_info,
+        trades=trades,
+        dynamic_total_asset=dynamic_total_asset,
+    )
 
 @app.route('/vip-dashboard')
 def vip_dashboard():
@@ -730,34 +774,39 @@ def vip_dashboard():
     trades_resp = supabase.table('trades').select('*').eq('user_id', user['id']).execute()
     trades = trades_resp.data if trades_resp.data else []
 
-    # 计算
-    total_market_value = 0
+    # 统计变量初始化
     total_profit = 0
     monthly_profit = 0
     holding_profit = 0
     closed_profit = 0
     now = datetime.now()
+    total_market_value = 0  # 总市值
+    holding_cost = 0  # 所有持仓的买入价*数量
+    closed_profit_sum = 0  # 所有已平仓盈亏
     for trade in trades:
         entry_price = float(trade.get('entry_price') or 0)
         exit_price = float(trade.get('exit_price') or 0)
         size = float(trade.get('size') or 0)
         current_price = float(trade.get('current_price') or 0)
         profit = 0
-        # 平仓收益
+        if not trade.get('exit_price'):
+            total_market_value += current_price * size
+            holding_cost += entry_price * size
+        else:
+            profit = (exit_price - entry_price) * size
+            closed_profit_sum += profit
+        # 盈亏统计逻辑保持原样
         if trade.get('exit_price') is not None:
             profit = (exit_price - entry_price) * size
             total_profit += profit
-            # 本月收益
             if trade.get('exit_date') and str(trade['exit_date']).startswith(now.strftime('%Y-%m')):
                 monthly_profit += profit
             closed_profit = total_profit
         else:
-            # 持仓收益
             profit = (current_price - entry_price) * size
             holding_profit += profit
-            total_market_value += current_price * size
-    dynamic_total_asset = initial_asset + holding_profit + closed_profit
-    available_funds = dynamic_total_asset - total_market_value
+    available_funds = initial_asset + closed_profit_sum - holding_cost
+    dynamic_total_asset = total_market_value + available_funds
 
     # 查询所有用户的用户名、等级、头像、本月收益和总收益，按本月收益降序
     users_resp = supabase.table('users').select('username,membership_level,avatar_url,monthly_profit,total_profit').order('monthly_profit', desc=True).limit(50).execute()
@@ -769,6 +818,14 @@ def vip_dashboard():
         'trading_volume': user.get('trading_volume', 0),
         'profile_image_url': avatar_url
     }
+
+    # 查询VIP策略公告（取前2条，按date降序）
+    announcements_resp = supabase.table('vip_announcements').select('*').order('date', desc=True).limit(2).execute()
+    announcements = announcements_resp.data if announcements_resp.data else []
+
+    # 查询VIP交易记录（取前10条，按entry_time降序）
+    vip_trades_resp = supabase.table('vip_trades').select('*').order('entry_time', desc=True).limit(10).execute()
+    vip_trades = vip_trades_resp.data if vip_trades_resp.data else []
 
     return render_template(
         'vip-dashboard.html',
@@ -782,7 +839,9 @@ def vip_dashboard():
         holding_profit=holding_profit,
         trades=trades,
         top_users=top_users,
-        membership_level_class=membership_level_class
+        membership_level_class=membership_level_class,
+        announcements=announcements,
+        vip_trades=vip_trades
     )
 
 # --- 用户表自动建表 ---
@@ -1172,6 +1231,35 @@ def update_holding_stocks_prices():
         import traceback
         print(f"错误堆栈: {traceback.format_exc()}")
 
+def update_all_trades_prices():
+    """同步所有交易表的未平仓记录的实时价格"""
+    tables = ['trades1', 'trades', 'vip_trades']
+    for table in tables:
+        print(f"=== 开始同步 {table} ===")
+        try:
+            response = supabase.table(table).select("*").execute()
+            trades = response.data
+            if not trades:
+                print(f"{table} 没有记录")
+                continue
+            for trade in trades:
+                # 只同步未平仓（exit_price为空或None）
+                if not trade.get('exit_price'):
+                    symbol = trade.get('symbol')
+                    if not symbol:
+                        continue
+                    current_price = get_real_time_price(symbol)
+                    if current_price:
+                        try:
+                            supabase.table(table).update({'current_price': current_price}).eq('id', trade['id']).execute()
+                            print(f"{table} {symbol} 价格已更新为 {current_price}")
+                        except Exception as e:
+                            print(f"{table} {symbol} 更新失败: {e}")
+                    else:
+                        print(f"{table} {symbol} 获取实时价格失败")
+        except Exception as e:
+            print(f"同步 {table} 时发生错误: {e}")
+
 # 创建调度器
 scheduler = BackgroundScheduler()
 scheduler.start()
@@ -1182,6 +1270,15 @@ scheduler.add_job(
     trigger=IntervalTrigger(seconds=30),  # 改为30秒
     id='update_stock_prices',
     name='Update holding stocks prices every 30 seconds',
+    replace_existing=True
+)
+
+# 替换原有定时任务为统一同步
+scheduler.add_job(
+    func=update_all_trades_prices,
+    trigger=IntervalTrigger(seconds=30),
+    id='update_all_trades_prices',
+    name='Update all trades prices every 30 seconds',
     replace_existing=True
 )
 
@@ -1241,7 +1338,8 @@ def manage_users():
                     'last_login_ip': user.get('last_login_ip'),
                     'last_login_location': user.get('last_login_location'),
                     'created_at': user.get('created_at'),
-                    'avatar_url': user.get('avatar_url')
+                    'avatar_url': user.get('avatar_url'),
+                    'initial_asset': user.get('initial_asset', 0)
                 })
             return jsonify({'success': True, 'users': users})
             
@@ -1266,7 +1364,8 @@ def manage_users():
                 'role': data.get('role', 'user'),
                 'status': 'active',
                 'membership_level': '普通会员',
-                'created_at': datetime.now(pytz.UTC).isoformat()
+                'created_at': datetime.now(pytz.UTC).isoformat(),
+                'initial_asset': float(data.get('initial_asset', 0) or 0)
             }
             
             response = supabase.table('users').insert(new_user).execute()
@@ -1290,25 +1389,25 @@ def update_user(user_id):
             
         if request.method == 'PUT':
             data = request.get_json()
-            
             # 只允许更新特定字段
-            allowed_fields = ['status', 'role', 'password_hash']
+            allowed_fields = ['status', 'role', 'password_hash', 'initial_asset']
             update_data = {k: v for k, v in data.items() if k in allowed_fields}
-            
             if not update_data:
                 return jsonify({'success': False, 'message': '没有可更新的字段'}), 400
-                
+            # initial_asset转float
+            if 'initial_asset' in update_data:
+                try:
+                    update_data['initial_asset'] = float(update_data['initial_asset'])
+                except Exception:
+                    update_data['initial_asset'] = 0
             # 更新用户信息
             response = supabase.table('users').update(update_data).eq('id', user_id).execute()
-            
             if not response.data:
                 return jsonify({'success': False, 'message': '用户不存在'}), 404
-                
             return jsonify({
                 'success': True,
                 'message': '更新成功'
             })
-            
         elif request.method == 'DELETE':
             # 软删除用户（更新状态为inactive）
             response = supabase.table('users').update({
@@ -2098,19 +2197,6 @@ def manage_whatsapp_agents():
         print(f"Manage WhatsApp agents error: {str(e)}")
         return jsonify({'success': False, 'message': '操作失败'}), 500
 
-@app.route('/api/set-asset', methods=['POST'])
-def set_asset():
-    if 'user_id' not in session:
-        return jsonify({'success': False, 'message': '请先登录'}), 401
-    data = request.get_json() or request.form
-    try:
-        initial_asset = float(data.get('init_asset', 0))
-    except Exception:
-        return jsonify({'success': False, 'message': '无效的初始金额'}), 400
-    # 更新数据库
-    supabase.table('users').update({'initial_asset': initial_asset}).eq('id', session['user_id']).execute()
-    return jsonify({'success': True, 'message': '初始金额已更新'})
-
 @app.route('/api/upload-trade', methods=['POST'])
 def upload_trade():
     try:
@@ -2272,10 +2358,19 @@ def update_document(doc_id):
 @app.route('/api/admin/videos', methods=['GET', 'POST'])
 def manage_videos():
     try:
+        # 检查用户是否登录
+        if 'user_id' not in session:
+            return jsonify({'success': False, 'message': '请先登录'}), 401
+            
         if request.method == 'GET':
+            # 获取视频列表不需要管理员权限
             response = supabase.table('videos').select('*').order('last_update', desc=True).execute()
             return jsonify({'success': True, 'videos': response.data})
         elif request.method == 'POST':
+            # 上传视频需要管理员权限
+            if 'role' not in session or session['role'] != 'admin':
+                return jsonify({'success': False, 'message': '无权限执行此操作'}), 403
+                
             file = request.files.get('file')
             title = request.form.get('title')
             description = request.form.get('description')
@@ -2402,6 +2497,314 @@ LEVEL_EN_MAP = {
 
 def get_level_en(level_cn):
     return LEVEL_EN_MAP.get(level_cn, level_cn)
+
+@app.route('/api/admin/change_avatar', methods=['POST'])
+def admin_change_avatar():
+    if 'user_id' not in request.form:
+        return jsonify({'success': False, 'message': '缺少用户ID'})
+    
+    user_id = request.form['user_id']
+    if 'avatar' not in request.files:
+        return jsonify({'success': False, 'message': '没有选择文件'})
+    
+    file = request.files['avatar']
+    if file.filename == '':
+        return jsonify({'success': False, 'message': '没有选择文件'})
+    
+    if file:
+        try:
+            # 生成安全的文件名
+            filename = secure_filename(file.filename)
+            # 生成唯一文件名
+            unique_filename = f"{uuid.uuid4()}_{filename}"
+            # 保存文件
+            file_path = os.path.join('static/avatars', unique_filename)
+            file.save(file_path)
+            
+            # 更新数据库中的头像URL
+            avatar_url = f"/static/avatars/{unique_filename}"
+            connection = get_db_connection()
+            if connection:
+                cursor = connection.cursor()
+                cursor.execute(
+                    "UPDATE users SET avatar_url = %s WHERE id = %s",
+                    (avatar_url, user_id)
+                )
+                connection.commit()
+                cursor.close()
+                connection.close()
+                
+                return jsonify({
+                    'success': True,
+                    'message': '头像更新成功',
+                    'avatar_url': avatar_url
+                })
+            else:
+                return jsonify({'success': False, 'message': '数据库连接失败'})
+        except Exception as e:
+            print(f"Error updating avatar: {str(e)}")
+            return jsonify({'success': False, 'message': '更新头像失败'})
+    
+    return jsonify({'success': False, 'message': '无效的文件'})
+
+# 获取所有VIP投资策略公告（Supabase版）
+@app.route('/api/admin/vip-announcements', methods=['GET'])
+def get_vip_announcements():
+    try:
+        # 检查管理员权限
+        if 'role' not in session or session['role'] != 'admin':
+            return jsonify({'success': False, 'message': '无权限访问'}), 403
+            
+        resp = supabase.table('vip_announcements').select('*').order('created_at', desc=True).execute()
+        announcements = resp.data if resp.data else []
+        return jsonify({'success': True, 'announcements': announcements})
+    except Exception as e:
+        print(f"获取VIP策略公告失败: {str(e)}")
+        return jsonify({'success': False, 'message': f'获取策略公告失败: {str(e)}'}), 500
+
+# 创建VIP投资策略公告（Supabase版）
+@app.route('/api/admin/vip-announcements', methods=['POST'])
+def create_vip_announcement():
+    try:
+        # 检查管理员权限
+        if 'role' not in session or session['role'] != 'admin':
+            return jsonify({'success': False, 'message': '无权限访问'}), 403
+            
+        data = request.json
+        required_fields = ['title', 'content']
+        if not all(field in data for field in required_fields):
+            return jsonify({'success': False, 'message': '缺少必要字段'}), 400
+            
+        # 添加创建者ID和时间戳
+        announcement_data = {
+            'title': data['title'],
+            'content': data['content'],
+            'created_by': session['user_id'],
+            'status': data.get('status', 'active'),
+            'priority': data.get('priority', 0)
+        }
+        
+        resp = supabase.table('vip_announcements').insert(announcement_data).execute()
+        if hasattr(resp, 'error') and resp.error:
+            return jsonify({'success': False, 'message': f'创建失败: {resp.error}'}), 500
+            
+        return jsonify({'success': True, 'message': '策略公告已创建'})
+    except Exception as e:
+        print(f"创建VIP策略公告失败: {str(e)}")
+        return jsonify({'success': False, 'message': f'创建策略公告失败: {str(e)}'}), 500
+
+# 编辑VIP投资策略公告（Supabase版）
+@app.route('/api/admin/vip-announcements/<int:announcement_id>', methods=['PUT'])
+def edit_vip_announcement(announcement_id):
+    try:
+        # 检查管理员权限
+        if 'role' not in session or session['role'] != 'admin':
+            return jsonify({'success': False, 'message': '无权限访问'}), 403
+            
+        data = request.json
+        update_fields = {k: v for k, v in data.items() if k in ['title', 'content', 'status', 'priority', 'type', 'publisher', 'date']}
+        if not update_fields:
+            return jsonify({'success': False, 'message': '没有可更新的字段'}), 400
+            
+        resp = supabase.table('vip_announcements').update(update_fields).eq('id', announcement_id).execute()
+        if hasattr(resp, 'error') and resp.error:
+            return jsonify({'success': False, 'message': f'更新失败: {resp.error}'}), 500
+            
+        return jsonify({'success': True, 'message': '策略公告已更新'})
+    except Exception as e:
+        print(f"更新VIP策略公告失败: {str(e)}")
+        return jsonify({'success': False, 'message': f'更新策略公告失败: {str(e)}'}), 500
+
+# 删除VIP投资策略公告（Supabase版）
+@app.route('/api/admin/vip-announcements/<int:announcement_id>', methods=['DELETE'])
+def delete_vip_announcement(announcement_id):
+    try:
+        # 检查管理员权限
+        if 'role' not in session or session['role'] != 'admin':
+            return jsonify({'success': False, 'message': '无权限访问'}), 403
+            
+        resp = supabase.table('vip_announcements').delete().eq('id', announcement_id).execute()
+        if hasattr(resp, 'error') and resp.error:
+            return jsonify({'success': False, 'message': f'删除失败: {resp.error}'}), 500
+            
+        return jsonify({'success': True, 'message': '策略公告已删除'})
+    except Exception as e:
+        print(f"删除VIP策略公告失败: {str(e)}")
+        return jsonify({'success': False, 'message': f'删除策略公告失败: {str(e)}'}), 500
+
+# 获取所有VIP交易记录（Supabase版）
+@app.route('/api/admin/vip-trades', methods=['GET'])
+def get_vip_trades():
+    try:
+        # 检查管理员权限
+        if 'role' not in session or session['role'] != 'admin':
+            return jsonify({'success': False, 'message': '无权限访问'}), 403
+            
+        resp = supabase.table('vip_trades').select('*').order('entry_time', desc=True).execute()
+        trades = resp.data if resp.data else []
+        
+        for trade in trades:
+            # 获取最新 current_price
+            current_price = trade.get('current_price')
+            entry_price = float(trade.get('entry_price') or 0)
+            quantity = float(trade.get('quantity') or 0)
+            current_price = float(current_price or 0)
+            direction = str(trade.get('direction', '')).lower()
+            if entry_price and quantity:
+                if direction in ['买涨', 'buy', '多', 'long']:
+                    pnl = (current_price - entry_price) * quantity
+                elif direction in ['买跌', 'sell', '空', 'short']:
+                    pnl = (entry_price - current_price) * quantity
+                else:
+                    pnl = (current_price - entry_price) * quantity
+                roi = (pnl / (entry_price * quantity)) * 100
+            else:
+                pnl = 0
+                roi = 0
+            # 写入数据库
+            supabase.table('vip_trades').update({
+                'pnl': pnl,
+                'roi': roi
+            }).eq('id', trade['id']).execute()
+            trade['pnl'] = pnl
+            trade['roi'] = roi
+        
+        return jsonify({
+            'success': True,
+            'trades': trades
+        })
+    except Exception as e:
+        print(f"获取VIP交易记录失败: {str(e)}")
+        return jsonify({'success': False, 'message': f'获取交易记录失败: {str(e)}'}), 500
+
+# 新增VIP交易记录（Supabase版）
+@app.route('/api/admin/vip-trades', methods=['POST'])
+def add_vip_trade():
+    try:
+        # 检查管理员权限
+        if 'role' not in session or session['role'] != 'admin':
+            return jsonify({'success': False, 'message': '无权限访问'}), 403
+            
+        data = request.json
+        required_fields = ['symbol', 'entry_price', 'quantity', 'entry_time', 'trade_type']
+        if not all(field in data for field in required_fields):
+            return jsonify({'success': False, 'message': '缺少必要字段'}), 400
+            
+        # 验证数据类型
+        try:
+            entry_price = float(data['entry_price'])
+            quantity = float(data['quantity'])
+            entry_time = datetime.fromisoformat(data['entry_time'].replace('Z', '+00:00'))
+        except (ValueError, TypeError) as e:
+            return jsonify({'success': False, 'message': f'数据类型错误: {str(e)}'}), 400
+            
+        # 获取当前价格
+        current_price = get_real_time_price(data['symbol'])
+        if not current_price:
+            return jsonify({'success': False, 'message': '无法获取当前价格'}), 400
+            
+        # 计算初始盈亏
+        pnl = (current_price - entry_price) * quantity
+        roi = (pnl / (entry_price * quantity)) * 100 if entry_price and quantity else 0
+        
+        # 准备交易数据
+        trade_data = {
+            'symbol': data['symbol'],
+            'entry_price': entry_price,
+            'quantity': quantity,
+            'entry_time': entry_time.isoformat(),
+            'trade_type': data['trade_type'],
+            'status': 'open',
+            'current_price': current_price,
+            'pnl': pnl,
+            'roi': roi,
+            'created_by': session['user_id'],
+            'asset_type': data.get('asset_type'),  # 新增
+            'direction': data.get('direction')     # 新增
+        }
+        
+        resp = supabase.table('vip_trades').insert(trade_data).execute()
+        if hasattr(resp, 'error') and resp.error:
+            return jsonify({'success': False, 'message': f'创建失败: {resp.error}'}), 500
+            
+        return jsonify({'success': True, 'message': '交易记录已添加'})
+    except Exception as e:
+        print(f"添加VIP交易记录失败: {str(e)}")
+        return jsonify({'success': False, 'message': f'添加交易记录失败: {str(e)}'}), 500
+
+# 编辑VIP交易记录（Supabase版）
+@app.route('/api/admin/vip-trades/<int:trade_id>', methods=['PUT'])
+def edit_vip_trade(trade_id):
+    try:
+        # 检查管理员权限
+        if 'role' not in session or session['role'] != 'admin':
+            return jsonify({'success': False, 'message': '无权限访问'}), 403
+            
+        data = request.json
+        update_fields = {k: v for k, v in data.items() if k in [
+            'symbol', 'entry_price', 'exit_price', 'quantity', 
+            'entry_time', 'exit_time', 'trade_type', 'status', 
+            'notes', 'asset_type', 'direction'  # 新增
+        ]}
+        
+        if not update_fields:
+            return jsonify({'success': False, 'message': '没有可更新的字段'}), 400
+            
+        # 如果更新了价格相关字段，重新计算盈亏
+        if any(k in update_fields for k in ['entry_price', 'exit_price', 'quantity']):
+            current_price = get_real_time_price(update_fields.get('symbol', data.get('symbol')))
+            if current_price:
+                entry_price = float(update_fields.get('entry_price', data.get('entry_price', 0)))
+                quantity = float(update_fields.get('quantity', data.get('quantity', 0)))
+                pnl = (current_price - entry_price) * quantity
+                roi = (pnl / (entry_price * quantity)) * 100 if entry_price and quantity else 0
+                
+                update_fields.update({
+                    'current_price': current_price,
+                    'pnl': pnl,
+                    'roi': roi
+                })
+        
+        resp = supabase.table('vip_trades').update(update_fields).eq('id', trade_id).execute()
+        if hasattr(resp, 'error') and resp.error:
+            return jsonify({'success': False, 'message': f'更新失败: {resp.error}'}), 500
+            
+        return jsonify({'success': True, 'message': '交易记录已更新'})
+    except Exception as e:
+        print(f"更新VIP交易记录失败: {str(e)}")
+        return jsonify({'success': False, 'message': f'更新交易记录失败: {str(e)}'}), 500
+
+# 删除VIP交易记录（Supabase版）
+@app.route('/api/admin/vip-trades/<int:trade_id>', methods=['DELETE'])
+def delete_vip_trade(trade_id):
+    try:
+        # 检查管理员权限
+        if 'role' not in session or session['role'] != 'admin':
+            return jsonify({'success': False, 'message': '无权限访问'}), 403
+            
+        resp = supabase.table('vip_trades').delete().eq('id', trade_id).execute()
+        if hasattr(resp, 'error') and resp.error:
+            return jsonify({'success': False, 'message': f'删除失败: {resp.error}'}), 500
+            
+        return jsonify({'success': True, 'message': '交易记录已删除'})
+    except Exception as e:
+        print(f"删除VIP交易记录失败: {str(e)}")
+        return jsonify({'success': False, 'message': f'删除交易记录失败: {str(e)}'}), 500
+
+@app.route('/download-proxy')
+def download_proxy():
+    url = request.args.get('url')
+    if not url:
+        return 'Missing url', 400
+    r = requests.get(url, stream=True)
+    filename = url.split('/')[-1]
+    return Response(
+        r.iter_content(chunk_size=8192),
+        headers={
+            'Content-Disposition': f'attachment; filename="{filename}"',
+            'Content-Type': r.headers.get('Content-Type', 'application/octet-stream')
+        }
+    )
 
 if __name__ == '__main__':
     # 初始化数据库

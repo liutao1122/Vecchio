@@ -983,29 +983,19 @@
                         <div class="col-md-6">
                             <div class="progress-bar-wrapper">
                                 <div class="progress">
-                                    {% set target_amount = {
-                                        'Regular Member': 50000,
-                                        'Gold Member': 200000,
-                                        'Diamond Member': 1000000
-                                    } %}
-                                    {% set next_level = {
-                                        'Regular Member': 'Gold Member',
-                                        'Gold Member': 'Diamond Member',
-                                        'Diamond Member': 'Supreme Black Card'
-                                    } %}
-                                    {% set current_target = target_amount[trader_info.membership_level]|default(50000) %}
-                                    {% set progress = ((trader_info.trading_volume|default(0) / current_target * 100)|round|int if current_target > 0 else 0) %}
+                                    {% set current_target = 1000000 %}
+                                    {% set progress = ((dynamic_total_asset / current_target * 100)|round(1) if current_target > 0 else 0) %}
                                     <div class="progress-bar" role="progressbar" 
                                         style="width: {{ progress }}%;" 
-                                        aria-valuenow="{{ trader_info.trading_volume|default(0) }}" 
+                                        aria-valuenow="{{ dynamic_total_asset }}" 
                                         aria-valuemin="0" 
                                         aria-valuemax="{{ current_target }}">
                                         <span class="progress-percent">{{ progress }}%</span>
                                     </div>
                                 </div>
                                 <div class="progress-labels d-flex justify-content-between">
-                                    <span>${{ "{:,.0f}".format(trader_info.trading_volume|default(0)) }} / ${{ "{:,.0f}".format(current_target) }}</span>
-                                    <span class="text-gold">Next Level: {{ next_level[trader_info.membership_level]|default('Gold Member') }}</span>
+                                    <span>$ {{ '{:,.0f}'.format(dynamic_total_asset) }} / ${{ '{:,.0f}'.format(current_target) }}</span>
+                                    <span class="text-gold">Next Level: Supreme Black Card</span>
                                 </div>
                             </div>
                         </div>
@@ -1013,7 +1003,7 @@
                             <div class="next-milestone">
                                 <i class="bi bi-crown-fill"></i>
                                 <h4 class="text-white mb-0" style="font-size: 1rem;">Next Level</h4>
-                                <p class="text-gold mb-0">{{ next_level[trader_info.membership_level]|default('Gold Member') }}</p>
+                                <p class="text-gold mb-0">Supreme Black Card</p>
                             </div>
                         </div>
                     </div>
