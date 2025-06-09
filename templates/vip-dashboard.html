@@ -10,7 +10,7 @@
     <style>
         body {
             font-family: 'Inter', 'PingFang SC', 'Microsoft YaHei', Arial, sans-serif;
-            background: linear-gradient(135deg, #181F2A 0%, #232B3E 100%);
+            background: linear-gradient(120deg, #181c2a 60%, #232b3e 100%);
             margin: 0;
             padding: 0;
             color: #fff;
@@ -1118,6 +1118,1622 @@
         .vip-table th {
             font-size: 1.05rem !important;
         }
+        /* 投资公告与策略（美化版） */
+        .announcement-card {
+          background: linear-gradient(135deg, #232B3E 60%, #232e4a 100%);
+          border-radius: 20px;
+          box-shadow: 0 4px 24px #181F2A33, 0 0 0 2px #FFD70022;
+          border: 1.5px solid rgba(255,215,0,0.10);
+          padding: 28px 24px 20px 24px;
+          margin-bottom: 28px;
+          position: relative;
+          color: #fff;
+          transition: box-shadow 0.2s;
+        }
+        .announcement-card:hover {
+          box-shadow: 0 8px 32px #FFD70044, 0 0 0 3px #FFD700;
+        }
+        .announcement-header {
+          display: flex;
+          align-items: flex-start;
+          justify-content: space-between;
+          margin-bottom: 12px;
+        }
+        .announcement-title {
+          font-size: 1.35rem;
+          font-weight: 900;
+          color: #FFD700;
+          letter-spacing: 1px;
+          flex: 1;
+        }
+        .priority-badge {
+          font-size: 0.98rem;
+          font-weight: 900;
+          border-radius: 14px;
+          padding: 4px 18px;
+          margin-left: 12px;
+          box-shadow: 0 2px 8px #FFD70033;
+          letter-spacing: 1px;
+          position: relative;
+          top: 0;
+          right: 0;
+          display: inline-block;
+        }
+        .priority-high { background: linear-gradient(90deg,#ff4d4f 60%,#ffb300 100%); color: #fff; }
+        .priority-medium { background: linear-gradient(90deg,#faad14 60%,#ffd700 100%); color: #232B3E; }
+        .priority-low { background: linear-gradient(90deg,#00ffae 60%,#b0c4e6 100%); color: #232B3E; }
+        .announcement-content {
+          font-size: 1.08rem;
+          color: #b0c4e6;
+          margin-bottom: 18px;
+          line-height: 1.7;
+          word-break: break-all;
+        }
+        .announcement-meta {
+          font-size: 0.98rem;
+          color: #b0c4e6;
+          display: flex;
+          gap: 24px;
+          justify-content: flex-end;
+          align-items: center;
+        }
+        .vip-trade-cards-grid {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 28px;
+          justify-content: flex-start;
+        }
+        .vip-trade-card {
+          background: linear-gradient(135deg, #232B3E 60%, #232e4a 100%);
+          border-radius: 20px;
+          box-shadow: 0 8px 32px #181F2A33, 0 0 0 2px #FFD70022;
+          border: 1.5px solid rgba(255, 255, 255, 0.10);
+          color: #fff;
+          padding: 28px 22px 18px 22px;
+          min-width: 320px;
+          max-width: 370px;
+          flex: 1 1 320px;
+          display: flex;
+          flex-direction: column;
+          margin-bottom: 8px;
+          transition: box-shadow 0.3s, transform 0.3s;
+        }
+        .vip-trade-card:hover {
+          box-shadow: 0 16px 64px 0 #FFD70044, 0 0 0 3px #FFD700;
+          border-color: #FFD700;
+          transform: translateY(-6px) scale(1.03);
+        }
+        .vip-trade-card-header {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          margin-bottom: 12px;
+        }
+        .vip-trade-symbol {
+          font-size: 1.3rem;
+          font-weight: 900;
+          color: #FFD700;
+          letter-spacing: 1px;
+        }
+        .vip-trade-type.buy {
+          background: #00ffae22;
+          color: #00ffae;
+          border: 1.5px solid #00ffae;
+          border-radius: 10px;
+          padding: 2px 14px;
+          font-weight: 700;
+          font-size: 1.05rem;
+        }
+        .vip-trade-type.sell {
+          background: #cf132222;
+          color: #cf1322;
+          border: 1.5px solid #cf1322;
+          border-radius: 10px;
+          padding: 2px 14px;
+          font-weight: 700;
+          font-size: 1.05rem;
+        }
+        .vip-trade-status {
+          margin-left: auto;
+          font-size: 1.05rem;
+          font-weight: 700;
+          padding: 2px 12px;
+          border-radius: 10px;
+          background: #232b3e;
+          border: 1.5px solid #FFD70055;
+          color: #FFD700;
+        }
+        .status-open { background: #232b3e; color: #FFD700; }
+        .status-closed, .status-平仓 { background: #00ffae22; color: #00ffae; border-color: #00ffae; }
+        .status-cancelled, .status-已取消 { background: #cf132222; color: #cf1322; border-color: #cf1322; }
+        .vip-trade-card-body {
+          display: flex;
+          flex-direction: column;
+          gap: 10px;
+        }
+        .vip-trade-info-group {
+          display: flex;
+          gap: 18px;
+          margin-bottom: 2px;
+          flex-wrap: wrap;
+        }
+        .vip-trade-info-group > div {
+          min-width: 120px;
+          font-size: 1.05rem;
+        }
+        .vip-trade-pnl.up, .vip-trade-roi.up { color: #00ffae; font-weight: 900; }
+        .vip-trade-pnl.down, .vip-trade-roi.down { color: #cf1322; font-weight: 900; }
+        @media (max-width: 900px) {
+          .vip-trade-cards-grid { flex-direction: column; gap: 16px; }
+          .vip-trade-card { min-width: 0; max-width: 100%; padding: 18px 8px; border-radius: 10px; }
+          .vip-trade-info-group > div { min-width: 90px; font-size: 0.98rem; }
+        }
+        .vip-trade-cards-premium {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 36px;
+          justify-content: center;
+          margin-bottom: 24px;
+        }
+        .vip-trade-card-premium {
+          background: rgba(24,31,42,0.98);
+          border-radius: 28px;
+          box-shadow: 0 12px 48px 0 #181F2A55, 0 2px 24px #FFD70022;
+          border: 1.5px solid rgba(255,215,0,0.13);
+          color: #fff;
+          padding: 32px 28px 22px 28px;
+          min-width: 360px;
+          max-width: 420px;
+          flex: 1 1 420px;
+          display: flex;
+          flex-direction: column;
+          margin-bottom: 8px;
+          transition: box-shadow 0.3s, transform 0.3s;
+          position: relative;
+          overflow: hidden;
+        }
+        @media (min-width: 900px) {
+          .vip-trade-cards-premium {
+            flex-wrap: wrap;
+            justify-content: center;
+          }
+          .vip-trade-card-premium {
+            flex-basis: calc(50% - 36px);
+            margin-left: 0;
+            margin-right: 0;
+          }
+        }
+        @media (max-width: 900px) {
+          .vip-trade-cards-premium { flex-direction: column; gap: 18px; }
+          .vip-trade-card-premium { min-width: 0; max-width: 100%; padding: 18px 8px; border-radius: 14px; }
+          .vip-trade-premium-body { flex-direction: column; gap: 8px; }
+        }
+        .vip-trade-card-premium:before {
+          content: '';
+          position: absolute;
+          top: -60px; left: -60px;
+          width: 180px; height: 180px;
+          background: radial-gradient(circle, #FFD70033 0%, rgba(255,215,0,0) 80%);
+          z-index: 0;
+        }
+        .vip-trade-card-premium-header {
+          display: flex;
+          align-items: center;
+          gap: 16px;
+          margin-bottom: 10px;
+          z-index: 1;
+        }
+        .vip-trade-symbol-premium {
+          font-size: 1.5rem;
+          font-weight: 900;
+          color: #FFD700;
+          letter-spacing: 1px;
+          text-shadow: 0 2px 8px #FFD70044;
+        }
+        .vip-trade-type-premium.buy {
+          background: #00ffae22;
+          color: #00ffae;
+          border: 1.5px solid #00ffae;
+          border-radius: 12px;
+          padding: 2px 18px;
+          font-weight: 700;
+          font-size: 1.08rem;
+          box-shadow: 0 0 8px #00ffae33;
+        }
+        .vip-trade-type-premium.sell {
+          background: #cf132222;
+          color: #cf1322;
+          border: 1.5px solid #cf1322;
+          border-radius: 12px;
+          padding: 2px 18px;
+          font-weight: 700;
+          font-size: 1.08rem;
+          box-shadow: 0 0 8px #cf132233;
+        }
+        .vip-trade-meta-row {
+          display: flex;
+          align-items: center;
+          gap: 16px;
+          margin-bottom: 18px;
+          z-index: 1;
+        }
+        .vip-trade-status-premium {
+          font-size: 1.05rem;
+          font-weight: 700;
+          padding: 2px 14px;
+          border-radius: 10px;
+          background: #232b3e;
+          border: 1.5px solid #FFD70055;
+          color: #FFD700;
+          letter-spacing: 1px;
+        }
+        .status-open { background: #232b3e; color: #FFD700; }
+        .status-closed, .status-平仓 { background: #00ffae22; color: #00ffae; border-color: #00ffae; }
+        .status-cancelled, .status-已取消 { background: #cf132222; color: #cf1322; border-color: #cf1322; }
+        .vip-trade-entrytime { color: #b0c4e6; font-size: 1.01rem; display: flex; align-items: center; gap: 4px; }
+        .vip-trade-premium-body {
+          display: flex;
+          flex-direction: row;
+          gap: 32px;
+          margin-bottom: 18px;
+          z-index: 1;
+        }
+        .vip-trade-premium-col {
+          display: flex;
+          flex-direction: column;
+          gap: 8px;
+        }
+        .vip-label {
+          color: #b0c4e6;
+          font-size: 0.98rem;
+          margin-right: 8px;
+          font-weight: 600;
+        }
+        .vip-value {
+          color: #fff;
+          font-size: 1.08rem;
+          font-weight: 700;
+        }
+        .vip-trade-premium-footer {
+          display: flex;
+          flex-direction: row;
+          gap: 32px;
+          align-items: center;
+          margin-top: 8px;
+          z-index: 1;
+        }
+        .vip-pnl-group, .vip-roi-group {
+          display: flex;
+          flex-direction: column;
+          align-items: flex-start;
+          gap: 2px;
+        }
+        .vip-pnl-label, .vip-roi-label {
+          color: #b0c4e6;
+          font-size: 0.98rem;
+          font-weight: 600;
+        }
+        .vip-pnl-value.up, .vip-roi-value.up {
+          color: #00ffae;
+          font-weight: 900;
+          font-size: 1.25rem;
+          text-shadow: 0 0 8px #00ffae55;
+        }
+        .vip-pnl-value.down, .vip-roi-value.down {
+          color: #cf1322;
+          font-weight: 900;
+          font-size: 1.25rem;
+          text-shadow: 0 0 8px #cf132255;
+        }
+        .vip-trade-cards-wide {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 32px;
+          margin-bottom: 32px;
+          justify-content: space-between;
+        }
+        .vip-trade-card-wide {
+          background: linear-gradient(135deg, #232B3E 60%, #232e4a 100%);
+          border-radius: 28px;
+          box-shadow: 0 8px 32px #181F2A44, 0 0 0 2px #FFD70033;
+          border: 2px solid rgba(255,215,0,0.10);
+          color: #fff;
+          padding: 38px 48px 28px 48px;
+          flex: 1 1 calc(50% - 16px);
+          min-width: 0;
+          max-width: calc(50% - 16px);
+          display: flex;
+          flex-direction: column;
+          margin-bottom: 0;
+          transition: box-shadow 0.3s, transform 0.3s;
+          position: relative;
+          overflow: hidden;
+        }
+        .vip-trade-card-wide:not(:last-child) {
+          margin-right: 0;
+        }
+        @media (max-width: 1200px) {
+          .vip-trade-card-wide { padding: 18px 8px; }
+          .vip-trade-cards-wide { gap: 18px; }
+        }
+        @media (max-width: 900px) {
+          .vip-trade-cards-wide { flex-direction: column; gap: 18px; }
+          .vip-trade-card-wide { max-width: 100%; flex-basis: 100%; border-radius: 16px; padding: 12px 2vw; }
+        }
+        .vip-trade-cards-lux {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 28px;
+          margin-bottom: 32px;
+          justify-content: space-between;
+        }
+        .vip-trade-card-lux {
+          background: linear-gradient(90deg, rgba(35,43,62,0.92) 60%, rgba(35,46,74,0.92) 100%);
+          border-radius: 36px;
+          box-shadow: 0 4px 32px 0 #FFD70033, 0 0 0 2px #FFD70022;
+          border: 1.5px solid rgba(255,215,0,0.10);
+          color: #fff;
+          padding: 0 38px;
+          min-height: 120px;
+          max-height: 140px;
+          height: 120px;
+          flex: 1 1 calc(50% - 14px);
+          min-width: 0;
+          max-width: calc(50% - 14px);
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          position: relative;
+          overflow: hidden;
+          transition: box-shadow 0.3s, transform 0.3s;
+          backdrop-filter: blur(6px) saturate(1.2);
+        }
+        .vip-trade-card-lux:before {
+          content: '';
+          position: absolute;
+          left: -60px; top: -60px;
+          width: 180px; height: 180px;
+          background: radial-gradient(circle, #FFD70033 0%, rgba(255,215,0,0) 80%);
+          z-index: 0;
+        }
+        .vip-trade-card-lux:hover {
+          box-shadow: 0 8px 48px 0 #FFD70055, 0 0 0 3px #FFD700;
+          border-color: #FFD700;
+          transform: translateY(-3px) scale(1.01);
+        }
+        .vip-trade-lux-left {
+          display: flex;
+          flex-direction: column;
+          justify-content: center;
+          gap: 8px;
+          min-width: 180px;
+          z-index: 1;
+        }
+        .vip-symbol-lux {
+          font-size: 2.1rem;
+          font-weight: 900;
+          color: #FFD700;
+          letter-spacing: 1px;
+          text-shadow: 0 2px 8px #FFD70044;
+          margin-bottom: 2px;
+        }
+        .vip-type-lux {
+          display: inline-block;
+          margin-right: 12px;
+          font-size: 1.08rem;
+          font-weight: 700;
+          padding: 2px 18px;
+          border-radius: 12px;
+          border: 1.5px solid #00ffae;
+          color: #00ffae;
+          background: #00ffae22;
+          box-shadow: 0 0 8px #00ffae33;
+        }
+        .vip-type-lux.sell {
+          border-color: #cf1322;
+          color: #cf1322;
+          background: #cf132222;
+          box-shadow: 0 0 8px #cf132233;
+        }
+        .vip-status-lux {
+          display: inline-block;
+          font-size: 1.08rem;
+          font-weight: 700;
+          padding: 2px 14px;
+          border-radius: 10px;
+          background: #232b3e;
+          border: 1.5px solid #FFD70055;
+          color: #FFD700;
+          margin-left: 8px;
+        }
+        .vip-trade-lux-right {
+          display: flex;
+          flex-direction: column;
+          justify-content: center;
+          gap: 8px;
+          align-items: flex-end;
+          z-index: 1;
+        }
+        .vip-lux-row {
+          display: flex;
+          flex-direction: row;
+          gap: 38px;
+          align-items: center;
+        }
+        .vip-label-lux {
+          color: #b0c4e6;
+          font-size: 1.02rem;
+          font-weight: 600;
+          margin-right: 4px;
+        }
+        .vip-value-lux {
+          color: #fff;
+          font-size: 1.18rem;
+          font-weight: 900;
+          letter-spacing: 1px;
+          margin-right: 12px;
+        }
+        .vip-pnl-lux, .vip-roi-lux {
+          font-size: 1.7rem;
+          font-weight: 900;
+          margin-left: 12px;
+          text-shadow: 0 0 8px #00ffae55;
+        }
+        .vip-pnl-lux.up, .vip-roi-lux.up { color: #00ffae; }
+        .vip-pnl-lux.down, .vip-roi-lux.down { color: #cf1322; text-shadow: 0 0 8px #cf132255; }
+        .vip-lux-meta {
+          color: #b0c4e6;
+          font-size: 1.01rem;
+          font-weight: 500;
+          margin-top: 2px;
+          text-align: right;
+        }
+        @media (max-width: 1200px) {
+          .vip-trade-card-lux { padding: 0 8px; }
+          .vip-trade-cards-lux { gap: 14px; }
+        }
+        @media (max-width: 900px) {
+          .vip-trade-cards-lux { flex-direction: column; gap: 14px; }
+          .vip-trade-card-lux { max-width: 100%; flex-basis: 100%; border-radius: 18px; height: auto; min-height: 90px; }
+          .vip-trade-lux-right { align-items: flex-start; }
+        }
+        .vip-trade-cards-prolux {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 36px;
+          margin-bottom: 40px;
+          justify-content: space-between;
+        }
+        .vip-trade-card-prolux {
+          background: linear-gradient(120deg, rgba(35,43,62,0.92) 70%, rgba(35,46,74,0.96) 100%);
+          border-radius: 0;
+          box-shadow: 0 0 48px 0 #FFD70033, 0 0 0 2px #FFD70022;
+          border: 2px solid rgba(255,215,0,0.18);
+          color: #fff;
+          padding: 0;
+          min-height: 200px;
+          max-height: 240px;
+          flex: 1 1 calc(50% - 18px);
+          min-width: 0;
+          max-width: calc(50% - 18px);
+          display: flex;
+          align-items: stretch;
+          position: relative;
+          overflow: hidden;
+          transition: box-shadow 0.3s, transform 0.3s;
+          backdrop-filter: blur(10px) saturate(1.18);
+          animation: card-glow-breath 2.8s infinite alternate;
+        }
+        @keyframes card-glow-breath {
+          0% { box-shadow: 0 0 48px 0 #FFD70033, 0 0 0 2px #FFD70022; }
+          100% { box-shadow: 0 0 80px 12px #FFD70077, 0 0 0 4px #FFD70044; }
+        }
+        .vip-trade-card-prolux:before { display: none; }
+        .vip-trade-card-prolux:hover {
+          box-shadow: 0 0 120px 24px #FFD70099, 0 0 0 4px #FFD700;
+          border-color: #FFD700;
+          transform: translateY(-4px) scale(1.01);
+        }
+        .vip-prolux-left {
+          flex: 0 0 180px;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          background: linear-gradient(135deg, #232B3E 60%, #FFD70022 100%);
+          border-top-left-radius: 0;
+          border-bottom-left-radius: 0;
+          position: relative;
+          z-index: 1;
+          min-width: 160px;
+          max-width: 200px;
+          padding: 0 24px;
+        }
+        .vip-prolux-symbol {
+          font-size: 2.6rem;
+          font-weight: 900;
+          color: #FFD700;
+          letter-spacing: 2px;
+          text-shadow: 0 2px 16px #FFD70077;
+          margin-bottom: 12px;
+          margin-top: 8px;
+        }
+        .vip-prolux-tags {
+          display: flex;
+          flex-direction: column;
+          gap: 10px;
+          align-items: center;
+        }
+        .vip-prolux-type {
+          font-size: 1.15rem;
+          font-weight: 700;
+          padding: 4px 28px;
+          border-radius: 16px;
+          border: 2px solid #00ffae;
+          color: #00ffae;
+          background: #00ffae22;
+          box-shadow: 0 0 12px #00ffae33;
+          margin-bottom: 2px;
+        }
+        .vip-prolux-type.sell {
+          border-color: #cf1322;
+          color: #cf1322;
+          background: #cf132222;
+          box-shadow: 0 0 12px #cf132233;
+        }
+        .vip-prolux-status {
+          font-size: 1.08rem;
+          font-weight: 700;
+          padding: 2px 18px;
+          border-radius: 12px;
+          background: #232b3e;
+          border: 2px solid #FFD70055;
+          color: #FFD700;
+          margin-top: 2px;
+        }
+        .vip-prolux-glowdot { display: none; }
+        .vip-prolux-right {
+          flex: 1 1 0;
+          display: flex;
+          flex-direction: column;
+          justify-content: center;
+          gap: 18px;
+          padding: 28px 36px 28px 24px;
+          z-index: 1;
+          min-width: 0;
+          overflow-x: auto;
+        }
+        .vip-prolux-row {
+          display: flex;
+          flex-direction: row;
+          gap: 44px;
+          align-items: center;
+          margin-bottom: 2px;
+          flex-wrap: wrap;
+        }
+        .vip-prolux-label {
+          color: #b0c4e6;
+          font-size: 1.08rem;
+          font-weight: 600;
+          margin-right: 4px;
+        }
+        .vip-prolux-value {
+          color: #fff;
+          font-size: 1.22rem;
+          font-weight: 900;
+          letter-spacing: 1px;
+          margin-right: 12px;
+          word-break: break-all;
+        }
+        .vip-prolux-pnl, .vip-prolux-roi {
+          font-size: 2.1rem;
+          font-weight: 900;
+          margin-left: 12px;
+          text-shadow: 0 0 16px #00ffae55;
+        }
+        .vip-prolux-pnl.up, .vip-prolux-roi.up { color: #00ffae; }
+        .vip-prolux-pnl.down, .vip-prolux-roi.down { color: #cf1322; text-shadow: 0 0 16px #cf132255; }
+        .vip-prolux-meta {
+          color: #b0c4e6;
+          font-size: 1.05rem;
+          font-weight: 500;
+          margin-bottom: 6px;
+          text-align: right;
+        }
+        @media (max-width: 1200px) {
+          .vip-trade-card-prolux { padding: 0; }
+          .vip-trade-cards-prolux { gap: 14px; }
+        }
+        @media (max-width: 900px) {
+          .vip-trade-cards-prolux { flex-direction: column; gap: 14px; }
+          .vip-trade-card-prolux { max-width: 100%; flex-basis: 100%; border-radius: 0; height: auto; min-height: 120px; }
+          .vip-prolux-left { min-width: 100px; max-width: 120px; padding: 0 8px; }
+          .vip-prolux-right { padding: 18px 8px 18px 8px; }
+        }
+        .vip-trade-cards-ultimate {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 36px;
+          margin-bottom: 40px;
+          justify-content: space-between;
+        }
+        .vip-trade-card-ultimate {
+          background: linear-gradient(120deg, rgba(35,43,62,0.98) 70%, rgba(35,46,74,0.96) 100%);
+          border-radius: 0;
+          box-shadow: 0 0 64px 0 #FFD70044, 0 0 0 2px #FFD70022;
+          border: 2px solid rgba(255,215,0,0.18);
+          color: #fff;
+          padding: 0;
+          min-height: 180px;
+          max-height: 220px;
+          flex: 1 1 calc(50% - 18px);
+          min-width: 0;
+          max-width: calc(50% - 18px);
+          display: flex;
+          align-items: stretch;
+          position: relative;
+          overflow: hidden;
+          transition: box-shadow 0.3s, transform 0.3s;
+          backdrop-filter: blur(10px) saturate(1.18);
+          animation: card-glow-breath 2.8s infinite alternate;
+        }
+        @keyframes card-glow-breath {
+          0% { box-shadow: 0 0 64px 0 #FFD70044, 0 0 0 2px #FFD70022; }
+          100% { box-shadow: 0 0 120px 24px #FFD70099, 0 0 0 4px #FFD70044; }
+        }
+        .vip-trade-card-ultimate:hover {
+          box-shadow: 0 0 120px 32px #FFD700cc, 0 0 0 4px #FFD700;
+          border-color: #FFD700;
+          transform: translateY(-4px) scale(1.01);
+        }
+        .vip-ultimate-left {
+          flex: 0 0 200px;
+          display: flex;
+          flex-direction: column;
+          align-items: flex-start;
+          justify-content: center;
+          background: linear-gradient(135deg, #232B3E 60%, #FFD70022 100%);
+          border-top-left-radius: 0;
+          border-bottom-left-radius: 0;
+          position: relative;
+          z-index: 1;
+          min-width: 160px;
+          max-width: 220px;
+          padding: 0 32px;
+          gap: 18px;
+        }
+        .vip-ultimate-symbol {
+          font-size: 2.7rem;
+          font-weight: 900;
+          color: #FFD700;
+          letter-spacing: 2px;
+          text-shadow: 0 2px 18px #FFD70099;
+          margin-bottom: 8px;
+          margin-top: 8px;
+        }
+        .vip-ultimate-tags {
+          display: flex;
+          flex-direction: row;
+          gap: 12px;
+          align-items: center;
+        }
+        .vip-ultimate-type {
+          font-size: 1.18rem;
+          font-weight: 700;
+          padding: 4px 28px;
+          border-radius: 16px;
+          border: 2px solid #00ffae;
+          color: #00ffae;
+          background: #00ffae22;
+          box-shadow: 0 0 12px #00ffae33;
+        }
+        .vip-ultimate-type.sell {
+          border-color: #cf1322;
+          color: #cf1322;
+          background: #cf132222;
+          box-shadow: 0 0 12px #cf132233;
+        }
+        .vip-ultimate-status {
+          font-size: 1.12rem;
+          font-weight: 700;
+          padding: 2px 18px;
+          border-radius: 12px;
+          background: #232b3e;
+          border: 2px solid #FFD70055;
+          color: #FFD700;
+        }
+        .vip-ultimate-right {
+          flex: 1 1 0;
+          display: flex;
+          flex-direction: column;
+          justify-content: center;
+          gap: 18px;
+          padding: 32px 36px 32px 24px;
+          z-index: 1;
+          min-width: 0;
+        }
+        .vip-ultimate-row {
+          display: flex;
+          flex-direction: row;
+          gap: 44px;
+          align-items: center;
+          margin-bottom: 2px;
+          flex-wrap: wrap;
+        }
+        .vip-ultimate-label {
+          color: #b0c4e6;
+          font-size: 1.08rem;
+          font-weight: 600;
+          margin-right: 4px;
+        }
+        .vip-ultimate-value {
+          color: #fff;
+          font-size: 1.22rem;
+          font-weight: 900;
+          letter-spacing: 1px;
+          margin-right: 12px;
+          word-break: break-all;
+        }
+        .vip-ultimate-pnl, .vip-ultimate-roi {
+          font-size: 2.1rem;
+          font-weight: 900;
+          margin-left: 12px;
+          text-shadow: 0 0 16px #00ffae55;
+        }
+        .vip-ultimate-pnl.up, .vip-ultimate-roi.up { color: #00ffae; }
+        .vip-ultimate-pnl.down, .vip-ultimate-roi.down { color: #cf1322; text-shadow: 0 0 16px #cf132255; }
+        .vip-ultimate-meta {
+          color: #b0c4e6;
+          font-size: 1.05rem;
+          font-weight: 500;
+          margin-bottom: 6px;
+          text-align: right;
+        }
+        @media (max-width: 1200px) {
+          .vip-trade-card-ultimate { padding: 0; }
+          .vip-trade-cards-ultimate { gap: 14px; }
+        }
+        @media (max-width: 900px) {
+          .vip-trade-cards-ultimate { flex-direction: column; gap: 14px; }
+          .vip-trade-card-ultimate { max-width: 100%; flex-basis: 100%; border-radius: 0; height: auto; min-height: 120px; }
+          .vip-ultimate-left { min-width: 100px; max-width: 120px; padding: 0 8px; }
+          .vip-ultimate-right { padding: 18px 8px 18px 8px; }
+        }
+        .vip-trade-card-ultimate {
+          max-height: 220px;
+          height: 200px;
+          overflow: visible;
+          display: flex;
+        }
+        .vip-ultimate-left {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          gap: 18px;
+          min-width: 140px;
+          max-width: 180px;
+          padding: 0 18px;
+        }
+        .vip-ultimate-symbol {
+          font-size: 2.5rem;
+          font-weight: 900;
+          color: #FFD700;
+          letter-spacing: 2px;
+          text-shadow: 0 2px 18px #FFD70099;
+          margin: 0 0 8px 0;
+        }
+        .vip-ultimate-tags {
+          display: flex;
+          flex-direction: column;
+          gap: 10px;
+          width: 100%;
+          align-items: center;
+        }
+        .vip-ultimate-type, .vip-ultimate-status {
+          width: 80px;
+          min-height: 32px;
+          line-height: 32px;
+          text-align: center;
+          display: block;
+          font-size: 1.08rem;
+        }
+        .vip-ultimate-right {
+          flex: 1 1 0;
+          display: flex;
+          flex-direction: column;
+          justify-content: space-between;
+          gap: 10px;
+          padding: 22px 18px 22px 8px;
+          min-width: 0;
+          height: 100%;
+        }
+        .vip-ultimate-meta {
+          color: #b0c4e6;
+          font-size: 1.02rem;
+          font-weight: 500;
+          margin-bottom: 0;
+          text-align: left;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
+        .vip-ultimate-row {
+          display: flex;
+          flex-direction: row;
+          gap: 18px;
+          align-items: center;
+          margin-bottom: 0;
+          width: 100%;
+          justify-content: flex-start;
+        }
+        .vip-ultimate-label {
+          color: #b0c4e6;
+          font-size: 1.02rem;
+          font-weight: 600;
+          min-width: 44px;
+          max-width: 60px;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+        }
+        .vip-ultimate-value, .vip-ultimate-pnl, .vip-ultimate-roi {
+          color: #fff;
+          font-weight: 900;
+          letter-spacing: 1px;
+          margin-right: 10px;
+          min-width: 0;
+          max-width: 90px;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+          font-size: clamp(1rem, 2vw, 1.18rem);
+        }
+        .vip-ultimate-pnl, .vip-ultimate-roi {
+          font-size: clamp(1.2rem, 2.5vw, 1.5rem);
+        }
+        .vip-ultimate-pnl.up, .vip-ultimate-roi.up { color: #00ffae; }
+        .vip-ultimate-pnl.down, .vip-ultimate-roi.down { color: #cf1322; text-shadow: 0 0 16px #cf132255; }
+        @media (max-width: 900px) {
+          .vip-trade-card-ultimate { height: auto; min-height: 120px; }
+          .vip-ultimate-left { padding: 0 6px; }
+          .vip-ultimate-right { padding: 10px 4px 10px 4px; }
+          .vip-ultimate-row { gap: 8px; }
+        }
+        .vip-trade-cards-ultimate {
+          overflow: visible !important;
+        }
+        .vip-trade-card-ultimate {
+          max-height: none;
+          height: 200px;
+          overflow: visible !important;
+          display: flex;
+        }
+        .vip-ultimate-right {
+          flex: 1 1 0;
+          display: flex;
+          flex-direction: column;
+          justify-content: space-between;
+          gap: 10px;
+          padding: 22px 18px 22px 8px;
+          min-width: 0;
+          height: 100%;
+        }
+        .vip-ultimate-row {
+          display: flex;
+          flex-direction: row;
+          gap: 18px;
+          align-items: center;
+          margin-bottom: 0;
+          width: 100%;
+          justify-content: flex-start;
+          flex-wrap: wrap;
+        }
+        .vip-ultimate-label {
+          color: #b0c4e6;
+          font-size: 1.02rem;
+          font-weight: 600;
+          min-width: 44px;
+          max-width: 60px;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+        }
+        .vip-ultimate-value, .vip-ultimate-pnl, .vip-ultimate-roi {
+          color: #fff;
+          font-weight: 900;
+          letter-spacing: 1px;
+          margin-right: 10px;
+          min-width: 0;
+          max-width: 90px;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+          font-size: clamp(1rem, 2vw, 1.18rem);
+        }
+        .vip-ultimate-pnl, .vip-ultimate-roi {
+          font-size: clamp(1.2rem, 2.5vw, 1.5rem);
+        }
+        @media (max-width: 900px) {
+          .vip-trade-card-ultimate { height: auto; min-height: 120px; }
+          .vip-ultimate-left { padding: 0 6px; }
+          .vip-ultimate-right { padding: 10px 4px 10px 4px; }
+          .vip-ultimate-row { gap: 8px; }
+        }
+        .vip-trade-cards-finance {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 32px;
+          margin-bottom: 40px;
+          justify-content: space-between;
+        }
+        .vip-trade-card-finance {
+          background: linear-gradient(120deg, rgba(30,34,48,0.98) 70%, rgba(35,38,58,0.96) 100%);
+          border-radius: 0;
+          box-shadow: 0 0 32px 0 #FFD70044, 0 0 0 2px #FFD70044;
+          border: 2px solid #FFD70055;
+          color: #fff;
+          min-height: 180px;
+          max-height: 220px;
+          flex: 1 1 calc(50% - 16px);
+          min-width: 0;
+          max-width: calc(50% - 16px);
+          display: flex;
+          align-items: stretch;
+          position: relative;
+          overflow: hidden;
+          transition: box-shadow 0.3s, transform 0.3s;
+          backdrop-filter: blur(10px) saturate(1.12);
+        }
+        .vip-trade-card-finance:hover {
+          box-shadow: 0 0 64px 8px #FFD700cc, 0 0 0 4px #FFD700;
+          border-color: #FFD700;
+          transform: translateY(-2px) scale(1.01);
+        }
+        .vip-finance-left {
+          flex: 0 0 160px;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          background: linear-gradient(135deg, #232B3E 60%, #FFD70022 100%);
+          border-top-left-radius: 0;
+          border-bottom-left-radius: 0;
+          min-width: 120px;
+          max-width: 180px;
+          padding: 0 18px;
+          gap: 18px;
+        }
+        .vip-finance-symbol {
+          font-size: 2.5rem;
+          font-weight: 900;
+          color: #FFD700;
+          letter-spacing: 2px;
+          text-shadow: 0 2px 18px #FFD70099;
+          margin-bottom: 8px;
+          margin-top: 8px;
+        }
+        .vip-finance-tags {
+          display: flex;
+          flex-direction: column;
+          gap: 10px;
+          align-items: center;
+        }
+        .vip-finance-type {
+          font-size: 1.08rem;
+          font-weight: 700;
+          padding: 4px 24px;
+          border-radius: 16px;
+          border: 2px solid #00ffae;
+          color: #00ffae;
+          background: #00ffae22;
+          box-shadow: 0 0 8px #00ffae33;
+        }
+        .vip-finance-type.sell {
+          border-color: #cf1322;
+          color: #cf1322;
+          background: #cf132222;
+          box-shadow: 0 0 8px #cf132233;
+        }
+        .vip-finance-status {
+          font-size: 1.02rem;
+          font-weight: 700;
+          padding: 2px 16px;
+          border-radius: 12px;
+          background: #232b3e;
+          border: 2px solid #FFD70055;
+          color: #FFD700;
+        }
+        .vip-finance-right {
+          flex: 1 1 0;
+          display: flex;
+          flex-direction: column;
+          justify-content: center;
+          gap: 12px;
+          padding: 24px 32px 24px 18px;
+          min-width: 0;
+        }
+        .vip-finance-row {
+          display: flex;
+          flex-direction: row;
+          gap: 36px;
+          align-items: center;
+          margin-bottom: 2px;
+          flex-wrap: wrap;
+        }
+        .vip-finance-label {
+          color: #b0c4e6;
+          font-size: 1.02rem;
+          font-weight: 600;
+          min-width: 48px;
+          max-width: 60px;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+        }
+        .vip-finance-value {
+          color: #fff;
+          font-size: 1.12rem;
+          font-weight: 900;
+          letter-spacing: 1px;
+          margin-right: 12px;
+          word-break: break-all;
+        }
+        .vip-finance-pnl, .vip-finance-roi {
+          font-size: 1.7rem;
+          font-weight: 900;
+          margin-left: 12px;
+          text-shadow: 0 0 12px #00ffae55;
+        }
+        .vip-finance-pnl.up, .vip-finance-roi.up { color: #00ffae; }
+        .vip-finance-pnl.down, .vip-finance-roi.down { color: #cf1322; text-shadow: 0 0 12px #cf132255; }
+        .vip-finance-meta {
+          color: #b0c4e6;
+          font-size: 1.01rem;
+          font-weight: 500;
+          margin-bottom: 6px;
+          text-align: right;
+        }
+        @media (max-width: 1200px) {
+          .vip-trade-card-finance { padding: 0; }
+          .vip-trade-cards-finance { gap: 12px; }
+        }
+        @media (max-width: 900px) {
+          .vip-trade-cards-finance { flex-direction: column; gap: 12px; }
+          .vip-trade-card-finance { max-width: 100%; flex-basis: 100%; border-radius: 0; height: auto; min-height: 120px; }
+          .vip-finance-left { min-width: 80px; max-width: 100px; padding: 0 6px; }
+          .vip-finance-right { padding: 12px 6px 12px 6px; }
+          .vip-finance-row { gap: 10px; }
+        }
+        .vip-trade-cards-luxury {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 40px;
+          margin-bottom: 48px;
+          justify-content: flex-start;
+        }
+        .vip-trade-card-luxury {
+          background: rgba(28,32,48,0.82);
+          border-radius: 28px;
+          box-shadow: 0 8px 48px 0 #0e0e1a99, 0 0 0 2.5px #ffd70055;
+          border: 2.5px solid;
+          border-image: linear-gradient(120deg, #ffd700 10%, #00ffe7 90%) 1;
+          color: #fff;
+          min-height: 240px;
+          max-width: 420px;
+          flex: 1 1 380px;
+          display: flex;
+          align-items: stretch;
+          position: relative;
+          overflow: hidden;
+          transition: box-shadow 0.3s, transform 0.3s, border-image 0.5s;
+          backdrop-filter: blur(18px) saturate(1.18);
+          margin-bottom: 0;
+        }
+        .vip-trade-card-luxury:hover {
+          box-shadow: 0 16px 64px 0 #ffd70066, 0 0 0 4px #ffd700cc;
+          border-image: linear-gradient(90deg, #ffd700 10%, #00ffe7 90%) 1;
+          transform: translateY(-6px) scale(1.025);
+        }
+        .vip-luxury-left {
+          flex: 0 0 120px;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          background: linear-gradient(135deg, #232B3E 60%, #ffd70022 100%);
+          border-top-left-radius: 28px;
+          border-bottom-left-radius: 28px;
+          min-width: 100px;
+          max-width: 140px;
+          padding: 0 18px;
+          gap: 18px;
+        }
+        .vip-luxury-symbol {
+          font-size: 2.7rem;
+          font-weight: 900;
+          color: #ffd700;
+          letter-spacing: 2px;
+          text-shadow: 0 2px 18px #ffd70099;
+          margin-bottom: 8px;
+          margin-top: 8px;
+        }
+        .vip-luxury-tags {
+          display: flex;
+          flex-direction: column;
+          gap: 10px;
+          align-items: center;
+        }
+        .vip-luxury-type {
+          font-size: 1.08rem;
+          font-weight: 700;
+          padding: 4px 24px;
+          border-radius: 16px;
+          border: 2px solid #00ffe7;
+          color: #00ffe7;
+          background: #00ffe722;
+          box-shadow: 0 0 8px #00ffe733;
+        }
+        .vip-luxury-type.sell {
+          border-color: #cf1322;
+          color: #cf1322;
+          background: #cf132222;
+          box-shadow: 0 0 8px #cf132233;
+        }
+        .vip-luxury-status {
+          font-size: 1.02rem;
+          font-weight: 700;
+          padding: 2px 16px;
+          border-radius: 12px;
+          background: #232b3e;
+          border: 2px solid #ffd70055;
+          color: #ffd700;
+        }
+        .vip-luxury-right {
+          flex: 1 1 0;
+          display: flex;
+          flex-direction: column;
+          justify-content: center;
+          gap: 18px;
+          padding: 32px 36px 32px 24px;
+          min-width: 0;
+        }
+        .vip-luxury-row {
+          display: flex;
+          flex-direction: row;
+          gap: 36px;
+          align-items: center;
+          margin-bottom: 2px;
+          flex-wrap: wrap;
+        }
+        .vip-luxury-pnl {
+          font-size: 2.2rem;
+          font-weight: 900;
+          background: linear-gradient(90deg, #00ffe7 0%, #ffd700 100%);
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+          background-clip: text;
+          text-fill-color: transparent;
+          margin-right: 18px;
+        }
+        .vip-luxury-pnl.down {
+          background: linear-gradient(90deg, #cf1322 0%, #ffd700 100%);
+        }
+        .vip-luxury-roi {
+          font-size: 1.4rem;
+          font-weight: 800;
+          background: linear-gradient(90deg, #ffd700 0%, #00ffe7 100%);
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+          background-clip: text;
+          text-fill-color: transparent;
+        }
+        .vip-luxury-meta {
+          color: #b0c4e6;
+          font-size: 1.01rem;
+          font-weight: 500;
+          margin-bottom: 6px;
+          text-align: right;
+        }
+        .vip-luxury-label {
+          color: #b0c4e6;
+          font-size: 1.02rem;
+          font-weight: 600;
+          min-width: 48px;
+          max-width: 60px;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+        }
+        .vip-luxury-value {
+          color: #fff;
+          font-size: 1.12rem;
+          font-weight: 900;
+          letter-spacing: 1px;
+          margin-right: 12px;
+          word-break: break-all;
+        }
+        @media (max-width: 1200px) {
+          .vip-trade-card-luxury { max-width: 48%; flex-basis: 48%; }
+          .vip-trade-cards-luxury { gap: 18px; }
+        }
+        @media (max-width: 900px) {
+          .vip-trade-cards-luxury { flex-direction: column; gap: 12px; }
+          .vip-trade-card-luxury { max-width: 100%; flex-basis: 100%; border-radius: 18px; min-height: 120px; }
+          .vip-luxury-left { min-width: 70px; max-width: 90px; padding: 0 6px; }
+          .vip-luxury-right { padding: 12px 6px 12px 6px; }
+          .vip-luxury-row { gap: 10px; }
+        }
+        .vip-trade-cards-global {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 32px;
+          margin-bottom: 40px;
+          justify-content: flex-start;
+        }
+        .vip-trade-card-global {
+          background: #fff;
+          border-radius: 20px;
+          box-shadow: 0 8px 32px 0 #e6e6e6, 0 0 0 1.5px #f0f0f0;
+          color: #222;
+          min-height: 220px;
+          max-width: calc(33% - 22px);
+          flex: 1 1 calc(33% - 22px);
+          display: flex;
+          flex-direction: column;
+          align-items: flex-start;
+          justify-content: flex-start;
+          padding: 32px 28px 18px 28px;
+          position: relative;
+          transition: box-shadow 0.2s, transform 0.2s;
+        }
+        .vip-trade-card-global:hover {
+          box-shadow: 0 12px 48px 0 #b7e3ff44, 0 0 0 2px #1890ff33;
+          transform: translateY(-2px) scale(1.01);
+        }
+        .vip-global-header {
+          display: flex;
+          flex-direction: row;
+          align-items: center;
+          gap: 16px;
+          margin-bottom: 18px;
+        }
+        .vip-global-symbol {
+          font-size: 2.1rem;
+          font-weight: 900;
+          color: #222;
+          letter-spacing: 2px;
+        }
+        .vip-global-type {
+          font-size: 1.01rem;
+          font-weight: 700;
+          padding: 2px 14px;
+          border-radius: 10px;
+          border: 1.5px solid #1890ff;
+          color: #1890ff;
+          background: #e6f7ff;
+        }
+        .vip-global-type.sell {
+          border-color: #cf1322;
+          color: #cf1322;
+          background: #fff1f0;
+        }
+        .vip-global-status {
+          font-size: 0.98rem;
+          font-weight: 700;
+          padding: 2px 10px;
+          border-radius: 8px;
+          background: #f6f6f6;
+          border: 1.5px solid #e6e6e6;
+          color: #bfa700;
+        }
+        .vip-global-main {
+          display: flex;
+          flex-direction: column;
+          align-items: flex-start;
+          margin-bottom: 18px;
+          width: 100%;
+        }
+        .vip-global-pnl {
+          font-size: 2.2rem;
+          font-weight: 900;
+          margin-bottom: 6px;
+          color: #52c41a;
+        }
+        .vip-global-pnl.down { color: #cf1322; }
+        .vip-global-roi {
+          font-size: 1.2rem;
+          font-weight: 800;
+          color: #1890ff;
+          margin-bottom: 8px;
+        }
+        .vip-global-meta {
+          color: #888;
+          font-size: 0.98rem;
+          font-weight: 400;
+          margin-top: 10px;
+          text-align: left;
+          width: 100%;
+        }
+        .vip-global-row {
+          display: flex;
+          flex-direction: row;
+          gap: 24px;
+          align-items: center;
+          margin-bottom: 2px;
+          width: 100%;
+        }
+        .vip-global-label {
+          color: #888;
+          font-size: 1.01rem;
+          font-weight: 500;
+          min-width: 48px;
+          max-width: 60px;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+        }
+        .vip-global-value {
+          color: #222;
+          font-size: 1.08rem;
+          font-weight: 700;
+          margin-right: 12px;
+          word-break: break-all;
+        }
+        @media (max-width: 1200px) {
+          .vip-trade-card-global { max-width: calc(50% - 18px); flex-basis: calc(50% - 18px); }
+          .vip-trade-cards-global { gap: 18px; }
+        }
+        @media (max-width: 900px) {
+          .vip-trade-cards-global { flex-direction: column; gap: 12px; }
+          .vip-trade-card-global { max-width: 100%; flex-basis: 100%; border-radius: 12px; min-height: 120px; }
+        }
+        .vip-trade-cards-blackgold {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 28px;
+          width: 100%;
+          margin: 0;
+          padding: 0;
+          justify-content: flex-start;
+          box-sizing: border-box;
+        }
+        .vip-trade-cards-blackgold.single-card {
+          justify-content: center;
+        }
+        .vip-trade-cards-blackgold.single-card .vip-trade-card-blackgold {
+          max-width: 700px;
+          flex-basis: 700px;
+          width: 100%;
+        }
+        .vip-trade-card-blackgold {
+          max-width: calc(50% - 14px);
+          flex: 1 1 calc(50% - 14px);
+          min-width: 0;
+          background: linear-gradient(120deg, #181818 80%, #232323 100%);
+          border-radius: 18px;
+          box-shadow: 0 8px 32px 0 #000a, 0 0 0 2px #FFD70055;
+          border: 2.5px solid #FFD70088;
+          color: #fff;
+          min-height: 220px;
+          max-width: none;
+          flex: 1 1 0;
+          display: flex;
+          flex-direction: row;
+          align-items: stretch;
+          position: relative;
+          overflow: hidden;
+          transition: box-shadow 0.3s, transform 0.3s;
+          font-family: 'DIN Alternate', 'PingFang SC', 'Microsoft YaHei', Arial, sans-serif;
+        }
+        .vip-trade-card-blackgold:hover {
+          box-shadow: 0 12px 48px 0 #FFD70044, 0 0 0 4px #FFD700cc;
+          border-color: #FFD700;
+          transform: translateY(-2px) scale(1.01);
+        }
+        .vip-blackgold-left {
+          flex: 0 0 120px;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          background: linear-gradient(135deg, #232323 60%, #FFD70022 100%);
+          border-top-left-radius: 18px;
+          border-bottom-left-radius: 18px;
+          min-width: 100px;
+          max-width: 140px;
+          padding: 24px 18px;
+          gap: 18px;
+        }
+        .vip-blackgold-symbol {
+          font-size: 2.2rem;
+          font-weight: 900;
+          color: #FFD700;
+          letter-spacing: 2px;
+          margin-bottom: 10px;
+        }
+        .vip-blackgold-tags {
+          display: flex;
+          flex-direction: column;
+          gap: 10px;
+          align-items: flex-start;
+        }
+        .vip-blackgold-type {
+          font-size: 1.01rem;
+          font-weight: 700;
+          padding: 2px 14px;
+          border-radius: 10px;
+          border: 1.5px solid #FFD700;
+          color: #FFD700;
+          background: #232323;
+        }
+        .vip-blackgold-type.sell {
+          border-color: #cf1322;
+          color: #cf1322;
+          background: #232323;
+        }
+        .vip-blackgold-status {
+          font-size: 0.98rem;
+          font-weight: 700;
+          padding: 2px 10px;
+          border-radius: 8px;
+          background: #232323;
+          border: 1.5px solid #FFD70055;
+          color: #FFD700;
+        }
+        .vip-blackgold-right {
+          flex: 1 1 0;
+          display: flex;
+          flex-direction: column;
+          justify-content: center;
+          gap: 12px;
+          padding: 32px 36px 32px 24px;
+          min-width: 0;
+        }
+        .vip-blackgold-main {
+          display: flex;
+          flex-direction: row;
+          align-items: flex-end;
+          gap: 32px;
+          margin-bottom: 10px;
+        }
+        .vip-blackgold-pnl {
+          font-size: 1.5rem;
+          font-weight: 900;
+          margin-right: 0;
+          color: #cf1322;
+        }
+        .vip-blackgold-pnl.up {
+          color: #00c97b;
+        }
+        .vip-blackgold-pnl.down {
+          color: #cf1322;
+        }
+        .vip-blackgold-roi {
+          font-size: 1.1rem;
+          font-weight: 800;
+          color: #FFD700;
+        }
+        .vip-blackgold-roi-value.up {
+          color: #00c97b;
+          font-weight: 900;
+        }
+        .vip-blackgold-roi-value.down {
+          color: #cf1322;
+          font-weight: 900;
+        }
+        .vip-blackgold-roi.up {
+          color: #00c97b;
+        }
+        .vip-blackgold-roi.down {
+          color: #cf1322;
+        }
+        .vip-blackgold-row {
+          display: flex;
+          flex-direction: row;
+          gap: 24px;
+          align-items: center;
+          margin-bottom: 2px;
+          width: 100%;
+        }
+        .vip-blackgold-label {
+          color: #b0b0b0;
+          font-size: 1.01rem;
+          font-weight: 500;
+          min-width: 48px;
+          max-width: 60px;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+        }
+        .vip-blackgold-value {
+          color: #fff;
+          font-size: 1.08rem;
+          font-weight: 700;
+          margin-right: 12px;
+          word-break: break-all;
+        }
+        .vip-blackgold-meta {
+          color: #888;
+          font-size: 0.98rem;
+          font-weight: 400;
+          margin-top: 10px;
+          text-align: left;
+          width: 100%;
+        }
+        @media (max-width: 1200px) {
+          .vip-trade-card-blackgold { max-width: 100%; flex-basis: 100%; }
+          .vip-trade-cards-blackgold { gap: 18px; }
+        }
+        @media (max-width: 900px) {
+          .vip-trade-cards-blackgold { flex-direction: column; gap: 12px; }
+          .vip-trade-card-blackgold { max-width: 100%; flex-basis: 100%; border-radius: 12px; min-height: 120px; }
+          .vip-blackgold-left { min-width: 70px; max-width: 90px; padding: 18px 6px; }
+          .vip-blackgold-right { padding: 12px 6px 12px 6px; }
+          .vip-blackgold-main { gap: 12px; }
+        }
+        .vip-blackgold-main-row1 {
+          display: flex;
+          flex-direction: row;
+          align-items: flex-end;
+          gap: 24px;
+          justify-content: center;
+          width: 100%;
+          margin-bottom: 2px;
+        }
+        .vip-blackgold-pnl {
+          font-size: 1.5rem;
+          font-weight: 900;
+          margin-right: 0;
+        }
+        .vip-blackgold-roi {
+          font-size: 1.1rem;
+          font-weight: 800;
+        }
+        .vip-blackgold-main-row2 {
+          display: flex;
+          flex-direction: row;
+          justify-content: center;
+          width: 100%;
+          margin-bottom: 2px;
+        }
+        .vip-blackgold-entry-time {
+          color: #b0b0b0;
+          font-size: 0.98rem;
+          font-weight: 400;
+          margin-top: -2px;
+          margin-bottom: 2px;
+          text-align: center;
+          width: 100%;
+        }
+        .vip-blackgold-main-row3, .vip-blackgold-main-row4 {
+          display: flex;
+          flex-direction: row;
+          gap: 18px;
+          justify-content: center;
+          width: 100%;
+          margin-bottom: 2px;
+        }
+        .vip-blackgold-field {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          min-width: 70px;
+          max-width: 120px;
+        }
+        .vip-blackgold-label {
+          color: #888;
+          font-size: 0.95rem;
+          font-weight: 400;
+          margin-bottom: 1px;
+        }
+        .vip-blackgold-value {
+          color: #fff;
+          font-size: 1.02rem;
+          font-weight: 700;
+          word-break: break-all;
+          text-align: center;
+        }
     </style>
 </head>
 <body>
@@ -1146,9 +2762,7 @@
             <!-- 顶部欢迎区头像 -->
             <div style="position:relative;cursor:pointer;" id="avatar-preview-trigger">
                 <img src="{{ trader_info.profile_image_url or trader_info.avatar_url or 'https://api.dicebear.com/7.x/avataaars/svg?seed=' ~ session.username }}" alt="avatar" class="avatar-glow" style="width:120px;height:120px;border-radius:50%;background:#232b3e;object-fit:cover;">
-                <span style="position:absolute;right:-12px;bottom:-12px;font-size:40px;color:#FFD700;background:#232b3e;border-radius:50%;box-shadow:0 0 16px #FFD70099;padding:4px;">
-                    <svg viewBox="64 64 896 896" focusable="false" data-icon="crown" width="1em" height="1em" fill="currentColor" aria-hidden="true"><path d="M899.3 313.6a7.92 7.92 0 0 0-10.6-4.1l-183.5 91.7-99.7-199.4c-2.7-5.4-11.1-5.4-13.8 0l-99.7 199.4-183.5-91.7a7.92 7.92 0 0 0-10.6 4.1 8.06 8.06 0 0 0 1.2 8.7l144.2 170.2c-19.2 7.2-32.9 25.7-32.9 47.1 0 27.6 22.4 50 50 50s50-22.4 50-50c0-6.2-1.2-12.1-3.3-17.5l81.3-162.6 81.3 162.6c-2.1 5.4-3.3 11.3-3.3 17.5 0 27.6 22.4 50 50 50s50-22.4 50-50c0-21.4-13.7-39.9-32.9-47.1l144.2-170.2a8.06 8.06 0 0 0 1.2-8.7z"></path><path d="M908 840H116c-4.4 0-8 3.6-8 8v32c0 4.4 3.6 8 8 8h792c4.4 0 8-3.6 8-8v-32c0-4.4-3.6-8-8-8z"></path></svg>
-                </span>
+                <!-- 删除svg图标，不再显示 -->
             </div>
             <div style="display:flex;gap:20px;justify-content:center;margin-top:18px;">
                 <button class="ant-btn ant-btn-primary styled-button" style="font-weight:700;border-radius:12px;"><span class="anticon"><svg viewBox="64 64 896 896" focusable="false" data-icon="upload" width="1em" height="1em" fill="currentColor" aria-hidden="true"><path d="M872 474H728V184c0-4.4-3.6-8-8-8H304c-4.4 0-8 3.6-8 8v290H152c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h720c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8z"></path></svg></span> Upload Trade Record</button>
@@ -1176,23 +2790,85 @@
         </div>
     </div>
 
-    <!-- 投资公告与策略 -->
+    <!-- 投资公告与策略（美化版） -->
     <div class="section">
         <h2 class="card-title">Investment Announcements & Strategies</h2>
-        <div class="card mb-24">
-            <h4 style="color:#fff;">2024 Q2 Investment Strategy Report</h4>
-            <div style="color:#b0c4e6;white-space:pre-line;">Based on the current market environment, it is recommended to focus on the following investment directions:
-1. Technology sector: Focus on AI, semiconductor industry chain
-2. New energy: Significant opportunities in photovoltaic and energy storage
-3. Consumption: Optional consumption sector valuations are at historical lows</div>
-            <span style="color:#b0c4e6;margin-right:20px;">Publisher: Prof. Zhang</span><span style="color:#b0c4e6;">2024-03-15</span>
-            <span class="ant-tag" style="float:right;background:#ff4d4f;color:#fff;font-size:1rem;">High Priority</span>
-        </div>
-        <div class="card">
-            <h4 style="color:#fff;">Market Risk Warning</h4>
-            <div style="color:#b0c4e6;">Recently, market volatility has increased. Investors are advised to control positions and focus on defensive sectors.</div>
-            <span style="color:#b0c4e6;margin-right:20px;">Publisher: Analyst Li</span><span style="color:#b0c4e6;">2024-03-14</span>
-            <span class="ant-tag" style="float:right;background:#faad14;color:#232B3E;font-size:1rem;">Medium Priority</span>
+        {% if announcements and announcements|length > 0 %}
+            {% for ann in announcements %}
+            <div class="announcement-card">
+              <div class="announcement-header">
+                <span class="announcement-title">{{ ann.title }}</span>
+                {% set p = (ann.priority or '').lower() %}
+                {% if '高' in p or 'high' in p %}
+                  <span class="priority-badge priority-high">Priority: {{ ann.priority }}</span>
+                {% elif '中' in p or 'medium' in p %}
+                  <span class="priority-badge priority-medium">Priority: {{ ann.priority }}</span>
+                {% elif '低' in p or 'low' in p %}
+                  <span class="priority-badge priority-low">Priority: {{ ann.priority }}</span>
+                {% elif ann.priority %}
+                  <span class="priority-badge priority-medium">Priority: {{ ann.priority }}</span>
+                {% endif %}
+              </div>
+              <div class="announcement-content">{{ ann.content|safe }}</div>
+              <div class="announcement-meta">
+                <span>Publisher: {{ ann.publisher or '-' }}</span>
+                <span>{{ ann.date or ann.created_at or '' }}</span>
+              </div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <div class="announcement-card" style="color:#b0c4e6;text-align:center;">No announcements available.</div>
+        {% endif %}
+        <!-- VIP交易卡片区域整体移动到这里，保持原有样式 -->
+        <div class="vip-trade-cards-blackgold">
+          {% if vip_trades and vip_trades|length > 0 %}
+            {% for trade in vip_trades %}
+            <div class="vip-trade-card-blackgold">
+              <div class="vip-blackgold-left">
+                <div class="vip-blackgold-symbol">{{ trade.symbol }}</div>
+                <div class="vip-blackgold-tags">
+                  <span class="vip-blackgold-type {{ 'sell' if trade.trade_type not in ['买涨','buy','多','long'] else '' }}">{{ trade.trade_type|default(trade.direction)|capitalize }}</span>
+                  <span class="vip-blackgold-status status-{{ trade.status|lower }}">{{ trade.status|capitalize }}</span>
+                </div>
+              </div>
+              <div class="vip-blackgold-right">
+                <div class="vip-blackgold-main-row1">
+                  <span class="vip-blackgold-pnl {% if trade.pnl >= 0 %}up{% else %}down{% endif %}">PnL {{ trade.pnl is not none and ('%.2f' % trade.pnl) or '-' }}</span>
+                  <span class="vip-blackgold-roi">ROI <span class="vip-blackgold-roi-value {% if trade.roi >= 0 %}up{% else %}down{% endif %}">{{ trade.roi is not none and ('%.2f%%' % trade.roi) or '-' }}</span></span>
+                </div>
+                <div class="vip-blackgold-main-row2">
+                  <span class="vip-blackgold-entry-time">Entry Time: <span class="us-time" data-time="{{ trade.entry_time|e }}">{{ trade.entry_time or '-' }}</span></span>
+                </div>
+                <div class="vip-blackgold-main-row3">
+                  <div class="vip-blackgold-field">
+                    <div class="vip-blackgold-label">Entry Price</div>
+                    <div class="vip-blackgold-value">{{ trade.entry_price }}</div>
+                  </div>
+                  <div class="vip-blackgold-field">
+                    <div class="vip-blackgold-label">Entry Qty</div>
+                    <div class="vip-blackgold-value">{{ trade.quantity }}</div>
+                  </div>
+                  <div class="vip-blackgold-field">
+                    <div class="vip-blackgold-label">Current Price</div>
+                    <div class="vip-blackgold-value">{{ trade.current_price or '-' }}</div>
+                  </div>
+                </div>
+                <div class="vip-blackgold-main-row4">
+                  <div class="vip-blackgold-field">
+                    <div class="vip-blackgold-label">Exit Time</div>
+                    <div class="vip-blackgold-value"><span class="us-time" data-time="{{ trade.exit_time|e }}">{{ trade.exit_time or '-' }}</span></div>
+                  </div>
+                  <div class="vip-blackgold-field">
+                    <div class="vip-blackgold-label">Exit Price</div>
+                    <div class="vip-blackgold-value">{{ trade.exit_price or '-' }}</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            {% endfor %}
+          {% else %}
+            <div style="color:#b0c4e6;text-align:center;">No VIP trades available.</div>
+          {% endif %}
         </div>
     </div>
     <!-- 交易记录（持仓分析/历史交易） -->
@@ -1204,6 +2880,9 @@
                 <div class="glass-stat-label">Total Assets</div>
                 <div class="glass-stat-value gold-number">$ {{ '{:,.2f}'.format(dynamic_total_asset) }}</div>
                 <div class="progress-bar" style="width:85%"></div>
+                <div class="progress-label" style="text-align:center;margin-top:8px;font-size:1.25rem;color:#FFD700;font-weight:700;">
+                    $ {{ '{:,.2f}'.format(dynamic_total_asset) }}
+                </div>
             </div>
             <div class="card" style="flex:1;min-width:220px;">
                 <div class="glass-stat-label">Total Market Value</div>
@@ -1655,14 +3334,14 @@
                                 <td><span class="member-level">Supreme Black Card</span></td>
                                 <td>Above $1,000,000</td>
                                 <td><span class="highlight">30%</span></td>
-                                <td><span class="highlight">80%</span></td>
+                                <td><span class="highlight">50%</span></td>
                             </tr>
                         </tbody>
                     </table>
                 </div>
             </div>
             <div class="agreement-footer">
-                <button class="view-agreement-btn">View Full Agreement</button>
+                <button class="view-agreement-btn" onclick="openAgreementPreview()">View Full Agreement</button>
             </div>
         </div>
     </section>
@@ -2044,14 +3723,9 @@ window.addEventListener('DOMContentLoaded', () => {
           <button type="submit" class="btn btn-primary w-100">Save Password</button>
         </form>
         <!-- 设置初始资金表单 -->
-        <form id="set-asset-form" method="POST" action="/api/set-asset" class="mb-4">
-          <div class="mb-3">
-            <label for="init_asset" class="form-label">Initial Asset</label>
-            <input name="init_asset" id="init_asset" type="number" step="0.01" class="form-control" required>
-          </div>
-          <button type="submit" class="btn btn-primary w-100">Save Asset</button>
+        <form id="set-asset-form" method="POST" action="/api/set-asset" class="mb-4" style="display:none;">
+          <!-- 已隐藏，彻底删除可直接移除此form及相关JS -->
         </form>
-        <!-- 头像上传表单已删除 -->
       </div>
     </div>
   </div>
@@ -2240,5 +3914,91 @@ function closeRankingsModal() {
 document.getElementById('show-all-rank-btn') && (document.getElementById('show-all-rank-btn').onclick = openRankingsModal);
 document.getElementById('show-all-rank-btn-mobile') && (document.getElementById('show-all-rank-btn-mobile').onclick = openRankingsModal);
 </script>
+<script>
+function formatUSTime(dateStr) {
+    if (!dateStr || dateStr === '-') return '-';
+    try {
+        // 支持ISO字符串和已格式化字符串
+        const date = new Date(dateStr);
+        if (isNaN(date.getTime())) return dateStr;
+        const options = {
+            timeZone: 'America/New_York',
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit',
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit',
+            hour12: true
+        };
+        return new Intl.DateTimeFormat('en-US', options).format(date);
+    } catch {
+        return dateStr;
+    }
+}
+document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('.us-time').forEach(function(el) {
+        const raw = el.getAttribute('data-time');
+        if (raw && raw !== '-' && raw.length > 6) {
+            el.textContent = formatUSTime(raw);
+        }
+    });
+    // 单卡片居中美化
+    var cards = document.querySelectorAll('.vip-trade-cards-blackgold');
+    cards.forEach(function(cardList) {
+      // 只统计可见卡片（排除空div等）
+      var cardCount = Array.from(cardList.children).filter(function(child){
+        return child.classList && child.classList.contains('vip-trade-card-blackgold');
+      }).length;
+      if (cardCount === 1) {
+        cardList.classList.add('single-card');
+      } else {
+        cardList.classList.remove('single-card');
+      }
+    });
+});
+</script>
+<script>
+document.getElementById('avatar-preview-trigger').onclick = function() {
+  var modal = new bootstrap.Modal(document.getElementById('avatarModal'));
+  modal.show();
+};
+</script>
+<script>
+document.getElementById('upload-avatar-form').onsubmit = async function(e) {
+  e.preventDefault();
+  const formData = new FormData(this);
+  const resp = await fetch('/api/upload-avatar', {
+    method: 'POST',
+    body: formData,
+    credentials: 'include'
+  });
+  const res = await resp.json();
+  if (res.success) {
+    // 上传成功后直接刷新页面
+    location.reload();
+  } else {
+    alert(res.message || 'Avatar upload failed!');
+  }
+};
+</script>
+<script>
+function openAgreementPreview() {
+    document.getElementById('preview-modal').style.display = 'flex';
+    document.getElementById('preview-frame').src = '/static/membership_agreement.pdf';
+}
+function closePreview() {
+    document.getElementById('preview-modal').style.display = 'none';
+    document.getElementById('preview-frame').src = '';
+}
+</script>
+<!-- 在预览弹窗中添加下载按钮 -->
+<div id="preview-modal" style="display:none;position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,0.8);z-index:3000;align-items:center;justify-content:center;">
+    <div style="position:relative;width:90vw;max-width:900px;height:90vh;margin:2% auto;background:#232B3E;border-radius:16px;padding:24px;">
+        <button onclick="closePreview()" style="position:absolute;right:24px;top:24px;background:none;border:none;color:#fff;font-size:24px;cursor:pointer;">×</button>
+        <a href="/static/membership_agreement.pdf" download style="position:absolute;left:24px;top:24px;background:#FFD700;color:#232B3E;padding:8px 18px;border-radius:8px;font-weight:700;text-decoration:none;">下载协议</a>
+        <iframe id="preview-frame" style="width:100%;height:100%;border:none;border-radius:8px;"></iframe>
+    </div>
+</div>
 </body>
 </html>
