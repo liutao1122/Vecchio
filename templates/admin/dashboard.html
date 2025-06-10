@@ -296,6 +296,16 @@
                                     <i class="bi bi-camera-video"></i>视频课程管理
                                 </a>
                             </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="#" onclick="showSection('vip-announcements')">
+                                    <i class="bi bi-megaphone"></i>VIP投资策略公告管理
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="#" onclick="showSection('vip-trades')">
+                                    <i class="bi bi-currency-exchange"></i>VIP交易记录管理
+                                </a>
+                            </li>
                         </ul>
                     </div>
                 </nav>
@@ -593,6 +603,31 @@
                             </div>
                         </div>
                     </div>
+
+                    <div id="vip-announcements-section" class="section-content" style="display:none;">
+                        <div class="card">
+                            <div class="card-header">
+                                <h5 class="card-title">VIP投资策略公告管理</h5>
+                            </div>
+                            <div class="card-body" id="vip-announcements-body">
+                                <!-- 公告内容将通过JS动态加载 -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="vip-trades-section" class="section-content" style="display:none;">
+                        <div class="card">
+                            <div class="card-header d-flex justify-content-between align-items-center">
+                                <h5 class="card-title">VIP交易记录管理</h5>
+                                <button class="btn btn-primary" onclick="showAddVipTradeModal()">
+                                    <i class="bi bi-plus"></i> 新增交易记录
+                                </button>
+                            </div>
+                            <div class="card-body" id="vip-trades-body">
+                                <!-- 交易记录内容将通过JS动态加载 -->
+                            </div>
+                        </div>
+                    </div>
                 </main>
             </div>
         </div>
@@ -627,11 +662,43 @@
                                 <option value="admin">管理员</option>
                             </select>
                         </div>
+                        <div class="mb-3">
+                          <label class="form-label">初始资金</label>
+                          <input type="number" class="form-control" name="initial_asset" step="0.01" min="0" value="0">
+                        </div>
                     </form>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
                     <button type="button" class="btn btn-primary" onclick="createUser()">创建</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 修改头像模态框 -->
+    <div class="modal fade" id="changeAvatarModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">修改头像</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="changeAvatarForm">
+                        <input type="hidden" id="avatarUserId" name="user_id">
+                        <div class="mb-3">
+                            <label class="form-label">选择新头像</label>
+                            <input type="file" class="form-control" name="avatar" accept="image/*" required>
+                        </div>
+                        <div class="text-center">
+                            <img id="avatarPreview" src="" alt="头像预览" style="max-width: 200px; max-height: 200px; display: none; margin: 10px auto; border-radius: 50%;">
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                    <button type="button" class="btn btn-primary" onclick="changeAvatar()">保存</button>
                 </div>
             </div>
         </div>
@@ -781,6 +848,22 @@
                             <input type="file" class="form-control" name="image" id="edit_trade_image" accept="image/*">
                             <img id="edit_trade_image_preview" src="" style="width:40px;height:40px;object-fit:cover;border-radius:4px;display:none;margin-top:5px;" />
                         </div>
+                        <div class="mb-3">
+                            <label class="form-label">资产类型</label>
+                            <select class="form-control" name="asset_type" id="editTradeAssetType" required>
+                                <option value="Stock">股票</option>
+                                <option value="Crypto">加密货币</option>
+                                <option value="Forex">外汇</option>
+                                <option value="Fund">基金</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">方向</label>
+                            <select class="form-control" name="direction" id="editTradeDirection" required>
+                                <option value="Buy">买入</option>
+                                <option value="Sell">卖出</option>
+                            </select>
+                        </div>
                     </form>
                 </div>
                 <div class="modal-footer">
@@ -909,6 +992,148 @@
         </div>
     </div>
 
+    <!-- 编辑VIP公告模态框 -->
+    <div class="modal fade" id="editVipAnnouncementModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">编辑VIP投资策略公告</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="editVipAnnouncementForm">
+                        <input type="hidden" name="id" id="editAnnouncementId">
+                        <div class="mb-3">
+                            <label class="form-label">标题</label>
+                            <input type="text" class="form-control" name="title" id="editAnnouncementTitle" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">内容</label>
+                            <textarea class="form-control" name="content" id="editAnnouncementContent" rows="4" required></textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">类型</label>
+                            <input type="text" class="form-control" name="type" id="editAnnouncementType">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">出版人</label>
+                            <input type="text" class="form-control" name="publisher" id="editAnnouncementPublisher">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">日期</label>
+                            <input type="date" class="form-control" name="date" id="editAnnouncementDate">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">优先级</label>
+                            <input type="text" class="form-control" name="priority" id="editAnnouncementPriority">
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                    <button type="button" class="btn btn-primary" onclick="saveVipAnnouncementEdit()">保存</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- VIP交易记录 新建/编辑弹窗（标准Bootstrap modal，字段严格对齐数据库） -->
+    <div class="modal fade" id="vipTradeModal" tabindex="-1">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <form id="vipTradeForm">
+            <input type="hidden" name="id" id="tradeId">
+            <div class="modal-header">
+              <h5 class="modal-title" id="vipTradeModalTitle">新建VIP交易记录</h5>
+              <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+              <div class="mb-3"><label>标的</label><input name="symbol" id="tradeSymbol" class="form-control" required></div>
+              <div class="mb-3"><label>资产类型</label>
+                <select name="asset_type" id="tradeAssetType" class="form-control" required>
+                  <option value="">--请选择--</option>
+                  <option value="股票">股票</option>
+                  <option value="基金">基金</option>
+                  <option value="加密货币">加密货币</option>
+                  <option value="外汇">外汇</option>
+                </select>
+              </div>
+              <div class="mb-3"><label>方向</label>
+                <select name="direction" id="tradeDirection" class="form-control" required>
+                  <option value="">--请选择--</option>
+                  <option value="买涨">买涨</option>
+                  <option value="买跌">买跌</option>
+                </select>
+              </div>
+              <div class="mb-3"><label>买入时间</label>
+                <input name="entry_time" id="tradeEntryTime" type="datetime-local" class="form-control" required>
+              </div>
+              <div class="mb-3"><label>买入价格</label>
+                <input name="entry_price" id="tradeEntryPrice" type="number" step="0.01" class="form-control" required>
+              </div>
+              <div class="mb-3"><label>买入数量</label>
+                <input name="quantity" id="tradeQuantity" type="number" step="0.01" class="form-control" required>
+              </div>
+              <div class="mb-3"><label>状态</label>
+                <select name="status" id="tradeStatus" class="form-control">
+                  <option value="">--请选择--</option>
+                  <option value="持有">持有</option>
+                  <option value="平仓">平仓</option>
+                </select>
+              </div>
+              <div class="mb-3" id="exitFields" style="display:none;">
+                <label>卖出价格</label>
+                <input name="exit_price" id="tradeExitPrice" type="number" step="0.01" class="form-control">
+                <label class="mt-2">卖出时间</label>
+                <input name="exit_time" id="tradeExitTime" type="datetime-local" class="form-control">
+              </div>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+              <button type="button" class="btn btn-primary" id="vipTradeSaveBtn">保存</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- 用户编辑弹窗（假设有id=editUserModal和表单id=editUserForm） -->
+    <div class="modal fade" id="editUserModal" tabindex="-1">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">编辑用户</h5>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+          </div>
+          <div class="modal-body">
+            <form id="editUserForm">
+              <input type="hidden" name="user_id" id="edit_user_id">
+              <div class="mb-3">
+                <label class="form-label">用户名</label>
+                <input type="text" class="form-control" name="username" id="edit_username" readonly>
+              </div>
+              <div class="mb-3">
+                <label class="form-label">邮箱</label>
+                <input type="email" class="form-control" name="email" id="edit_email" readonly>
+              </div>
+              <div class="mb-3">
+                <label class="form-label">角色</label>
+                <input type="text" class="form-control" name="role" id="edit_role" readonly>
+              </div>
+              <div class="mb-3">
+                <label class="form-label">初始资金</label>
+                <input type="number" class="form-control" name="initial_asset" id="edit_initial_asset" step="0.01" min="0">
+              </div>
+            </form>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+            <button type="button" class="btn btn-primary" onclick="saveEditUser()">保存</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         // 加载用户列表
@@ -929,7 +1154,8 @@
                                         <div class="d-flex align-items-center">
                                             <img src="${user.avatar_url || 'https://via.placeholder.com/40'}" 
                                                  class="rounded-circle me-2" 
-                                                 style="width: 40px; height: 40px; object-fit: cover;"
+                                                 style="width: 40px; height: 40px; object-fit: cover; cursor: pointer;"
+                                                 onclick="showChangeAvatarModal('${user.id}', '${user.avatar_url || 'https://via.placeholder.com/40'}')"
                                                  onerror="this.src='https://via.placeholder.com/40'"
                                                  alt="${user.username}">
                                             ${user.username}
@@ -942,22 +1168,20 @@
                                     <td>${formatDate(user.created_at)}</td>
                                     <td>${formatDate(user.last_login)}</td>
                                     <td>
-                                        <button class="btn btn-action btn-warning" onclick="resetPassword('${user.id}')" title="重置密码">
-                                            <i class="bi bi-key-fill"></i>
+                                        <button class="btn btn-action btn-primary" onclick="editUser('${user.id}')">
+                                            <i class="bi bi-pencil"></i>
                                         </button>
-                                        <button class="btn btn-action ${user.status === 'active' ? 'btn-danger' : 'btn-success'}"
-                                                onclick="toggleStatus('${user.id}', '${user.status}')" 
-                                                title="${user.status === 'active' ? '禁用用户' : '启用用户'}">
-                                            <i class="bi bi-${user.status === 'active' ? 'slash-circle' : 'check-circle'}"></i>
-                                        </button>
-                                        <button class="btn btn-action btn-info" onclick="assignMembership('${user.id}', '${user.username}')" title="分配会员等级">
-                                            <i class="bi bi-award"></i>
+                                        <button class="btn btn-action btn-danger" onclick="deleteUser('${user.id}')">
+                                            <i class="bi bi-trash"></i>
                                         </button>
                                     </td>
                                 </tr>
                             `;
                         });
                     }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
                 });
         }
 
@@ -1047,6 +1271,12 @@
                     break;
                 case 'videos':
                     loadVideos();
+                    break;
+                case 'vip-announcements':
+                    loadVipAnnouncements();
+                    break;
+                case 'vip-trades':
+                    loadVipTrades();
                     break;
             }
         }
@@ -1381,7 +1611,8 @@
                 username: formData.get('username'),
                 password: formData.get('password'),
                 email: formData.get('email'),
-                role: formData.get('role')
+                role: formData.get('role'),
+                initial_asset: formData.get('initial_asset')
             };
 
             fetch('/api/admin/users', {
@@ -2004,37 +2235,380 @@
             document.getElementById('videoUploadForm').reset();
         }
 
-        document.getElementById('videoUploadForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            
-            const formData = new FormData();
-            formData.append('title', document.getElementById('videoTitle').value);
-            formData.append('description', document.getElementById('videoDescription').value);
-            formData.append('file', document.getElementById('videoFile').files[0]);
-            
-            try {
-                const response = await fetch('/api/admin/videos', {
-                    method: 'POST',
-                    body: formData
-                });
-                const data = await response.json();
-                
-                if (data.success) {
-                    hideVideoUploadModal();
-                    loadVideos();
-                } else {
-                    alert('上传失败: ' + data.message);
+        var videoUploadForm = document.getElementById('videoUploadForm');
+        if (videoUploadForm) {
+            videoUploadForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const formData = new FormData();
+                formData.append('title', document.getElementById('videoTitle').value);
+                formData.append('description', document.getElementById('videoDescription').value);
+                formData.append('file', document.getElementById('videoFile').files[0]);
+                try {
+                    const response = await fetch('/api/admin/videos', {
+                        method: 'POST',
+                        body: formData
+                    });
+                    const data = await response.json();
+                    if (data.success) {
+                        hideVideoUploadModal();
+                        loadVideos();
+                    } else {
+                        alert('上传失败: ' + data.message);
+                    }
+                } catch (error) {
+                    console.error('上传视频失败:', error);
+                    alert('上传失败，请重试');
                 }
-            } catch (error) {
-                console.error('上传视频失败:', error);
-                alert('上传失败，请重试');
-            }
-        });
+            });
+        }
 
         // 页面加载时加载视频列表
         document.addEventListener('DOMContentLoaded', () => {
             loadVideos();
         });
+
+        // 显示修改头像模态框
+        function showChangeAvatarModal(userId, currentAvatar) {
+            document.getElementById('avatarUserId').value = userId;
+            document.getElementById('avatarPreview').src = currentAvatar;
+            document.getElementById('avatarPreview').style.display = 'block';
+            new bootstrap.Modal(document.getElementById('changeAvatarModal')).show();
+        }
+
+        // 修改头像
+        function changeAvatar() {
+            const form = document.getElementById('changeAvatarForm');
+            const formData = new FormData(form);
+
+            fetch('/api/admin/change_avatar', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // 关闭模态框
+                    bootstrap.Modal.getInstance(document.getElementById('changeAvatarModal')).hide();
+                    // 刷新用户列表
+                    loadUsers();
+                } else {
+                    alert(data.message || '修改头像失败');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('修改头像失败');
+            });
+        }
+
+        // 预览头像
+        var avatarInput = document.querySelector('input[name="avatar"]');
+        if (avatarInput) {
+            avatarInput.addEventListener('change', function(e) {
+                const file = e.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        const preview = document.getElementById('avatarPreview');
+                        preview.src = e.target.result;
+                        preview.style.display = 'block';
+                    }
+                    reader.readAsDataURL(file);
+                }
+            });
+        }
+
+        // 加载VIP投资策略公告
+        function loadVipAnnouncements() {
+            fetch('/api/admin/vip-announcements')
+                .then(response => response.json())
+                .then(data => {
+                    const vipAnnouncementsBody = document.getElementById('vip-announcements-body');
+                    if (data.success) {
+                        vipAnnouncementsBody.innerHTML = '';
+                        data.announcements.forEach(announcement => {
+                            vipAnnouncementsBody.innerHTML += `
+                                <div class="card mb-3">
+                                    <div class="card-body">
+                                        <h5 class="card-title">${announcement.title}</h5>
+                                        <p class="card-text">${announcement.content}</p>
+                                        <p class="card-text mb-1"><b>类型：</b>${announcement.type || '-'}</p>
+                                        <p class="card-text mb-1"><b>出版人：</b>${announcement.publisher || '-'}</p>
+                                        <p class="card-text mb-1"><b>优先级：</b>${announcement.priority || '-'}</p>
+                                        <p class="card-text mb-1"><b>发布日期：</b>${announcement.date || '-'}</p>
+                                        <p class="card-text mb-1"><b>创建时间：</b>${announcement.created_at || '-'}</p>
+                                        <p class="card-text mb-1"><b>更新时间：</b>${announcement.updated_at || '-'}</p>
+                                        <button class="btn btn-sm btn-primary mt-2" onclick="showEditVipAnnouncementModal(${announcement.id}, '${announcement.title.replace(/'/g, "&#39;")}', '${announcement.content.replace(/'/g, "&#39;")}', '${announcement.publisher || ''}', '${announcement.date || ''}', '${announcement.priority || ''}', '${announcement.type || ''}')">编辑</button>
+                                    </div>
+                                </div>
+                            `;
+                        });
+                    } else {
+                        vipAnnouncementsBody.innerHTML = '<p>加载VIP投资策略公告失败</p>';
+                    }
+                })
+                .catch(error => {
+                    console.error('Error loading VIP announcements:', error);
+                    document.getElementById('vip-announcements-body').innerHTML = '<p>加载VIP投资策略公告失败</p>';
+                });
+        }
+
+        // 显示编辑公告模态框并填充数据
+        function showEditVipAnnouncementModal(id, title, content, publisher, date, priority, type) {
+            document.getElementById('editAnnouncementId').value = id;
+            document.getElementById('editAnnouncementTitle').value = title;
+            document.getElementById('editAnnouncementContent').value = content;
+            document.getElementById('editAnnouncementPublisher').value = publisher;
+            document.getElementById('editAnnouncementDate').value = date;
+            document.getElementById('editAnnouncementPriority').value = priority;
+            document.getElementById('editAnnouncementType').value = type;
+            new bootstrap.Modal(document.getElementById('editVipAnnouncementModal')).show();
+        }
+
+        // 加载VIP交易记录
+        function loadVipTrades() {
+            fetch('/api/admin/vip-trades')
+                .then(response => response.json())
+                .then(data => {
+                    const vipTradesBody = document.getElementById('vip-trades-body');
+                    if (data.success) {
+                        vipTradesBody.innerHTML = '';
+                        data.trades.forEach(trade => {
+                            vipTradesBody.innerHTML += `
+                                <div class="card mb-3">
+                                    <div class="card-body">
+                                        <h5 class="card-title">${trade.symbol} <span class="badge bg-secondary ms-2">${trade.asset_type || ''}</span></h5>
+                                        <p class="card-text mb-1"><b>方向：</b>${trade.direction || '-'}</p>
+                                        <p class="card-text mb-1"><b>买入时间：</b>${trade.entry_time || '-'}</p>
+                                        <p class="card-text mb-1"><b>买入价：</b>${trade.entry_price || '-'}</p>
+                                        <p class="card-text mb-1"><b>买入数量：</b>${trade.quantity || '-'}</p>
+                                        <p class="card-text mb-1"><b>当前价：</b>${trade.current_price || '-'}</p>
+                                        <p class="card-text mb-1"><b>卖出价(exit_price)：</b>${trade.exit_price || '-'}</p>
+                                        <p class="card-text mb-1"><b>卖出时间(exit_time)：</b>${trade.exit_time || '-'}</p>
+                                        <p class="card-text mb-1"><b>状态(status)：</b>${trade.status || '-'}</p>
+                                        <p class="card-text mb-1"><b>盈亏(PnL)：</b>${trade.pnl || '-'}</p>
+                                        <p class="card-text mb-1"><b>收益率(ROI)：</b>${trade.roi || '-'}</p>
+                                        <p class="card-text mb-1"><b>创建人(created_by)：</b>${trade.created_by || '-'}</p>
+                                        <p class="card-text mb-1"><b>创建时间(created_at)：</b>${trade.created_at || '-'}</p>
+                                        <p class="card-text mb-1"><b>更新时间(updated_at)：</b>${trade.updated_at || '-'}</p>
+                                        <p class="card-text mb-1"><b>备注(notes)：</b>${trade.notes || '-'}</p>
+                                        <p class="card-text mb-1"><b>trade_type：</b>${trade.trade_type || '-'}</p>
+                                        <button class="btn btn-sm btn-primary mt-2" onclick='showEditVipTradeModal(${JSON.stringify(trade)})'>编辑</button>
+                                        <button class="btn btn-sm btn-danger mt-2 ms-2" onclick="deleteVipTrade(${trade.id})">删除</button>
+                                    </div>
+                                </div>
+                            `;
+                        });
+                    } else {
+                        vipTradesBody.innerHTML = '<p>加载VIP交易记录失败</p>';
+                    }
+                })
+                .catch(error => {
+                    console.error('Error loading VIP trades:', error);
+                    document.getElementById('vip-trades-body').innerHTML = '<p>加载VIP交易记录失败</p>';
+                });
+        }
+
+        // 显示添加VIP交易记录模态框
+        function showAddVipTradeModal() {
+            document.getElementById('vipTradeForm').reset();
+            document.getElementById('vipTradeModalTitle').textContent = '新建VIP交易记录';
+            document.getElementById('tradeId').value = '';
+            document.getElementById('exitFields').style.display = 'none';
+            document.getElementById('vipTradeSaveBtn').onclick = addVipTrade;
+            new bootstrap.Modal(document.getElementById('vipTradeModal')).show();
+        }
+
+        // 新建交易弹窗
+        function showAddVipTradeModal() {
+          document.getElementById('vipTradeForm').reset();
+          document.getElementById('vipTradeModalTitle').textContent = '新建VIP交易记录';
+          document.getElementById('tradeId').value = '';
+          document.getElementById('exitFields').style.display = 'none';
+          document.getElementById('vipTradeSaveBtn').onclick = addVipTrade;
+          new bootstrap.Modal(document.getElementById('vipTradeModal')).show();
+        }
+        // 编辑交易弹窗
+        function showEditVipTradeModal(trade) {
+          document.getElementById('vipTradeForm').reset();
+          document.getElementById('vipTradeModalTitle').textContent = '编辑VIP交易记录';
+          document.getElementById('tradeId').value = trade.id || '';
+          document.getElementById('tradeSymbol').value = trade.symbol || '';
+          document.getElementById('tradeAssetType').value = trade.asset_type || '';
+          document.getElementById('tradeDirection').value = trade.direction || '';
+          document.getElementById('tradeEntryTime').value = trade.entry_time ? trade.entry_time.replace(' ', 'T').replace(/\//g, '-').slice(0, 16) : '';
+          document.getElementById('tradeEntryPrice').value = trade.entry_price || '';
+          document.getElementById('tradeQuantity').value = trade.quantity || '';
+          document.getElementById('tradeStatus').value = trade.status || '';
+          document.getElementById('tradeExitPrice').value = trade.exit_price || '';
+          document.getElementById('tradeExitTime').value = trade.exit_time ? trade.exit_time.replace(' ', 'T').replace(/\//g, '-').slice(0, 16) : '';
+          document.getElementById('exitFields').style.display = (trade.status === '平仓') ? '' : 'none';
+          document.getElementById('vipTradeSaveBtn').onclick = saveVipTradeEdit;
+          new bootstrap.Modal(document.getElementById('vipTradeModal')).show();
+        }
+        // 状态切换显示/隐藏卖出信息
+        if(document.getElementById('tradeStatus')){
+          document.getElementById('tradeStatus').addEventListener('change', function(){
+            document.getElementById('exitFields').style.display = (this.value === '平仓') ? '' : 'none';
+          });
+        }
+        // 新建交易
+        function addVipTrade() {
+          const form = document.getElementById('vipTradeForm');
+          if (!form.checkValidity()) { form.reportValidity(); return; }
+          const formData = new FormData(form);
+          // 打印所有原始表单字段
+          for (let [k, v] of formData.entries()) { console.log('表单字段', k, v); }
+          if (!formData.get('asset_type')) { alert('请选择资产类型'); return; }
+          if (!formData.get('direction')) { alert('请选择方向'); return; }
+          let entry_time = formData.get('entry_time');
+          if(entry_time) entry_time = entry_time.replace(/\//g, '-').replace(' ', 'T');
+          let exit_time = formData.get('exit_time');
+          if(exit_time) exit_time = exit_time.replace(/\//g, '-').replace(' ', 'T');
+          const data = {
+            symbol: formData.get('symbol'),
+            asset_type: formData.get('asset_type'),
+            direction: formData.get('direction'),
+            entry_time: entry_time,
+            entry_price: parseFloat(formData.get('entry_price')),
+            quantity: parseFloat(formData.get('quantity')),
+            status: formData.get('status') || null,
+            exit_price: formData.get('exit_price') ? parseFloat(formData.get('exit_price')) : null,
+            exit_time: exit_time || null,
+            trade_type: 'buy'
+          };
+          console.log('最终提交数据', data);
+          fetch('/api/admin/vip-trades', {
+            method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data)
+          })
+          .then(res => res.json())
+          .then(data => {
+            if(data.success){
+              alert('添加成功');
+              bootstrap.Modal.getInstance(document.getElementById('vipTradeModal')).hide();
+              loadVipTrades();
+            }else{
+              alert(data.message || '添加失败');
+            }
+          });
+        }
+        // 编辑交易
+        function saveVipTradeEdit() {
+          const form = document.getElementById('vipTradeForm');
+          if (!form.checkValidity()) { form.reportValidity(); return; }
+          const formData = new FormData(form);
+          // 打印所有原始表单字段
+          for (let [k, v] of formData.entries()) { console.log('表单字段', k, v); }
+          if (!formData.get('asset_type')) { alert('请选择资产类型'); return; }
+          if (!formData.get('direction')) { alert('请选择方向'); return; }
+          let entry_time = formData.get('entry_time');
+          if(entry_time) entry_time = entry_time.replace(/\//g, '-').replace(' ', 'T');
+          let exit_time = formData.get('exit_time');
+          if(exit_time) exit_time = exit_time.replace(/\//g, '-').replace(' ', 'T');
+          const id = formData.get('id');
+          const data = {
+            symbol: formData.get('symbol'),
+            asset_type: formData.get('asset_type'),
+            direction: formData.get('direction'),
+            entry_time: entry_time,
+            entry_price: parseFloat(formData.get('entry_price')),
+            quantity: parseFloat(formData.get('quantity')),
+            status: formData.get('status') || null,
+            exit_price: formData.get('exit_price') ? parseFloat(formData.get('exit_price')) : null,
+            exit_time: exit_time || null
+          };
+          console.log('最终提交数据', data);
+          fetch('/api/admin/vip-trades/' + id, {
+            method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data)
+          })
+          .then(res => res.json())
+          .then(data => {
+            if(data.success){
+              alert('编辑成功');
+              bootstrap.Modal.getInstance(document.getElementById('vipTradeModal')).hide();
+              loadVipTrades();
+            }else{
+              alert(data.message || '编辑失败');
+            }
+          });
+        }
+        // 删除交易
+        function deleteVipTrade(id) {
+          if (!confirm('确定要删除这条交易记录吗？')) return;
+          fetch(`/api/admin/vip-trades/${id}`, { method: 'DELETE' })
+            .then(res => res.json())
+            .then(data => {
+              if (data.success) {
+                alert('删除成功');
+                loadVipTrades();
+              } else {
+                alert(data.message || '删除失败');
+              }
+            });
+        }
+
+        function editUser(userId) {
+          // 假设有全局users数据或通过AJAX获取用户详情
+          fetch(`/api/admin/users?id=${userId}`)
+            .then(res => res.json())
+            .then(data => {
+              if (data.success && data.users && data.users.length > 0) {
+                const user = data.users[0];
+                document.getElementById('edit_user_id').value = user.id;
+                document.getElementById('edit_username').value = user.username;
+                document.getElementById('edit_email').value = user.email || '';
+                document.getElementById('edit_role').value = user.role || '';
+                document.getElementById('edit_initial_asset').value = user.initial_asset !== undefined ? user.initial_asset : 0;
+                new bootstrap.Modal(document.getElementById('editUserModal')).show();
+              }
+            });
+        }
+        function saveEditUser() {
+          const userId = document.getElementById('edit_user_id').value;
+          const initialAsset = document.getElementById('edit_initial_asset').value;
+          fetch(`/api/admin/users/${userId}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ initial_asset: initialAsset })
+          })
+          .then(res => res.json())
+          .then(data => {
+            if (data.success) {
+              alert('初始资金已更新');
+              bootstrap.Modal.getInstance(document.getElementById('editUserModal')).hide();
+              loadUsers();
+            } else {
+              alert(data.message || '更新失败');
+            }
+          });
+        }
+
+        function saveVipAnnouncementEdit() {
+          const id = document.getElementById('editAnnouncementId').value;
+          const data = {
+            title: document.getElementById('editAnnouncementTitle').value,
+            content: document.getElementById('editAnnouncementContent').value,
+            type: document.getElementById('editAnnouncementType').value,
+            publisher: document.getElementById('editAnnouncementPublisher').value,
+            date: document.getElementById('editAnnouncementDate').value,
+            priority: document.getElementById('editAnnouncementPriority').value
+          };
+          fetch(`/api/admin/vip-announcements/${id}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+          })
+          .then(res => res.json())
+          .then(res => {
+            if (res.success) {
+              alert('保存成功');
+              bootstrap.Modal.getInstance(document.getElementById('editVipAnnouncementModal')).hide();
+              loadVipAnnouncements();
+            } else {
+              alert(res.message || '保存失败');
+            }
+          });
+        }
     </script>
 </body>
 </html> 

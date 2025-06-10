@@ -231,4 +231,54 @@ BEGIN
         )
         THEN RAISE(ABORT, 'Permission denied')
     END;
-END; 
+END;
+
+-- 创建VIP策略公告表
+CREATE TABLE IF NOT EXISTS vip_announcements (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    title TEXT NOT NULL,
+    content TEXT NOT NULL,
+    created_by INTEGER NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    status TEXT DEFAULT 'active',
+    priority INTEGER DEFAULT 0,
+    FOREIGN KEY (created_by) REFERENCES users (id)
+);
+
+-- 创建VIP交易表
+CREATE TABLE IF NOT EXISTS vip_trades (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    symbol TEXT NOT NULL,
+    entry_price DECIMAL(15,2) NOT NULL,
+    exit_price DECIMAL(15,2),
+    quantity DECIMAL(15,2) NOT NULL,
+    entry_time TIMESTAMP NOT NULL,
+    exit_time TIMESTAMP,
+    trade_type TEXT NOT NULL,
+    status TEXT DEFAULT 'open',
+    current_price DECIMAL(15,2),
+    pnl DECIMAL(15,2),
+    roi DECIMAL(5,2),
+    created_by INTEGER NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    notes TEXT,
+    FOREIGN KEY (created_by) REFERENCES users (id)
+);
+
+-- 创建VIP策略公告更新时间触发器
+CREATE TRIGGER update_vip_announcements_updated_at
+    BEFORE UPDATE ON vip_announcements
+    FOR EACH ROW
+    BEGIN
+        NEW.updated_at = CURRENT_TIMESTAMP;
+    END;
+
+-- 创建VIP交易更新时间触发器
+CREATE TRIGGER update_vip_trades_updated_at
+    BEFORE UPDATE ON vip_trades
+    FOR EACH ROW
+    BEGIN
+        NEW.updated_at = CURRENT_TIMESTAMP;
+    END; 
