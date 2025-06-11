@@ -2404,10 +2404,10 @@ def manage_videos():
             if not file or not title:
                 return jsonify({'success': False, 'message': '标题和视频为必填项'}), 400
                 
-            # 检查文件大小（限制为50MB）
+            # 检查文件大小（限制为200MB）
             file_bytes = file.read()
-            if len(file_bytes) > 50 * 1024 * 1024:  # 50MB
-                return jsonify({'success': False, 'message': '文件大小不能超过50MB'}), 400
+            if len(file_bytes) > 200 * 1024 * 1024:  # 200MB
+                return jsonify({'success': False, 'message': 'File size cannot exceed 200MB'}), 400
                 
             filename = secure_filename(file.filename)
             file_ext = filename.rsplit('.', 1)[-1].lower() if '.' in filename else ''
