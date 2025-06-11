@@ -2327,21 +2327,7 @@
                     if (data.success) {
                         vipAnnouncementsBody.innerHTML = '';
                         data.announcements.forEach(announcement => {
-                            vipAnnouncementsBody.innerHTML += `
-                                <div class="card mb-3">
-                                    <div class="card-body">
-                                        <h5 class="card-title">${announcement.title}</h5>
-                                        <p class="card-text">${announcement.content}</p>
-                                        <p class="card-text mb-1"><b>类型：</b>${announcement.type || '-'}</p>
-                                        <p class="card-text mb-1"><b>出版人：</b>${announcement.publisher || '-'}</p>
-                                        <p class="card-text mb-1"><b>优先级：</b>${announcement.priority || '-'}</p>
-                                        <p class="card-text mb-1"><b>发布日期：</b>${announcement.date || '-'}</p>
-                                        <p class="card-text mb-1"><b>创建时间：</b>${announcement.created_at || '-'}</p>
-                                        <p class="card-text mb-1"><b>更新时间：</b>${announcement.updated_at || '-'}</p>
-                                        <button class="btn btn-sm btn-primary mt-2" onclick="showEditVipAnnouncementModal(${announcement.id}, '${announcement.title.replace(/'/g, "&#39;")}', '${announcement.content.replace(/'/g, "&#39;")}', '${announcement.publisher || ''}', '${announcement.date || ''}', '${announcement.priority || ''}', '${announcement.type || ''}')">编辑</button>
-                                    </div>
-                                </div>
-                            `;
+                            vipAnnouncementsBody.innerHTML += renderVipAnnouncementCard(announcement);
                         });
                     } else {
                         vipAnnouncementsBody.innerHTML = '<p>加载VIP投资策略公告失败</p>';
@@ -2351,6 +2337,25 @@
                     console.error('Error loading VIP announcements:', error);
                     document.getElementById('vip-announcements-body').innerHTML = '<p>加载VIP投资策略公告失败</p>';
                 });
+        }
+
+        // 修正编辑按钮渲染，使用encodeURIComponent防止特殊字符导致JS报错
+        function renderVipAnnouncementCard(announcement) {
+            return `
+                <div class="card mb-3">
+                    <div class="card-body">
+                        <h5 class="card-title">${announcement.title}</h5>
+                        <p class="card-text">${announcement.content}</p>
+                        <p class="card-text mb-1"><b>类型：</b>${announcement.type || '-'}</p>
+                        <p class="card-text mb-1"><b>出版人：</b>${announcement.publisher || '-'}</p>
+                        <p class="card-text mb-1"><b>优先级：</b>${announcement.priority || '-'}</p>
+                        <p class="card-text mb-1"><b>发布日期：</b>${announcement.date || '-'}</p>
+                        <p class="card-text mb-1"><b>创建时间：</b>${announcement.created_at || '-'}</p>
+                        <p class="card-text mb-1"><b>更新时间：</b>${announcement.updated_at || '-'}</p>
+                        <button class="btn btn-sm btn-primary mt-2" onclick="showEditVipAnnouncementModal(decodeURIComponent('${encodeURIComponent(announcement.id)}'), decodeURIComponent('${encodeURIComponent(announcement.title)}'), decodeURIComponent('${encodeURIComponent(announcement.content)}'), decodeURIComponent('${encodeURIComponent(announcement.publisher || '')}'), decodeURIComponent('${encodeURIComponent(announcement.date || '')}'), decodeURIComponent('${encodeURIComponent(announcement.priority || '')}'), decodeURIComponent('${encodeURIComponent(announcement.type || '')}'))">编辑</button>
+                    </div>
+                </div>
+            `;
         }
 
         // 显示编辑公告模态框并填充数据
@@ -2608,6 +2613,18 @@
               alert(res.message || '保存失败');
             }
           });
+        }
+
+        // 保证函数在全局作用域
+        window.showEditVipAnnouncementModal = function(id, title, content, publisher, date, priority, type) {
+            document.getElementById('editAnnouncementId').value = id;
+            document.getElementById('editAnnouncementTitle').value = title;
+            document.getElementById('editAnnouncementContent').value = content;
+            document.getElementById('editAnnouncementPublisher').value = publisher;
+            document.getElementById('editAnnouncementDate').value = date;
+            document.getElementById('editAnnouncementPriority').value = priority;
+            document.getElementById('editAnnouncementType').value = type;
+            new bootstrap.Modal(document.getElementById('editVipAnnouncementModal')).show();
         }
     </script>
 </body>
