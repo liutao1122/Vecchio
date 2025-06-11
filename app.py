@@ -770,6 +770,31 @@ def vip_dashboard():
     level_en = get_level_en(level_cn)
     initial_asset = float(user.get('initial_asset', 0) or 0)
 
+    # --- 新增：同步所有用户收益到users表 ---
+    all_users_resp = supabase.table('users').select('id,username').execute()
+    all_users = all_users_resp.data if all_users_resp.data else []
+    now = datetime.now()
+    for u in all_users:
+        trades_resp = supabase.table('trades').select('*').eq('user_id', u['id']).execute()
+        trades = trades_resp.data if trades_resp.data else []
+        total_profit = 0
+        monthly_profit = 0
+        for trade in trades:
+            entry_price = float(trade.get('entry_price') or 0)
+            exit_price = float(trade.get('exit_price') or 0)
+            size = float(trade.get('size') or 0)
+            profit = 0
+            if trade.get('exit_price') is not None:
+                profit = (exit_price - entry_price) * size
+                total_profit += profit
+                if trade.get('exit_date') and str(trade['exit_date']).startswith(now.strftime('%Y-%m')):
+                    monthly_profit += profit
+        supabase.table('users').update({
+            'total_profit': total_profit,
+            'monthly_profit': monthly_profit
+        }).eq('id', u['id']).execute()
+    # --- 同步结束 ---
+
     # 用 user_id 查询交易记录
     trades_resp = supabase.table('trades').select('*').eq('user_id', user['id']).execute()
     trades = trades_resp.data if trades_resp.data else []
@@ -2229,14 +2254,14 @@ def update_trade():
         exit_date = request.form.get('exit_date')
 
         if not all([trade_id, exit_price, exit_date]):
-            return jsonify({'success': False, 'message': '参数不完整'}), 400
+            return jsonify({'success': False, 'message': 'Incomplete parameters'}), 400
 
         supabase.table('trades').update({
             'exit_price': exit_price,
             'exit_date': exit_date
         }).eq('id', trade_id).execute()
 
-        return jsonify({'success': True, 'message': '平仓成功'})
+        return jsonify({'success': True, 'message': 'Close position successful'})
     except Exception as e:
         return jsonify({'success': False, 'message': str(e)}), 500
 

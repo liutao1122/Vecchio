@@ -2871,6 +2871,107 @@
             font-weight: 700;
           }
         }
+        .vip-trade-cards-blackgold {
+          {% if vip_trades and vip_trades|length > 0 %}
+            {% for trade in vip_trades %}
+            <div class="vip-trade-card-new">
+              <div class="vip-trade-card-left">
+                <div class="vip-symbol">{{ trade.symbol }}</div>
+                <div class="vip-type {{ 'sell' if trade.trade_type not in ['买涨','buy','多','long'] else '' }}">{{ trade.trade_type|default(trade.direction)|capitalize }}</div>
+                <div class="vip-status status-{{ trade.status|lower }}">{{ trade.status|capitalize }}</div>
+              </div>
+              <div class="vip-trade-card-main">
+                <div class="vip-pnl-row">
+                  <span class="vip-pnl {% if trade.pnl >= 0 %}up{% else %}down{% endif %}">PnL {{ trade.pnl is not none and ('%.2f' % trade.pnl) or '-' }}</span>
+                  <span class="vip-roi">ROI <span class="{% if trade.roi >= 0 %}up{% else %}down{% endif %}">{{ trade.roi is not none and ('%.2f%%' % trade.roi) or '-' }}</span></span>
+                </div>
+                <div class="vip-meta-row">
+                  <span>Entry Price: <b>{{ trade.entry_price }}</b> × <b>{{ trade.quantity }}</b></span>
+                  <span>Current Price: <b>{{ trade.current_price or '-' }}</b></span>
+                </div>
+                <div class="vip-meta-row">
+                  <span>Entry Time: <b><span class="us-time" data-time="{{ trade.entry_time|e }}">{{ trade.entry_time or '-' }}</span></b></span>
+                  <span>Exit Price: <b>{{ trade.exit_price or '-' }}</b></span>
+                  <span>Exit Time: <b><span class="us-time" data-time="{{ trade.exit_time|e }}">{{ trade.exit_time or '-' }}</span></b></span>
+                </div>
+              </div>
+              <div class="vip-trade-card-btns">
+                <button class="btn btn-outline-warning btn-sm">Buy</button>
+                <button class="btn btn-outline-light btn-sm">持有</button>
+              </div>
+            </div>
+            {% endfor %}
+          {% else %}
+            <div style="color:#b0c4e6;text-align:center;">No VIP trades available.</div>
+          {% endif %}
+        </div>
+        <style>
+        .vip-trade-card-new {
+          display: flex;
+          align-items: stretch;
+          background: linear-gradient(120deg, #232B3E 60%, #181c2a 100%);
+          border-radius: 22px;
+          box-shadow: 0 8px 32px #FFD70033, 0 0 0 2px #FFD70055;
+          border: 2px solid #FFD70088;
+          color: #fff;
+          margin-bottom: 32px;
+          overflow: hidden;
+        }
+        .vip-trade-card-left {
+          background: #FFD700;
+          color: #232B3E;
+          min-width: 120px;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          font-weight: 900;
+          font-size: 1.5rem;
+          padding: 24px 12px;
+        }
+        .vip-symbol { font-size: 2rem; font-weight: 900; margin-bottom: 8px; }
+        .vip-type { font-size: 1.1rem; font-weight: 700; margin-bottom: 4px; }
+        .vip-status { font-size: 1.05rem; font-weight: 700; }
+        .vip-trade-card-main {
+          flex: 1;
+          padding: 24px 32px;
+          display: flex;
+          flex-direction: column;
+          justify-content: center;
+          gap: 12px;
+        }
+        .vip-pnl-row {
+          font-size: 1.3rem;
+          font-weight: 900;
+          color: #00ffae;
+          margin-bottom: 8px;
+        }
+        .vip-pnl.up { color: #00ffae; }
+        .vip-pnl.down { color: #cf1322; }
+        .vip-roi { color: #FFD700; margin-left: 24px; }
+        .vip-roi.up { color: #FFD700; }
+        .vip-roi.down { color: #cf1322; }
+        .vip-meta-row { color: #b0c4e6; font-size: 1.05rem; margin-bottom: 2px; display: flex; gap: 32px; flex-wrap: wrap; }
+        .vip-trade-card-btns {
+          display: flex;
+          flex-direction: column;
+          justify-content: flex-end;
+          gap: 8px;
+          padding: 24px 12px;
+        }
+        .vip-trade-card-btns button {
+          font-size: 1.08rem;
+          font-weight: 700;
+          border-radius: 8px;
+          margin-bottom: 4px;
+        }
+        @media (max-width: 900px) {
+          .vip-trade-card-new { flex-direction: column; }
+          .vip-trade-card-left, .vip-trade-card-btns { flex-direction: row; justify-content: space-between; padding: 12px 8px; }
+          .vip-trade-card-main { padding: 12px 8px; }
+          .vip-meta-row { gap: 12px; }
+        }
+        </style>
     </style>
 </head>
 <body>
@@ -2949,37 +3050,39 @@
               <div class="announcement-content">{{ ann.content|safe }}</div>
               <div class="announcement-meta">
                 <span>Publisher: {{ ann.publisher or '-' }}</span>
-                <span>{{ ann.date or ann.created_at or '' }}</span>
+                <span><span class="us-time" data-time="{{ ann.date or ann.created_at or '' }}">{{ ann.date or ann.created_at or '' }}</span></span>
               </div>
             </div>
             {% endfor %}
         {% else %}
             <div class="announcement-card" style="color:#b0c4e6;text-align:center;">No announcements available.</div>
         {% endif %}
-        <!-- VIP交易卡片区域整体移动到这里，保持原有样式 -->
+        <!-- 新VIP交易卡片区域 -->
         <div class="vip-trade-cards-blackgold">
           {% if vip_trades and vip_trades|length > 0 %}
             {% for trade in vip_trades %}
-            <div class="vip-trade-card-blackgold">
-              <div class="vip-blackgold-symbol-row">
-                <span class="vip-blackgold-symbol">{{ trade.symbol }}</span>
-                <span class="vip-blackgold-type {{ 'sell' if trade.trade_type not in ['买涨','buy','多','long'] else '' }}">{{ trade.trade_type|default(trade.direction)|capitalize }}</span>
-                <span class="vip-blackgold-status status-{{ trade.status|lower }}">{{ trade.status|capitalize }}</span>
+            <div class="vip-trade-card-new">
+              <div class="vip-trade-card-left">
+                <div class="vip-symbol">{{ trade.symbol }}</div>
+                <div class="vip-type {{ 'sell' if trade.trade_type not in ['买涨','buy','多','long'] else '' }}">{{ trade.trade_type|default(trade.direction)|capitalize }}</div>
+                <div class="vip-status status-{{ trade.status|lower }}">{{ trade.status|capitalize }}</div>
               </div>
-              <div class="vip-blackgold-pnl-row">
-                <span class="vip-blackgold-pnl {% if trade.pnl >= 0 %}up{% else %}down{% endif %}">PnL {{ trade.pnl is not none and ('%.2f' % trade.pnl) or '-' }}</span>
-                <span class="vip-blackgold-roi">ROI <span class="vip-blackgold-roi-value {% if trade.roi >= 0 %}up{% else %}down{% endif %}">{{ trade.roi is not none and ('%.2f%%' % trade.roi) or '-' }}</span></span>
+              <div class="vip-trade-card-main">
+                <div class="vip-pnl-row">
+                  <span class="vip-pnl {% if trade.pnl >= 0 %}up{% else %}down{% endif %}">PnL {{ trade.pnl is not none and ('%.2f' % trade.pnl) or '-' }}</span>
+                  <span class="vip-roi">ROI <span class="{% if trade.roi >= 0 %}up{% else %}down{% endif %}">{{ trade.roi is not none and ('%.2f%%' % trade.roi) or '-' }}</span></span>
+                </div>
+                <div class="vip-meta-row">
+                  <span>Entry Price: <b>{{ trade.entry_price }}</b> × <b>{{ trade.quantity }}</b></span>
+                  <span>Current Price: <b>{{ trade.current_price or '-' }}</b></span>
+                </div>
+                <div class="vip-meta-row">
+                  <span>Entry Time: <b><span class="us-time" data-time="{{ trade.entry_time|e }}">{{ trade.entry_time or '-' }}</span></b></span>
+                  <span>Exit Price: <b>{{ trade.exit_price or '-' }}</b></span>
+                  <span>Exit Time: <b><span class="us-time" data-time="{{ trade.exit_time|e }}">{{ trade.exit_time or '-' }}</span></b></span>
+                </div>
               </div>
-              <div class="vip-blackgold-meta-row">
-                <span>Entry: {{ trade.entry_price }} × {{ trade.quantity }}</span>
-                <span>Current: {{ trade.current_price or '-' }}</span>
-              </div>
-              <div class="vip-blackgold-meta-row">
-                <span>Entry Time: <span class="us-time" data-time="{{ trade.entry_time|e }}">{{ trade.entry_time or '-' }}</span></span>
-                <span>Exit: {{ trade.exit_price or '-' }}</span>
-                <span>Exit Time: <span class="us-time" data-time="{{ trade.exit_time|e }}">{{ trade.exit_time or '-' }}</span></span>
-              </div>
-              <div class="vip-blackgold-btn-row">
+              <div class="vip-trade-card-btns">
                 <button class="btn btn-outline-warning btn-sm">Buy</button>
                 <button class="btn btn-outline-light btn-sm">持有</button>
               </div>
@@ -2989,6 +3092,7 @@
             <div style="color:#b0c4e6;text-align:center;">No VIP trades available.</div>
           {% endif %}
         </div>
+        <!-- 新VIP交易卡片区域结束 -->
     </div>
     <!-- 交易记录（持仓分析/历史交易） -->
     <div class="section">

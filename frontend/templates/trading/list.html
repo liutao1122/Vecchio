@@ -28,20 +28,20 @@
         <table class="table table-striped">
             <thead>
                 <tr>
-                    <th>资产类型</th>
-                    <th>交易品种</th>
-                    <th>方向</th>
-                    <th>数量</th>
-                    <th>入场价格</th>
-                    <th>出场价格</th>
-                    <th>入场时间</th>
-                    <th>出场时间</th>
-                    <th>状态</th>
-                    <th>盈亏</th>
-                    <th>盈亏百分比</th>
-                    <th>当前价格</th>
-                    <th>备注</th>
-                    <th>操作</th>
+                    <th>Asset Type</th>
+                    <th>Symbol</th>
+                    <th>Direction</th>
+                    <th>Quantity</th>
+                    <th>Entry Price</th>
+                    <th>Exit Price</th>
+                    <th>Entry Time</th>
+                    <th>Exit Time</th>
+                    <th>Status</th>
+                    <th>P&L</th>
+                    <th>P&L Ratio</th>
+                    <th>Current Price</th>
+                    <th>Notes</th>
+                    <th>Action</th>
                 </tr>
             </thead>
             <tbody>
@@ -53,8 +53,8 @@
                     <td>{{ record.quantity }}</td>
                     <td>{{ record.entry_price }}</td>
                     <td>{{ record.exit_price|default:"-" }}</td>
-                    <td>{{ record.entry_time|date:"Y-m-d H:i:s" }}</td>
-                    <td>{{ record.exit_time|date:"Y-m-d H:i:s"|default:"-" }}</td>
+                    <td>{{ record.entry_time|date:"m/d/Y H:i" }}</td>
+                    <td>{{ record.exit_time|date:"m/d/Y H:i"|default:"-" }}</td>
                     <td>{{ record.get_status_display }}</td>
                     <td>{{ record.pnl|default:"-" }}</td>
                     <td>{{ record.roi|default:"-" }}%</td>
@@ -62,7 +62,7 @@
                     <td>{{ record.notes|default:"-" }}</td>
                     <td>
                         {% if record.status == 'open' %}
-                        <button class="btn btn-warning btn-sm close-position" data-id="{{ record.id }}">平仓</button>
+                        <button class="btn btn-warning btn-sm close-position" data-id="{{ record.id }}">Close</button>
                         {% endif %}
                     </td>
                 </tr>
@@ -110,7 +110,7 @@
             <div class="modal-body">
                 <form id="newRecordForm">
                     <div class="form-group">
-                        <label for="asset_type">资产类型</label>
+                        <label for="asset_type">Asset Type</label>
                         <select class="form-control" id="asset_type" name="asset_type" required>
                             <option value="crypto">加密货币</option>
                             <option value="stock">股票</option>
@@ -119,37 +119,37 @@
                         </select>
                     </div>
                     <div class="form-group">
-                        <label for="symbol">交易品种</label>
+                        <label for="symbol">Symbol</label>
                         <input type="text" class="form-control" id="symbol" name="symbol" required>
                     </div>
                     <div class="form-group">
-                        <label for="direction">交易方向</label>
+                        <label for="direction">Direction</label>
                         <select class="form-control" id="direction" name="direction" required>
                             <option value="long">做多</option>
                             <option value="short">做空</option>
                         </select>
                     </div>
                     <div class="form-group">
-                        <label for="quantity">数量</label>
+                        <label for="quantity">Quantity</label>
                         <input type="number" class="form-control" id="quantity" name="quantity" step="0.00000001" required>
                     </div>
                     <div class="form-group">
-                        <label for="entry_price">入场价格</label>
+                        <label for="entry_price">Entry Price</label>
                         <input type="number" class="form-control" id="entry_price" name="entry_price" step="0.00000001" required>
                     </div>
                     <div class="form-group">
-                        <label for="entry_time">入场时间</label>
+                        <label for="entry_time">Entry Time</label>
                         <input type="datetime-local" class="form-control" id="entry_time" name="entry_time" required>
                     </div>
                     <div class="form-group">
-                        <label for="notes">备注</label>
+                        <label for="notes">Notes</label>
                         <textarea class="form-control" id="notes" name="notes" rows="3"></textarea>
                     </div>
                 </form>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-dismiss="modal">取消</button>
-                <button type="button" class="btn btn-primary" id="saveRecord">保存</button>
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="saveRecord">Save</button>
             </div>
         </div>
     </div>
@@ -160,7 +160,7 @@
     <div class="modal-dialog" role="document">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="closePositionModalLabel">平仓</h5>
+                <h5 class="modal-title" id="closePositionModalLabel">Close Position</h5>
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                     <span aria-hidden="true">&times;</span>
                 </button>
@@ -169,22 +169,22 @@
                 <form id="closePositionForm">
                     <input type="hidden" id="record_id" name="record_id">
                     <div class="form-group">
-                        <label for="exit_price">出场价格</label>
+                        <label for="exit_price">Exit Price</label>
                         <input type="number" class="form-control" id="exit_price" name="exit_price" step="0.00000001" required>
                     </div>
                     <div class="form-group">
-                        <label for="exit_time">出场时间</label>
+                        <label for="exit_time">Exit Time</label>
                         <input type="datetime-local" class="form-control" id="exit_time" name="exit_time" required>
                     </div>
                     <div class="form-group">
-                        <label for="close_notes">备注</label>
+                        <label for="close_notes">Notes</label>
                         <textarea class="form-control" id="close_notes" name="close_notes" rows="3"></textarea>
                     </div>
                 </form>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-dismiss="modal">取消</button>
-                <button type="button" class="btn btn-primary" id="saveClosePosition">保存</button>
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="saveClosePosition">Save</button>
             </div>
         </div>
     </div>

@@ -851,17 +851,17 @@
                         <div class="mb-3">
                             <label class="form-label">资产类型</label>
                             <select class="form-control" name="asset_type" id="editTradeAssetType" required>
-                                <option value="Stock">股票</option>
-                                <option value="Crypto">加密货币</option>
-                                <option value="Forex">外汇</option>
-                                <option value="Fund">基金</option>
+                                <option value="Stock">Stock</option>
+                                <option value="Crypto">Crypto</option>
+                                <option value="Forex">Forex</option>
+                                <option value="Fund">Fund</option>
                             </select>
                         </div>
                         <div class="mb-3">
                             <label class="form-label">方向</label>
                             <select class="form-control" name="direction" id="editTradeDirection" required>
-                                <option value="Buy">买入</option>
-                                <option value="Sell">卖出</option>
+                                <option value="Buy">Buy</option>
+                                <option value="Sell">Sell</option>
                             </select>
                         </div>
                     </form>
@@ -1445,16 +1445,16 @@
             })
             .then(data => {
                 if (data.success) {
-                    alert('交易更新成功');
+                    alert('Trade updated successfully');
                     bootstrap.Modal.getInstance(document.getElementById('editTradeModal')).hide();
                     loadTrades();
                 } else {
-                    alert('更新失败：' + (data.message || '未知错误'));
+                    alert('Update failed');
                 }
             })
             .catch(error => {
                 console.error('Error updating trade:', error);
-                alert('更新失败，请稍后重试');
+                alert('Update failed, please try again later');
             });
         }
 
