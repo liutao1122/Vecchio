@@ -1132,7 +1132,7 @@ def login():
             return jsonify({'success': False, 'message': '用户名或密码错误'}), 401
             
         if user.get('status') != 'active':
-            return jsonify({'success': False, 'message': '账号已被禁用'}), 403
+            return jsonify({'success': False, 'message': 'The account has been disabled.'}), 403
             
         # 获取IP和地址信息
         ip_address = request.remote_addr

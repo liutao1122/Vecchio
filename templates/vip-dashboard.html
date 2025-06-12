@@ -2999,7 +2999,7 @@
         <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;margin-bottom:24px;">
             <!-- 顶部欢迎区头像 -->
             <div style="position:relative;cursor:pointer;" id="avatar-preview-trigger">
-                <img src="{{ trader_info.profile_image_url or trader_info.avatar_url or 'https://api.dicebear.com/7.x/avataaars/svg?seed=' ~ session.username }}" alt="avatar" class="avatar-glow" style="width:120px;height:120px;border-radius:50%;background:#232b3e;object-fit:cover;">
+                <img src="{{ trader_info.avatar_url or 'https://api.dicebear.com/7.x/avataaars/svg?seed=' ~ (trader_info.trader_name or session.username) }}" alt="avatar" class="avatar-glow" style="width:120px;height:120px;border-radius:50%;background:#232b3e;object-fit:cover;">
                 <!-- 删除svg图标，不再显示 -->
             </div>
             <div style="display:flex;gap:20px;justify-content:center;margin-top:18px;">

@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>VIP管理后台</title>
+    <title>VIP Management Backend</title>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -240,12 +240,12 @@
         <nav class="navbar navbar-expand-lg">
             <div class="container-fluid px-4">
                 <a class="navbar-brand" href="#">
-                    <i class="bi bi-shield-check me-2"></i>VIP管理系统
+                    <i class="bi bi-shield-check me-2"></i>VIP Management System
                 </a>
                 <div class="d-flex align-items-center">
-                    <span class="text-light me-3">欢迎回来，{{ admin_name }}</span>
+                    <span class="text-light me-3">Welcome back, {{ admin_name }}</span>
                     <button class="btn btn-outline-light" onclick="logout()">
-                        <i class="bi bi-box-arrow-right me-2"></i>退出
+                        <i class="bi bi-box-arrow-right me-2"></i>Logout
                     </button>
                 </div>
             </div>
@@ -258,52 +258,52 @@
                         <ul class="nav flex-column">
                             <li class="nav-item">
                                 <a class="nav-link" href="#" onclick="showSection('strategy')">
-                                    <i class="bi bi-lightbulb"></i>交易策略
+                                    <i class="bi bi-lightbulb"></i>Trading Strategy
                                 </a>
                             </li>
                             <li class="nav-item">
                                 <a class="nav-link active" href="#" onclick="showSection('users')">
-                                    <i class="bi bi-people-fill"></i>用户管理
+                                    <i class="bi bi-people-fill"></i>User Management
                                 </a>
                             </li>
                             <li class="nav-item">
                                 <a class="nav-link" href="#" onclick="showSection('membership')">
-                                    <i class="bi bi-award-fill"></i>会员等级
+                                    <i class="bi bi-award-fill"></i>Membership Level
                                 </a>
                             </li>
                             <li class="nav-item">
                                 <a class="nav-link" href="#" onclick="showSection('trading')">
-                                    <i class="bi bi-graph-up"></i>交易管理
+                                    <i class="bi bi-graph-up"></i>Trading Management
                                 </a>
                             </li>
                             <li class="nav-item">
                                 <a class="nav-link" href="#" onclick="showSection('leaderboard')">
-                                    <i class="bi bi-trophy"></i>排行榜
+                                    <i class="bi bi-trophy"></i>Leaderboard
                                 </a>
                             </li>
                             <li class="nav-item">
                                 <a class="nav-link" href="#" onclick="showSection('statistics')">
-                                    <i class="bi bi-bar-chart"></i>数据统计
+                                    <i class="bi bi-bar-chart"></i>Data Statistics
                                 </a>
                             </li>
                             <li class="nav-item">
                                 <a class="nav-link" href="#" onclick="showSection('documents')">
-                                    <i class="bi bi-file-earmark-text"></i>文档管理
+                                    <i class="bi bi-file-earmark-text"></i>Document Management
                                 </a>
                             </li>
                             <li class="nav-item">
                                 <a class="nav-link" href="#" onclick="showSection('videos')">
-                                    <i class="bi bi-camera-video"></i>视频课程管理
+                                    <i class="bi bi-camera-video"></i>Video Course Management
                                 </a>
                             </li>
                             <li class="nav-item">
                                 <a class="nav-link" href="#" onclick="showSection('vip-announcements')">
-                                    <i class="bi bi-megaphone"></i>VIP投资策略公告管理
+                                    <i class="bi bi-megaphone"></i>VIP Investment Strategy Announcement Management
                                 </a>
                             </li>
                             <li class="nav-item">
                                 <a class="nav-link" href="#" onclick="showSection('vip-trades')">
-                                    <i class="bi bi-currency-exchange"></i>VIP交易记录管理
+                                    <i class="bi bi-currency-exchange"></i>VIP Trading Record Management
                                 </a>
                             </li>
                         </ul>
@@ -314,9 +314,9 @@
                     <div id="users-section" class="section-content">
                         <div class="card">
                             <div class="card-header d-flex justify-content-between align-items-center">
-                                <h5 class="card-title">用户管理</h5>
+                                <h5 class="card-title">User Management</h5>
                                 <button class="btn btn-primary" onclick="showCreateUserModal()">
-                                    <i class="bi bi-plus"></i> 创建用户
+                                    <i class="bi bi-plus"></i> Create User
                                 </button>
                             </div>
                             <div class="card-body">
@@ -324,18 +324,18 @@
                                     <table class="table">
                                         <thead>
                                             <tr>
-                                                <th>用户名</th>
-                                                <th>会员等级</th>
-                                                <th>状态</th>
-                                                <th>IP地址</th>
-                                                <th>登录位置</th>
-                                                <th>注册时间</th>
-                                                <th>最后登录</th>
-                                                <th>操作</th>
+                                                <th>Username</th>
+                                                <th>Membership Level</th>
+                                                <th>Status</th>
+                                                <th>IP Address</th>
+                                                <th>Login Location</th>
+                                                <th>Registration Time</th>
+                                                <th>Last Login</th>
+                                                <th>Actions</th>
                                             </tr>
                                         </thead>
                                         <tbody id="users-table-body">
-                                            <!-- 用户列表将通过JavaScript动态加载 -->
+                                            <!-- User list will be dynamically loaded via JavaScript -->
                                         </tbody>
                                     </table>
                                 </div>
@@ -347,10 +347,10 @@
                         <div class="card">
                             <div class="card-header d-flex justify-content-between align-items-center">
                                 <h5 class="card-title">
-                                    <i class="bi bi-award-fill me-2"></i>会员等级管理
+                                    <i class="bi bi-award-fill me-2"></i>Membership Level Management
                                 </h5>
                                 <button class="btn btn-primary" onclick="showCreateLevelModal()">
-                                    <i class="bi bi-plus-lg me-2"></i>创建等级
+                                    <i class="bi bi-plus-lg me-2"></i>Create Level
                                 </button>
                             </div>
                             <div class="card-body">
@@ -358,15 +358,15 @@
                                     <table class="table">
                                         <thead>
                                             <tr>
-                                                <th>等级名称</th>
-                                                <th>等级</th>
-                                                <th>最低交易额</th>
-                                                <th>权益</th>
-                                                <th>操作</th>
+                                                <th>Level Name</th>
+                                                <th>Level</th>
+                                                <th>Minimum Trading Volume</th>
+                                                <th>Benefits</th>
+                                                <th>Actions</th>
                                             </tr>
                                         </thead>
                                         <tbody id="levels-table-body">
-                                            <!-- 会员等级列表将通过JavaScript动态加载 -->
+                                            <!-- Membership levels list will be dynamically loaded via JavaScript -->
                                         </tbody>
                                     </table>
                                 </div>
@@ -379,7 +379,7 @@
                             <div class="col-md-4">
                                 <div class="card">
                                     <div class="card-body text-center">
-                                        <h3 class="text-warning mb-3">总用户数</h3>
+                                        <h3 class="text-warning mb-3">Total Users</h3>
                                         <h2 class="mb-0" id="total-users">0</h2>
                                     </div>
                                 </div>
@@ -387,7 +387,7 @@
                             <div class="col-md-4">
                                 <div class="card">
                                     <div class="card-body text-center">
-                                        <h3 class="text-warning mb-3">活跃用户</h3>
+                                        <h3 class="text-warning mb-3">Active Users</h3>
                                         <h2 class="mb-0" id="active-users">0</h2>
                                     </div>
                                 </div>
@@ -395,7 +395,7 @@
                             <div class="col-md-4">
                                 <div class="card">
                                     <div class="card-body text-center">
-                                        <h3 class="text-warning mb-3">VIP用户</h3>
+                                        <h3 class="text-warning mb-3">VIP Users</h3>
                                         <h2 class="mb-0" id="vip-users">0</h2>
                                     </div>
                                 </div>
@@ -403,18 +403,18 @@
                         </div>
                     </div>
 
-                    <!-- 数据统计部分 -->
+                    <!-- Statistics section -->
                     <div id="statistics" class="content-section" style="display: none;">
-                        <!-- 数据统计内容 -->
+                        <!-- Statistics content -->
                     </div>
 
-                    <!-- 交易管理部分 -->
+                    <!-- Trading section -->
                     <div id="trading-section" class="section-content" style="display: none;">
                         <div class="card">
                             <div class="card-header d-flex justify-content-between align-items-center">
-                                <h5 class="card-title">交易管理</h5>
+                                <h5 class="card-title">Trading Management</h5>
                                 <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addTradeModal">
-                                    <i class="bi bi-plus"></i> 添加交易
+                                    <i class="bi bi-plus"></i> Add Trade
                                 </button>
                             </div>
                             <div class="card-body">
@@ -422,21 +422,21 @@
                                     <table class="table">
                                         <thead>
                                             <tr>
-                                                <th>交易ID</th>
-                                                <th>股票代码</th>
-                                                <th>买入价格</th>
-                                                <th>卖出价格</th>
-                                                <th>数量</th>
-                                                <th>买入时间</th>
-                                                <th>卖出时间</th>
-                                                <th>状态</th>
-                                                <th>盈亏</th>
-                                                <th>图片</th>
-                                                <th>操作</th>
+                                                <th>Trade ID</th>
+                                                <th>Stock Code</th>
+                                                <th>Entry Price</th>
+                                                <th>Exit Price</th>
+                                                <th>Quantity</th>
+                                                <th>Entry Time</th>
+                                                <th>Exit Time</th>
+                                                <th>Status</th>
+                                                <th>Profit/Loss</th>
+                                                <th>Image</th>
+                                                <th>Actions</th>
                                             </tr>
                                         </thead>
                                         <tbody id="tradesList">
-                                            <!-- 交易记录将通过JavaScript动态加载 -->
+                                            <!-- Trading records will be dynamically loaded via JavaScript -->
                                         </tbody>
                                     </table>
                                 </div>
@@ -444,17 +444,17 @@
                         </div>
                     </div>
 
-                    <!-- 排行榜部分 -->
+                    <!-- Leaderboard section -->
                     <div id="leaderboard-section" class="section-content" style="display: none;">
                         <div class="card">
                             <div class="card-header d-flex justify-content-between align-items-center">
-                                <h5 class="card-title">交易员排行榜</h5>
+                                <h5 class="card-title">Trader Leaderboard</h5>
                                 <div>
                                     <button class="btn btn-primary" onclick="showAddLeaderboardModal()">
-                                        <i class="bi bi-plus"></i> 添加
+                                        <i class="bi bi-plus"></i> Add
                                     </button>
                                     <button class="btn btn-primary" onclick="refreshLeaderboard()">
-                                        <i class="bi bi-arrow-clockwise"></i> 刷新
+                                        <i class="bi bi-arrow-clockwise"></i> Refresh
                                     </button>
                                 </div>
                             </div>
@@ -463,19 +463,19 @@
                                     <table class="table">
                                         <thead>
                                             <tr>
-                                                <th class="text-center" style="width: 80px;">排名</th>
-                                                <th class="text-center" style="width: 80px;">头像</th>
-                                                <th style="width: 150px;">交易员</th>
-                                                <th style="width: 120px;">会员等级</th>
-                                                <th class="text-end" style="width: 120px;">总收益</th>
-                                                <th class="text-end" style="width: 120px;">本月收益</th>
-                                                <th class="text-end" style="width: 100px;">胜率</th>
-                                                <th class="text-end" style="width: 100px;">交易次数</th>
-                                                <th style="width: 120px;">操作</th>
+                                                <th class="text-center" style="width: 80px;">Rank</th>
+                                                <th class="text-center" style="width: 80px;">Avatar</th>
+                                                <th style="width: 150px;">Trader</th>
+                                                <th style="width: 120px;">Membership Level</th>
+                                                <th class="text-end" style="width: 120px;">Total Profit</th>
+                                                <th class="text-end" style="width: 120px;">Monthly Profit</th>
+                                                <th class="text-end" style="width: 100px;">Win Rate</th>
+                                                <th class="text-end" style="width: 100px;">Trades</th>
+                                                <th style="width: 120px;">Actions</th>
                                             </tr>
                                         </thead>
                                         <tbody id="leaderboardList">
-                                            <!-- 排行榜数据将通过JavaScript动态加载 -->
+                                            <!-- Leaderboard data will be dynamically loaded via JavaScript -->
                                         </tbody>
                                     </table>
                                 </div>
@@ -483,13 +483,13 @@
                         </div>
                     </div>
 
-                    <!-- 交易策略部分 -->
+                    <!-- Strategy section -->
                     <div id="strategy-section" class="section-content" style="display: none;">
                         <div class="card">
                             <div class="card-header d-flex justify-content-between align-items-center">
-                                <h5 class="card-title"><i class="bi bi-lightbulb me-2"></i>交易策略管理</h5>
+                                <h5 class="card-title"><i class="bi bi-lightbulb me-2"></i>Trading Strategy Management</h5>
                                 <button class="btn btn-primary" onclick="showStrategyModal()">
-                                    <i class="bi bi-plus"></i> 新建策略
+                                    <i class="bi bi-plus"></i> Create New Strategy
                                 </button>
                             </div>
                             <div class="card-body">
@@ -497,49 +497,49 @@
                                     <table class="table">
                                         <thead>
                                             <tr>
-                                                <th>市场分析</th>
-                                                <th>关注重点</th>
-                                                <th>风险提示</th>
-                                                <th>更新时间</th>
-                                                <th>操作</th>
+                                                <th>Market Analysis</th>
+                                                <th>Trading Focus</th>
+                                                <th>Risk Warning</th>
+                                                <th>Update Time</th>
+                                                <th>Actions</th>
                                             </tr>
                                         </thead>
                                         <tbody id="strategy-table-body">
-                                            <!-- 策略列表将通过JavaScript动态加载 -->
+                                            <!-- Strategy list will be dynamically loaded via JavaScript -->
                                         </tbody>
                                     </table>
                                 </div>
                             </div>
                         </div>
-                        <!-- 新建/编辑策略模态框 -->
+                        <!-- New/Edit Strategy Modal -->
                         <div class="modal fade" id="strategyModal" tabindex="-1">
                             <div class="modal-dialog">
                                 <div class="modal-content">
                                     <div class="modal-header">
-                                        <h5 class="modal-title" id="strategyModalTitle">新建策略</h5>
+                                        <h5 class="modal-title" id="strategyModalTitle">Create New Strategy</h5>
                                         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                                     </div>
                                     <div class="modal-body">
                                         <form id="strategyForm">
                                             <input type="hidden" id="strategyId">
                                             <div class="mb-3">
-                                                <label for="marketAnalysis" class="form-label">市场分析</label>
+                                                <label for="marketAnalysis" class="form-label">Market Analysis</label>
                                                 <textarea class="form-control" id="marketAnalysis" rows="2" required></textarea>
                                             </div>
                                             <div class="mb-3">
-                                                <label class="form-label">关注重点</label>
+                                                <label class="form-label">Trading Focus</label>
                                                 <div id="focusAreas"></div>
-                                                <button type="button" class="btn btn-sm btn-outline-primary mt-2" onclick="addFocusArea()">添加关注点</button>
+                                                <button type="button" class="btn btn-sm btn-outline-primary mt-2" onclick="addFocusArea()">Add Focus Area</button>
                                             </div>
                                             <div class="mb-3">
-                                                <label for="riskWarning" class="form-label">风险提示</label>
+                                                <label for="riskWarning" class="form-label">Risk Warning</label>
                                                 <textarea class="form-control" id="riskWarning" rows="2" required></textarea>
                                             </div>
                                         </form>
                                     </div>
                                     <div class="modal-footer">
-                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
-                                        <button type="button" class="btn btn-primary" onclick="saveStrategy()">保存</button>
+                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                        <button type="button" class="btn btn-primary" onclick="saveStrategy()">Save</button>
                                     </div>
                                 </div>
                             </div>
@@ -549,9 +549,9 @@
                     <div id="documents-section" class="section-content" style="display:none;">
                         <div class="card">
                             <div class="card-header d-flex justify-content-between align-items-center">
-                                <h5 class="card-title">文档管理</h5>
+                                <h5 class="card-title">Document Management</h5>
                                 <button class="btn btn-primary" onclick="showUploadDocumentModal()">
-                                    <i class="bi bi-upload"></i> 上传文档
+                                    <i class="bi bi-upload"></i> Upload Document
                                 </button>
                             </div>
                             <div class="card-body">
@@ -559,15 +559,15 @@
                                     <table class="table">
                                         <thead>
                                             <tr>
-                                                <th>标题</th>
-                                                <th>描述</th>
-                                                <th>文件</th>
-                                                <th>更新时间</th>
-                                                <th>操作</th>
+                                                <th>Title</th>
+                                                <th>Description</th>
+                                                <th>File</th>
+                                                <th>Update Time</th>
+                                                <th>Actions</th>
                                             </tr>
                                         </thead>
                                         <tbody id="documents-table-body">
-                                            <!-- 文档列表将通过JavaScript动态加载 -->
+                                            <!-- Document list will be dynamically loaded via JavaScript -->
                                         </tbody>
                                     </table>
                                 </div>
@@ -578,9 +578,9 @@
                     <div id="videos-section" class="section-content" style="display:none;">
                         <div class="card">
                             <div class="card-header d-flex justify-content-between align-items-center">
-                                <h5 class="card-title">视频课程管理</h5>
+                                <h5 class="card-title">Video Course Management</h5>
                                 <button class="btn btn-primary" onclick="showUploadVideoModal()">
-                                    <i class="bi bi-upload"></i> 上传视频
+                                    <i class="bi bi-upload"></i> Upload Video
                                 </button>
                             </div>
                             <div class="card-body">
@@ -588,15 +588,15 @@
                                     <table class="table">
                                         <thead>
                                             <tr>
-                                                <th>标题</th>
-                                                <th>描述</th>
-                                                <th>视频</th>
-                                                <th>更新时间</th>
-                                                <th>操作</th>
+                                                <th>Title</th>
+                                                <th>Description</th>
+                                                <th>Video</th>
+                                                <th>Update Time</th>
+                                                <th>Actions</th>
                                             </tr>
                                         </thead>
                                         <tbody id="videos-table-body">
-                                            <!-- 视频列表将通过JavaScript动态加载 -->
+                                            <!-- Video list will be dynamically loaded via JavaScript -->
                                         </tbody>
                                     </table>
                                 </div>
@@ -607,10 +607,10 @@
                     <div id="vip-announcements-section" class="section-content" style="display:none;">
                         <div class="card">
                             <div class="card-header">
-                                <h5 class="card-title">VIP投资策略公告管理</h5>
+                                <h5 class="card-title">VIP Investment Strategy Announcement Management</h5>
                             </div>
                             <div class="card-body" id="vip-announcements-body">
-                                <!-- 公告内容将通过JS动态加载 -->
+                                <!-- Announcements content will be dynamically loaded via JS -->
                             </div>
                         </div>
                     </div>
@@ -618,13 +618,13 @@
                     <div id="vip-trades-section" class="section-content" style="display:none;">
                         <div class="card">
                             <div class="card-header d-flex justify-content-between align-items-center">
-                                <h5 class="card-title">VIP交易记录管理</h5>
+                                <h5 class="card-title">VIP Trading Record Management</h5>
                                 <button class="btn btn-primary" onclick="showAddVipTradeModal()">
-                                    <i class="bi bi-plus"></i> 新增交易记录
+                                    <i class="bi bi-plus"></i> Add New Trading Record
                                 </button>
                             </div>
                             <div class="card-body" id="vip-trades-body">
-                                <!-- 交易记录内容将通过JS动态加载 -->
+                                <!-- Trading records content will be dynamically loaded via JS -->
                             </div>
                         </div>
                     </div>
@@ -633,223 +633,223 @@
         </div>
     </div>
 
-    <!-- 创建用户模态框 -->
+    <!-- Create User Modal -->
     <div class="modal fade" id="createUserModal" tabindex="-1">
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title">创建新用户</h5>
+                    <h5 class="modal-title">Create New User</h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
                     <form id="createUserForm">
                         <div class="mb-3">
-                            <label class="form-label">用户名</label>
+                            <label class="form-label">Username</label>
                             <input type="text" class="form-control" name="username" required>
                         </div>
                         <div class="mb-3">
-                            <label class="form-label">密码</label>
+                            <label class="form-label">Password</label>
                             <input type="password" class="form-control" name="password" required>
                         </div>
                         <div class="mb-3">
-                            <label class="form-label">邮箱</label>
+                            <label class="form-label">Email</label>
                             <input type="email" class="form-control" name="email">
                         </div>
                         <div class="mb-3">
-                            <label class="form-label">角色</label>
+                            <label class="form-label">Role</label>
                             <select class="form-select" name="role">
-                                <option value="user">普通用户</option>
-                                <option value="admin">管理员</option>
+                                <option value="user">User</option>
+                                <option value="admin">Admin</option>
                             </select>
                         </div>
                         <div class="mb-3">
-                          <label class="form-label">初始资金</label>
+                          <label class="form-label">Initial Asset</label>
                           <input type="number" class="form-control" name="initial_asset" step="0.01" min="0" value="0">
                         </div>
                     </form>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
-                    <button type="button" class="btn btn-primary" onclick="createUser()">创建</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" onclick="createUser()">Create</button>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- 修改头像模态框 -->
+    <!-- Change Avatar Modal -->
     <div class="modal fade" id="changeAvatarModal" tabindex="-1">
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title">修改头像</h5>
+                    <h5 class="modal-title">Change Avatar</h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
                     <form id="changeAvatarForm">
                         <input type="hidden" id="avatarUserId" name="user_id">
                         <div class="mb-3">
-                            <label class="form-label">选择新头像</label>
+                            <label class="form-label">Select New Avatar</label>
                             <input type="file" class="form-control" name="avatar" accept="image/*" required>
                         </div>
                         <div class="text-center">
-                            <img id="avatarPreview" src="" alt="头像预览" style="max-width: 200px; max-height: 200px; display: none; margin: 10px auto; border-radius: 50%;">
+                            <img id="avatarPreview" src="" alt="Avatar Preview" style="max-width: 200px; max-height: 200px; display: none; margin: 10px auto; border-radius: 50%;">
                         </div>
                     </form>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
-                    <button type="button" class="btn btn-primary" onclick="changeAvatar()">保存</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" onclick="changeAvatar()">Save</button>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- 创建/编辑会员等级模态框 -->
+    <!-- Create/Edit Membership Level Modal -->
     <div class="modal fade" id="levelModal" tabindex="-1">
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title" id="levelModalTitle">创建会员等级</h5>
+                    <h5 class="modal-title" id="levelModalTitle">Create Membership Level</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
                     <form id="levelForm">
                         <input type="hidden" id="levelId">
                         <div class="mb-3">
-                            <label for="levelName" class="form-label">等级名称</label>
+                            <label for="levelName" class="form-label">Level Name</label>
                             <input type="text" class="form-control" id="levelName" required>
                         </div>
                         <div class="mb-3">
-                            <label for="levelNumber" class="form-label">等级</label>
+                            <label for="levelNumber" class="form-label">Level</label>
                             <input type="number" class="form-control" id="levelNumber" required>
                         </div>
                         <div class="mb-3">
-                            <label for="minTradingVolume" class="form-label">最低交易额</label>
+                            <label for="minTradingVolume" class="form-label">Minimum Trading Volume</label>
                             <input type="number" class="form-control" id="minTradingVolume" required>
                         </div>
                         <div class="mb-3">
-                            <label for="benefits" class="form-label">权益</label>
+                            <label for="benefits" class="form-label">Benefits</label>
                             <textarea class="form-control" id="benefits" rows="3" required></textarea>
                         </div>
                     </form>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
-                    <button type="button" class="btn btn-primary" onclick="saveLevel()">保存</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" onclick="saveLevel()">Save</button>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- 分配会员等级模态框 -->
+    <!-- Assign Membership Level Modal -->
     <div class="modal fade" id="assignMembershipModal" tabindex="-1">
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title">分配会员等级</h5>
+                    <h5 class="modal-title">Assign Membership Level</h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
                     <form id="assignMembershipForm">
                         <input type="hidden" id="assignUserId">
                         <div class="mb-3">
-                            <label class="form-label">用户名</label>
+                            <label class="form-label">Username</label>
                             <input type="text" class="form-control" id="assignUsername" readonly>
                         </div>
                         <div class="mb-3">
-                            <label class="form-label">会员等级</label>
+                            <label class="form-label">Membership Level</label>
                             <select class="form-select" id="membershipLevel">
-                                <!-- 会员等级选项将通过JavaScript动态加载 -->
+                                <!-- Membership levels options will be dynamically loaded via JavaScript -->
                             </select>
                         </div>
                     </form>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
-                    <button type="button" class="btn btn-primary" onclick="saveMembershipAssignment()">保存</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" onclick="saveMembershipAssignment()">Save</button>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- 添加交易模态框 -->
+    <!-- Add Trade Modal -->
     <div class="modal fade" id="addTradeModal" tabindex="-1">
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title">添加交易</h5>
+                    <h5 class="modal-title">Add Trade</h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
                     <form id="addTradeForm">
                         <div class="mb-3">
-                            <label class="form-label">股票代码</label>
+                            <label class="form-label">Stock Code</label>
                             <input type="text" class="form-control" name="symbol" required>
                         </div>
                         <div class="mb-3">
-                            <label class="form-label">买入价格</label>
+                            <label class="form-label">Entry Price</label>
                             <input type="number" step="0.01" class="form-control" name="entry_price" required>
                         </div>
                         <div class="mb-3">
-                            <label class="form-label">数量</label>
+                            <label class="form-label">Quantity</label>
                             <input type="number" class="form-control" name="size" required>
                         </div>
                         <div class="mb-3">
-                            <label class="form-label">买入时间</label>
+                            <label class="form-label">Entry Time</label>
                             <input type="datetime-local" class="form-control" name="entry_date" required>
                         </div>
                     </form>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
-                    <button type="button" class="btn btn-primary" onclick="addTrade()">添加</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" onclick="addTrade()">Add</button>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- 编辑交易模态框 -->
+    <!-- Edit Trade Modal -->
     <div class="modal fade" id="editTradeModal" tabindex="-1">
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title">编辑交易</h5>
+                    <h5 class="modal-title">Edit Trade</h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
                     <form id="editTradeForm">
                         <input type="hidden" name="trade_id" id="edit_trade_id">
                         <div class="mb-3">
-                            <label class="form-label">股票代码</label>
+                            <label class="form-label">Stock Code</label>
                             <input type="text" class="form-control" name="symbol" id="edit_symbol" readonly>
                         </div>
                         <div class="mb-3">
-                            <label class="form-label">买入价格</label>
+                            <label class="form-label">Entry Price</label>
                             <input type="number" step="0.01" class="form-control" name="entry_price" id="edit_entry_price" readonly>
                         </div>
                         <div class="mb-3">
-                            <label class="form-label">卖出价格</label>
+                            <label class="form-label">Exit Price</label>
                             <input type="number" step="0.01" class="form-control" name="exit_price" id="edit_exit_price">
                         </div>
                         <div class="mb-3">
-                            <label class="form-label">数量</label>
+                            <label class="form-label">Quantity</label>
                             <input type="number" class="form-control" name="size" id="edit_size" readonly>
                         </div>
                         <div class="mb-3">
-                            <label class="form-label">买入时间</label>
+                            <label class="form-label">Entry Time</label>
                             <input type="datetime-local" class="form-control" name="entry_date" id="edit_entry_date" readonly>
                         </div>
                         <div class="mb-3">
-                            <label class="form-label">卖出时间</label>
+                            <label class="form-label">Exit Time</label>
                             <input type="datetime-local" class="form-control" name="exit_date" id="edit_exit_date">
                         </div>
                         <div class="mb-3">
-                            <label class="form-label">交易图片</label>
+                            <label class="form-label">Trade Image</label>
                             <input type="file" class="form-control" name="image" id="edit_trade_image" accept="image/*">
                             <img id="edit_trade_image_preview" src="" style="width:40px;height:40px;object-fit:cover;border-radius:4px;display:none;margin-top:5px;" />
                         </div>
                         <div class="mb-3">
-                            <label class="form-label">资产类型</label>
+                            <label class="form-label">Asset Type</label>
                             <select class="form-control" name="asset_type" id="editTradeAssetType" required>
                                 <option value="Stock">Stock</option>
                                 <option value="Crypto">Crypto</option>
@@ -858,7 +858,7 @@
                             </select>
                         </div>
                         <div class="mb-3">
-                            <label class="form-label">方向</label>
+                            <label class="form-label">Direction</label>
                             <select class="form-control" name="direction" id="editTradeDirection" required>
                                 <option value="Buy">Buy</option>
                                 <option value="Sell">Sell</option>
@@ -867,34 +867,34 @@
                     </form>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
-                    <button type="button" class="btn btn-primary" onclick="updateTrade()">保存</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" onclick="updateTrade()">Save</button>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- 添加/编辑排行榜记录模态框 -->
+    <!-- Add/Edit Leaderboard Record Modal -->
     <div class="modal fade" id="leaderboardModal" tabindex="-1">
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title" id="leaderboardModalTitle">添加排行榜记录</h5>
+                    <h5 class="modal-title" id="leaderboardModalTitle">Add Leaderboard Record</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
                     <form id="leaderboardForm">
                         <input type="hidden" id="leaderboardId">
                         <div class="mb-3">
-                            <label class="form-label">头像URL</label>
+                            <label class="form-label">Avatar URL</label>
                             <input type="text" class="form-control" id="profileImageUrl" name="profile_image_url">
                         </div>
                         <div class="mb-3">
-                            <label class="form-label">交易员名字</label>
+                            <label class="form-label">Trader Name</label>
                             <input type="text" class="form-control" id="traderName" name="trader_name" required>
                         </div>
                         <div class="mb-3">
-                            <label class="form-label">会员等级</label>
+                            <label class="form-label">Membership Level</label>
                             <select class="form-select" id="membershipLevel" name="membership_level" required>
                                 <option value="普通会员">普通会员</option>
                                 <option value="黄金会员">黄金会员</option>
@@ -903,232 +903,232 @@
                             </select>
                         </div>
                         <div class="mb-3">
-                            <label class="form-label">总收益</label>
+                            <label class="form-label">Total Profit</label>
                             <input type="number" class="form-control" id="totalProfit" name="total_profit" step="0.01" required>
                         </div>
                         <div class="mb-3">
-                            <label class="form-label">本月收益</label>
+                            <label class="form-label">Monthly Profit</label>
                             <input type="number" class="form-control" id="monthlyProfit" name="monthly_profit" step="0.01" required>
                         </div>
                         <div class="mb-3">
-                            <label class="form-label">胜率 (%)</label>
+                            <label class="form-label">Win Rate (%)</label>
                             <input type="number" class="form-control" id="winRate" name="win_rate" min="0" max="100" step="0.01" required>
                         </div>
                         <div class="mb-3">
-                            <label class="form-label">交易次数</label>
+                            <label class="form-label">Trades</label>
                             <input type="number" class="form-control" id="totalTrades" name="total_trades" required>
                         </div>
                     </form>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
-                    <button type="button" class="btn btn-primary" onclick="saveLeaderboardRecord()">保存</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" onclick="saveLeaderboardRecord()">Save</button>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- 上传文档模态框 -->
+    <!-- Upload Document Modal -->
     <div class="modal fade" id="uploadDocumentModal" tabindex="-1">
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title">上传文档</h5>
+                    <h5 class="modal-title">Upload Document</h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
                     <form id="uploadDocumentForm">
                         <div class="mb-3">
-                            <label class="form-label">标题 <span style="color:#ffd700">*</span></label>
+                            <label class="form-label">Title <span style="color:#ffd700">*</span></label>
                             <input type="text" class="form-control" name="title" required>
                         </div>
                         <div class="mb-3">
-                            <label class="form-label">描述</label>
+                            <label class="form-label">Description</label>
                             <textarea class="form-control" name="description" rows="2"></textarea>
                         </div>
                         <div class="mb-3">
-                            <label class="form-label">选择文件 <span style="color:#ffd700">*</span></label>
+                            <label class="form-label">Select File <span style="color:#ffd700">*</span></label>
                             <input type="file" class="form-control" name="file" required>
                         </div>
                     </form>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
-                    <button type="button" class="btn btn-primary" onclick="uploadDocument()">上传</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" onclick="uploadDocument()">Upload</button>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- 上传视频模态框 -->
+    <!-- Upload Video Modal -->
     <div class="modal fade" id="uploadVideoModal" tabindex="-1">
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title">上传视频</h5>
+                    <h5 class="modal-title">Upload Video</h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
                     <form id="uploadVideoForm">
                         <div class="mb-3">
-                            <label class="form-label">标题 <span style="color:#ffd700">*</span></label>
+                            <label class="form-label">Title <span style="color:#ffd700">*</span></label>
                             <input type="text" class="form-control" name="title" required>
                         </div>
                         <div class="mb-3">
-                            <label class="form-label">描述</label>
+                            <label class="form-label">Description</label>
                             <textarea class="form-control" name="description" rows="2"></textarea>
                         </div>
                         <div class="mb-3">
-                            <label class="form-label">选择视频 <span style="color:#ffd700">*</span></label>
+                            <label class="form-label">Select Video <span style="color:#ffd700">*</span></label>
                             <input type="file" class="form-control" name="file" accept="video/*" required>
                         </div>
                     </form>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
-                    <button type="button" class="btn btn-primary" onclick="uploadVideo()">上传</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" onclick="uploadVideo()">Upload</button>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- 编辑VIP公告模态框 -->
+    <!-- Edit VIP Announcement Modal -->
     <div class="modal fade" id="editVipAnnouncementModal" tabindex="-1">
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title">编辑VIP投资策略公告</h5>
+                    <h5 class="modal-title">Edit VIP Investment Strategy Announcement</h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
                     <form id="editVipAnnouncementForm">
                         <input type="hidden" name="id" id="editAnnouncementId">
                         <div class="mb-3">
-                            <label class="form-label">标题</label>
+                            <label class="form-label">Title</label>
                             <input type="text" class="form-control" name="title" id="editAnnouncementTitle" required>
                         </div>
                         <div class="mb-3">
-                            <label class="form-label">内容</label>
+                            <label class="form-label">Content</label>
                             <textarea class="form-control" name="content" id="editAnnouncementContent" rows="4" required></textarea>
                         </div>
                         <div class="mb-3">
-                            <label class="form-label">类型</label>
+                            <label class="form-label">Type</label>
                             <input type="text" class="form-control" name="type" id="editAnnouncementType">
                         </div>
                         <div class="mb-3">
-                            <label class="form-label">出版人</label>
+                            <label class="form-label">Publisher</label>
                             <input type="text" class="form-control" name="publisher" id="editAnnouncementPublisher">
                         </div>
                         <div class="mb-3">
-                            <label class="form-label">日期</label>
+                            <label class="form-label">Date</label>
                             <input type="date" class="form-control" name="date" id="editAnnouncementDate">
                         </div>
                         <div class="mb-3">
-                            <label class="form-label">优先级</label>
+                            <label class="form-label">Priority</label>
                             <input type="text" class="form-control" name="priority" id="editAnnouncementPriority">
                         </div>
                     </form>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
-                    <button type="button" class="btn btn-primary" onclick="saveVipAnnouncementEdit()">保存</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" onclick="saveVipAnnouncementEdit()">Save</button>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- VIP交易记录 新建/编辑弹窗（标准Bootstrap modal，字段严格对齐数据库） -->
+    <!-- VIP Trading Record  New/Edit Popup (Standard Bootstrap modal, fields strictly aligned with database) -->
     <div class="modal fade" id="vipTradeModal" tabindex="-1">
       <div class="modal-dialog">
         <div class="modal-content">
           <form id="vipTradeForm">
             <input type="hidden" name="id" id="tradeId">
             <div class="modal-header">
-              <h5 class="modal-title" id="vipTradeModalTitle">新建VIP交易记录</h5>
+              <h5 class="modal-title" id="vipTradeModalTitle">New VIP Trading Record</h5>
               <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
-              <div class="mb-3"><label>标的</label><input name="symbol" id="tradeSymbol" class="form-control" required></div>
-              <div class="mb-3"><label>资产类型</label>
+              <div class="mb-3"><label>Underlying</label><input name="symbol" id="tradeSymbol" class="form-control" required></div>
+              <div class="mb-3"><label>Asset Type</label>
                 <select name="asset_type" id="tradeAssetType" class="form-control" required>
-                  <option value="">--请选择--</option>
+                  <option value="">--Please select--</option>
                   <option value="股票">股票</option>
                   <option value="基金">基金</option>
                   <option value="加密货币">加密货币</option>
                   <option value="外汇">外汇</option>
                 </select>
               </div>
-              <div class="mb-3"><label>方向</label>
+              <div class="mb-3"><label>Direction</label>
                 <select name="direction" id="tradeDirection" class="form-control" required>
-                  <option value="">--请选择--</option>
+                  <option value="">--Please select--</option>
                   <option value="买涨">买涨</option>
                   <option value="买跌">买跌</option>
                 </select>
               </div>
-              <div class="mb-3"><label>买入时间</label>
+              <div class="mb-3"><label>Entry Time</label>
                 <input name="entry_time" id="tradeEntryTime" type="datetime-local" class="form-control" required>
               </div>
-              <div class="mb-3"><label>买入价格</label>
+              <div class="mb-3"><label>Entry Price</label>
                 <input name="entry_price" id="tradeEntryPrice" type="number" step="0.01" class="form-control" required>
               </div>
-              <div class="mb-3"><label>买入数量</label>
+              <div class="mb-3"><label>Quantity</label>
                 <input name="quantity" id="tradeQuantity" type="number" step="0.01" class="form-control" required>
               </div>
-              <div class="mb-3"><label>状态</label>
+              <div class="mb-3"><label>Status</label>
                 <select name="status" id="tradeStatus" class="form-control">
-                  <option value="">--请选择--</option>
+                  <option value="">--Please select--</option>
                   <option value="持有">持有</option>
                   <option value="平仓">平仓</option>
                 </select>
               </div>
               <div class="mb-3" id="exitFields" style="display:none;">
-                <label>卖出价格</label>
+                <label>Exit Price</label>
                 <input name="exit_price" id="tradeExitPrice" type="number" step="0.01" class="form-control">
-                <label class="mt-2">卖出时间</label>
+                <label class="mt-2">Exit Time</label>
                 <input name="exit_time" id="tradeExitTime" type="datetime-local" class="form-control">
               </div>
             </div>
             <div class="modal-footer">
-              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
-              <button type="button" class="btn btn-primary" id="vipTradeSaveBtn">保存</button>
+              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+              <button type="button" class="btn btn-primary" id="vipTradeSaveBtn">Save</button>
             </div>
           </form>
         </div>
       </div>
     </div>
 
-    <!-- 用户编辑弹窗（假设有id=editUserModal和表单id=editUserForm） -->
+    <!-- User Edit Popup (assuming there's an id=editUserModal and form id=editUserForm) -->
     <div class="modal fade" id="editUserModal" tabindex="-1">
       <div class="modal-dialog">
         <div class="modal-content">
           <div class="modal-header">
-            <h5 class="modal-title">编辑用户</h5>
+            <h5 class="modal-title">Edit User</h5>
             <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
           </div>
           <div class="modal-body">
             <form id="editUserForm">
               <input type="hidden" name="user_id" id="edit_user_id">
               <div class="mb-3">
-                <label class="form-label">用户名</label>
+                <label class="form-label">Username</label>
                 <input type="text" class="form-control" name="username" id="edit_username" readonly>
               </div>
               <div class="mb-3">
-                <label class="form-label">邮箱</label>
+                <label class="form-label">Email</label>
                 <input type="email" class="form-control" name="email" id="edit_email" readonly>
               </div>
               <div class="mb-3">
-                <label class="form-label">角色</label>
+                <label class="form-label">Role</label>
                 <input type="text" class="form-control" name="role" id="edit_role" readonly>
               </div>
               <div class="mb-3">
-                <label class="form-label">初始资金</label>
+                <label class="form-label">Initial Asset</label>
                 <input type="number" class="form-control" name="initial_asset" id="edit_initial_asset" step="0.01" min="0">
               </div>
             </form>
           </div>
           <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
-            <button type="button" class="btn btn-primary" onclick="saveEditUser()">保存</button>
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+            <button type="button" class="btn btn-primary" onclick="saveEditUser()">Save</button>
           </div>
         </div>
       </div>
@@ -1136,7 +1136,7 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        // 加载用户列表
+        // Load user list
         function loadUsers() {
             fetch('/api/admin/users')
                 .then(response => response.json())
@@ -1185,30 +1185,37 @@
                 });
         }
 
-        // 获取会员等级徽章HTML
+        // Get membership badge HTML
         function getMembershipBadge(level) {
-            const badges = {
-                '普通会员': 'membership-regular',
-                '黄金会员': 'membership-gold',
-                '钻石会员': 'membership-diamond',
-                '至尊黑卡': 'membership-supreme'
+            const levelMap = {
+                '普通会员': 'Regular Member',
+                '黄金会员': 'Gold Member',
+                '钻石会员': 'Diamond Member',
+                '至尊黑卡': 'Supreme Black Card',
+                'Regular Member': 'Regular Member',
+                'Gold Member': 'Gold Member',
+                'Diamond Member': 'Diamond Member',
+                'Supreme Black Card': 'Supreme Black Card'
             };
-            const badgeClass = badges[level] || 'membership-regular';
-            return `<span class="membership-badge ${badgeClass}">${level || '普通会员'}</span>`;
+            const badgeClass = {
+                'Regular Member': 'membership-regular',
+                'Gold Member': 'membership-gold',
+                'Diamond Member': 'membership-diamond',
+                'Supreme Black Card': 'membership-supreme'
+            }[levelMap[level] || 'Regular Member'];
+            return `<span class="membership-badge ${badgeClass}">${levelMap[level] || 'Regular Member'}</span>`;
         }
 
-        // 获取状态徽章HTML
+        // Get status badge HTML
         function getStatusBadge(status) {
-            return `<span class="status-badge ${status === 'active' ? 'status-active' : 'status-inactive'}">
-                ${status === 'active' ? '正常' : '禁用'}
-            </span>`;
+            return `<span class="status-badge ${status === 'active' ? 'status-active' : 'status-inactive'}">${status === 'active' ? 'Active' : 'Inactive'}</span>`;
         }
 
-        // 格式化日期
+        // Format date
         function formatDate(dateStr) {
             if (!dateStr) return '-';
             const date = new Date(dateStr);
-            return date.toLocaleString('zh-CN', {
+            return date.toLocaleString('en-US', {
                 year: 'numeric',
                 month: '2-digit',
                 day: '2-digit',
@@ -1217,11 +1224,11 @@
             });
         }
 
-        // 格式化日期时间
+        // Format date time
         function formatDateTime(dateStr) {
             if (!dateStr) return '-';
             const date = new Date(dateStr);
-            return date.toLocaleString('zh-CN', {
+            return date.toLocaleString('en-US', {
                 year: 'numeric',
                 month: '2-digit',
                 day: '2-digit',
@@ -1231,20 +1238,20 @@
             });
         }
 
-        // 显示指定的内容区域
+        // Show specified content area
         function showSection(sectionId) {
-            // 隐藏所有内容区域
+            // Hide all content areas
             document.querySelectorAll('.section-content').forEach(section => {
                 section.style.display = 'none';
             });
             
-            // 显示选中的内容区域
+            // Show selected content area
             const targetSection = document.getElementById(sectionId + '-section');
             if (targetSection) {
                 targetSection.style.display = 'block';
             }
             
-            // 更新导航菜单的激活状态
+            // Update navigation menu's active state
             document.querySelectorAll('.nav-link').forEach(link => {
                 link.classList.remove('active');
                 if(link.getAttribute('onclick')?.includes(sectionId)) {
@@ -1252,7 +1259,7 @@
                 }
             });
 
-            // 加载相应的数据
+            // Load corresponding data
             switch(sectionId) {
                 case 'users':
                     loadUsers();
@@ -1281,7 +1288,7 @@
             }
         }
 
-        // 加载交易列表
+        // Load trading list
         function loadTrades() {
             fetch('/api/admin/trading')
                 .then(response => {
@@ -1312,8 +1319,8 @@
                                 </td>
                                 <td>${calculateProfit(trade)}</td>
                                 <td>
-                                    <img src="${trade.image_url ? trade.image_url + '?t=' + Date.now() : ''}" alt="交易图片" style="width:40px;height:40px;object-fit:cover;border-radius:4px;${trade.image_url ? '' : 'display:none;'}" onclick="if(this.src) window.open(this.src)" title="点击放大">
-                                    <button class="btn btn-sm btn-secondary ms-1" onclick="showUploadImageModal('${trade.id}')">${trade.image_url ? '更换图片' : '上传图片'}</button>
+                                    <img src="${trade.image_url ? trade.image_url + '?t=' + Date.now() : ''}" alt="Trade Image" style="width:40px;height:40px;object-fit:cover;border-radius:4px;${trade.image_url ? '' : 'display:none;'}" onclick="if(this.src) window.open(this.src)" title="Click to enlarge">
+                                    <button class="btn btn-sm btn-secondary ms-1" onclick="showUploadImageModal('${trade.id}')">${trade.image_url ? 'Change Image' : 'Upload Image'}</button>
                                     <input type="file" accept="image/*" style="display:none" id="upload-image-input-${trade.id}" onchange="uploadTradeImage('${trade.id}')">
                                 </td>
                                 <td>
@@ -1329,27 +1336,27 @@
                         });
                     } else {
                         console.error('Failed to load trades:', data.message);
-                        alert('加载交易数据失败：' + (data.message || '未知错误'));
+                        alert('Failed to load trading data: ' + (data.message || 'Unknown error'));
                     }
                 })
                 .catch(error => {
                     console.error('Error loading trades:', error);
-                    alert('加载交易数据失败，请稍后重试');
+                    alert('Failed to load trading data, please try again later');
                 });
         }
 
-        // 编辑交易
+        // Edit trade
         function editTrade(tradeId) {
             if (!tradeId) {
                 console.error('Trade ID is required');
                 return;
             }
 
-            // 使用更可靠的方式查找对应的行
+            // Use a more reliable way to find the corresponding row
             const rows = document.querySelectorAll('#tradesList tr');
             let targetRow = null;
             
-            // 遍历所有行找到匹配的ID
+            // Loop through all rows to find the matching ID
             for (const row of rows) {
                 const idCell = row.cells[0];
                 if (idCell && idCell.textContent.trim() === tradeId.toString()) {
@@ -1363,10 +1370,10 @@
                 return;
             }
 
-            // 从表格中获取当前行的数据
+            // Get data from the current row of the table
             const cells = targetRow.cells;
             
-            // 填充表单数据
+            // Fill form data
             document.getElementById('edit_trade_id').value = tradeId;
             document.getElementById('edit_symbol').value = cells[1].textContent.trim();
             document.getElementById('edit_entry_price').value = cells[2].textContent.trim();
@@ -1375,12 +1382,12 @@
             document.getElementById('edit_entry_date').value = formatDateForInput(cells[5].textContent.trim());
             document.getElementById('edit_exit_date').value = cells[6].textContent.trim() !== '-' ? formatDateForInput(cells[6].textContent.trim()) : '';
             
-            // 显示编辑模态框
+            // Show edit modal
             const editModal = new bootstrap.Modal(document.getElementById('editTradeModal'));
             editModal.show();
         }
 
-        // 计算盈亏
+        // Calculate profit/loss
         function calculateProfit(trade) {
             if (!trade || !trade.entry_price) return '0.00';
             const exitPrice = trade.exit_price || trade.current_price || trade.entry_price;
@@ -1388,9 +1395,9 @@
             return profit.toFixed(2);
         }
 
-        // 删除交易
+        // Delete trade
         function deleteTrade(tradeId) {
-            if(confirm('确定要删除这条交易记录吗？')) {
+            if(confirm('Are you sure you want to delete this trading record?')) {
                 fetch(`/api/admin/trading?id=${tradeId}`, {
                     method: 'DELETE'
                 })
@@ -1402,20 +1409,20 @@
                 })
                 .then(data => {
                     if(data.success) {
-                        alert('删除成功');
+                        alert('Delete successful');
                         loadTrades();
                     } else {
-                        alert('删除失败：' + (data.message || '未知错误'));
+                        alert('Delete failed: ' + (data.message || 'Unknown error'));
                     }
                 })
                 .catch(error => {
                     console.error('Error deleting trade:', error);
-                    alert('删除失败，请稍后重试');
+                    alert('Delete failed, please try again later');
                 });
             }
         }
 
-        // 更新交易
+        // Update trade
         function updateTrade() {
             const form = document.getElementById('editTradeForm');
             if (!form.checkValidity()) {
@@ -1458,14 +1465,14 @@
             });
         }
 
-        // 格式化日期用于datetime-local输入框
+        // Format date for datetime-local input
         function formatDateForInput(dateStr) {
             if (!dateStr || dateStr === '-') return '';
             const date = new Date(dateStr);
             return date.toISOString().slice(0, 16);
         }
 
-        // 加载排行榜
+        // Load leaderboard
         function loadLeaderboard() {
             fetch('/api/admin/leaderboard')
                 .then(response => response.json())
@@ -2033,7 +2040,7 @@
             .then(res => res.json())
             .then(data => {
                 if (data.success) {
-                    alert('图片上传成功！');
+                    alert('Image uploaded successfully!');
                     // 只更新当前行的图片缩略图
                     const img = input.parentElement.querySelector('img');
                     if (img && data.url) {
@@ -2121,7 +2128,7 @@
             .then(res => res.json())
             .then(data => {
                 if (data.success) {
-                    alert('上传成功');
+                    alert('Upload successful!');
                     bootstrap.Modal.getInstance(document.getElementById('uploadDocumentModal')).hide();
                     loadDocuments();
                 } else {
