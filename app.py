@@ -26,9 +26,14 @@ app = Flask(__name__)
 app.secret_key = os.environ.get('FLASK_SECRET_KEY', 'your_secret_key_here')
 CORS(app, supports_credentials=True)
 
-# Supabase配置
-url = 'https://rwlziuinlbazgoajkcme.supabase.co'
-key = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ3bHppdWlubGJhemdvYWprY21lIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc0NTE4MDA2MiwiZXhwIjoyMDYwNzU2MDYyfQ.HAAXKlwasbIoq27IHRUn4gZoMfzGvUfsI4pt4NqCThk'
+# 加载环境变量
+load_dotenv()
+
+# Supabase配置（改为环境变量读取）
+url = os.getenv('SUPABASE_URL')
+key = os.getenv('SUPABASE_KEY')
+assert url, "SUPABASE_URL 环境变量未设置"
+assert key, "SUPABASE_KEY 环境变量未设置"
 supabase = create_client(url, key)
 
 # 股票图片映射
