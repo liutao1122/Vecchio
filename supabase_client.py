@@ -32,7 +32,6 @@ def get_traders(sort_by='profit'):
             
         return response.data
     except Exception as e:
-        print(f"Supabase error: {e}")
         return []
 
 def update_trader_stats(trader_id, stats):
@@ -47,5 +46,4 @@ def update_trader_stats(trader_id, stats):
             
         return len(response.data) > 0
     except Exception as e:
-        print(f"Update error: {e}")
         return False 

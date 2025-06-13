@@ -11,7 +11,6 @@ def get_crypto_price(symbol):
         data = response.json()
         return Decimal(str(data['price']))
     except Exception as e:
-        print(f"获取加密货币价格失败: {str(e)}")
         return None
 
 def get_stock_price(symbol):
@@ -23,7 +22,6 @@ def get_stock_price(symbol):
         data = response.json()
         return Decimal(str(data['Global Quote']['05. price']))
     except Exception as e:
-        print(f"获取股票价格失败: {str(e)}")
         return None
 
 def get_forex_price(symbol):
@@ -35,7 +33,6 @@ def get_forex_price(symbol):
         data = response.json()
         return Decimal(str(data['Realtime Currency Exchange Rate']['5. Exchange Rate']))
     except Exception as e:
-        print(f"获取外汇价格失败: {str(e)}")
         return None
 
 def get_commodity_price(symbol):
@@ -47,5 +44,4 @@ def get_commodity_price(symbol):
         data = response.json()
         return Decimal(str(data['Realtime Currency Exchange Rate']['5. Exchange Rate']))
     except Exception as e:
-        print(f"获取大宗商品价格失败: {str(e)}")
         return None 

@@ -116,7 +116,6 @@ def get_real_time_price(symbol, asset_type=None):
         try:
             resp = requests.get(url, timeout=5)
             data = resp.json()
-            print(f"Polygon股票查价: symbol={symbol}, asset_type={asset_type}, data={data}")
             price = None
             if data.get("results") and "p" in data["results"]:
                 price = data["results"]["p"]
@@ -124,10 +123,8 @@ def get_real_time_price(symbol, asset_type=None):
                 price = data["last"]["price"]
             if price is not None:
                 return float(price)
-            print(f"Polygon返回数据无法解析价格: {data}")
         except Exception as e:
-            print(f"股票API获取{symbol}价格失败: {e}")
-        return None
+            return None
     # 默认返回None
     return None
 
@@ -151,7 +148,6 @@ def get_historical_data(symbol):
             return data
         return None
     except Exception as e:
-        print(f"Error getting historical data for {symbol}: {str(e)}")
         return None
 
 def get_device_fingerprint():
@@ -165,59 +161,43 @@ def get_device_fingerprint():
 def get_next_whatsapp_agent(device_fingerprint):
     """获取下一个可用的WhatsApp客服"""
     try:
-        print("开始获取WhatsApp客服")
-        print(f"使用设备指纹: {device_fingerprint}")
-        
         # 测试数据库连接
         try:
             test_query = supabase.table('whatsapp_agents').select('count').execute()
-            print(f"数据库连接测试: {test_query.data}")
         except Exception as db_error:
-            print(f"数据库连接测试失败: {str(db_error)}")
             return None
         
         # 检查是否已有分配记录
         try:
             existing_record = supabase.table('contact_records').select('*').eq('device_fingerprint', device_fingerprint).execute()
-            print(f"现有记录查询结果: {existing_record.data}")
         except Exception as e:
-            print(f"查询现有记录失败: {str(e)}")
             return None
         
         if existing_record.data:
             # 如果已有分配，返回之前分配的客服
             agent_id = existing_record.data[0]['agent_id']
-            print(f"找到现有分配的客服ID: {agent_id}")
             try:
                 agent = supabase.table('whatsapp_agents').select('*').eq('id', agent_id).execute()
-                print(f"获取到现有客服信息: {agent.data}")
                 return agent.data[0] if agent.data else None
             except Exception as e:
-                print(f"获取现有客服信息失败: {str(e)}")
                 return None
         
         # 获取所有客服
         try:
             agents = supabase.table('whatsapp_agents').select('*').eq('is_active', True).execute()
-            print(f"可用客服列表查询结果: {agents.data}")
             if not agents.data:
-                print("没有找到可用的客服")
                 return None
         except Exception as e:
-            print(f"获取客服列表失败: {str(e)}")
             return None
             
         # 获取所有分配记录，只取agent_id
         try:
             assignments = supabase.table('contact_records').select('agent_id').execute()
-            print(f"客服分配记录查询结果: {assignments.data}")
             assignment_counts = {}
             for record in assignments.data:
                 agent_id = record['agent_id']
                 assignment_counts[agent_id] = assignment_counts.get(agent_id, 0) + 1
-            print(f"客服分配数量统计: {assignment_counts}")
         except Exception as e:
-            print(f"获取分配记录失败: {str(e)}")
             assignment_counts = {}
             
         # 选择分配数量最少的客服
@@ -230,8 +210,6 @@ def get_next_whatsapp_agent(device_fingerprint):
                 min_assignments = count
                 selected_agent = agent
         
-        print(f"选择的客服: {selected_agent}")
-        
         if selected_agent:
             # 记录新的分配
             try:
@@ -242,36 +220,29 @@ def get_next_whatsapp_agent(device_fingerprint):
                     'user_agent': request.headers.get('User-Agent', ''),
                     'timestamp': datetime.now(pytz.UTC).isoformat()
                 }
-                print(f"准备插入新记录: {insert_data}")
                 insert_result = supabase.table('contact_records').insert(insert_data).execute()
-                print(f"插入记录结果: {insert_result.data}")
             except Exception as e:
-                print(f"插入分配记录失败: {str(e)}")
                 # 即使插入失败也返回选中的客服
-                
+                pass
+        
         return selected_agent
         
     except Exception as e:
-        print(f"获取WhatsApp客服时发生错误: {str(e)}")
         return None
 
 @app.route('/api/get-whatsapp-link', methods=['GET', 'POST'])
 def get_whatsapp_link():
     """获取WhatsApp链接API"""
     try:
-        print("\n=== 开始处理WhatsApp链接请求 ===")
         device_fingerprint = get_device_fingerprint()
-        print(f"生成的设备指纹: {device_fingerprint}")
         
         # 获取点击时间
         click_time = None
         if request.method == 'POST':
             data = request.get_json()
             click_time = data.get('click_time')
-            print(f"记录点击时间: {click_time}")
         
         agent = get_next_whatsapp_agent(device_fingerprint)
-        print(f"获取到的客服信息: {agent}")
         
         if agent:
             # 更新点击时间
@@ -281,25 +252,21 @@ def get_whatsapp_link():
                         'click_time': click_time
                     }
                     update_result = supabase.table('contact_records').update(update_data).eq('device_fingerprint', device_fingerprint).execute()
-                    print(f"更新点击时间结果: {update_result.data}")
                 except Exception as e:
-                    print(f"更新点击时间失败: {str(e)}")
+                    pass
             
             app_link = f"whatsapp://send?phone={agent['phone_number']}"
-            print(f"生成的WhatsApp链接: {app_link}")
             return {
                 'success': True,
                 'app_link': app_link
             }
         else:
-            print("未能获取到可用的客服")
             return {
                 'success': False,
                 'message': "No available support agent, please try again later"
             }
             
     except Exception as e:
-        print(f"处理WhatsApp链接请求时发生错误: {str(e)}")
         return {
             'success': False,
             'message': "System error, please try again later"
@@ -313,17 +280,8 @@ def index():
         trades = response.data
 
         if not trades:
-            print("No trades found in database")
             trades = []
         
-        print("\n=== 原始数据 ===")
-        for trade in trades:
-            print(f"Symbol: {trade['symbol']}")
-            print(f"Entry Date: {trade.get('entry_date')}")
-            print(f"Exit Date: {trade.get('exit_date')}")
-            print("---")
-        
-        # 为每个交易添加图片URL和计算属性
         for trade in trades:
             # 格式化日期前先保存原始日期用于排序
             if trade.get('exit_date'):
@@ -332,20 +290,12 @@ def index():
                     # 尝试解析数据库中的日期格式
                     exit_date = datetime.strptime(trade['exit_date'].split('+')[0], '%Y-%m-%d %H:%M:%S.%f')
                     trade['original_exit_date'] = exit_date
-                    print(f"\nExit date for {trade['symbol']}:")
-                    print(f"Original string: {trade['exit_date']}")
-                    print(f"Parsed datetime: {exit_date}")
                 except Exception as e:
-                    print(f"\nError parsing exit date for {trade['symbol']}:")
-                    print(f"Date string: {trade['exit_date']}")
-                    print(f"Error: {e}")
                     # 如果解析失败，尝试其他格式
                     try:
                         exit_date = datetime.fromisoformat(trade['exit_date'].replace('Z', '+00:00'))
                         trade['original_exit_date'] = exit_date
-                        print(f"Successfully parsed using ISO format: {exit_date}")
                     except Exception as e2:
-                        print(f"Second parsing attempt failed: {e2}")
                         trade['original_exit_date'] = datetime.min
                 trade['exit_date'] = format_datetime(trade['exit_date'])
 
@@ -373,18 +323,13 @@ def index():
                 if current_price:
                     trade['current_price'] = current_price
                     # 更新数据库中的价格
-                    print(f"\n=== 更新数据库中的价格 ===")
-                    print(f"交易ID: {trade['id']}")
-                    print(f"股票代码: {trade['symbol']}")
-                    print(f"新价格: {current_price}")
                     try:
                         update_response = supabase.table('trades1').update({
                             'current_price': current_price,
                             'updated_at': datetime.now(pytz.UTC).isoformat()
                         }).eq('id', trade['id']).execute()
-                        print(f"数据库更新响应: {update_response.data}")
                     except Exception as e:
-                        print(f"更新数据库时发生错误: {str(e)}")
+                        pass
             
             # 计算当前市值和盈亏
             trade['current_amount'] = trade['current_price'] * trade['size'] if trade.get('current_price') else trade['entry_amount']
@@ -408,59 +353,12 @@ def index():
         holding_trades = [t for t in trades if t['status'] == "Active"]
         closed_trades = [t for t in trades if t['status'] == "Closed"]
 
-        print("\n=== 排序前的交易 ===")
-        print("持仓中的交易:")
-        for trade in holding_trades:
-            print(f"Symbol: {trade['symbol']}")
-            print(f"Entry Date: {trade.get('entry_date')}")
-            print(f"Original Entry Date: {trade.get('original_entry_date')}")
-            print("---")
-        
-        print("\n平仓的交易:")
-        for trade in closed_trades:
-            print(f"Symbol: {trade['symbol']}")
-            print(f"Exit Date: {trade.get('exit_date')}")
-            print(f"Original Exit Date: {trade.get('original_exit_date')}")
-            print("---")
-        
-        # 对持仓交易按买入时间降序排序（最近的在前面）
         holding_trades.sort(key=lambda x: x['original_entry_date'], reverse=True)
         
-        # 对平仓交易按退出时间降序排序
         closed_trades.sort(key=lambda x: x['original_exit_date'], reverse=True)
-        
-        print("\n=== 排序后的交易 ===")
-        print("持仓中的交易:")
-        for trade in holding_trades:
-            print(f"Symbol: {trade['symbol']}")
-            print(f"Entry Date: {trade.get('entry_date')}")
-            print(f"Original Entry Date: {trade.get('original_entry_date')}")
-            print("---")
-        
-        print("\n平仓的交易:")
-        for trade in closed_trades:
-            print(f"Symbol: {trade['symbol']}")
-            print(f"Exit Date: {trade.get('exit_date')}")
-            print(f"Original Exit Date: {trade.get('original_exit_date')}")
-            print("---")
         
         # 合并排序后的交易列表
         sorted_trades = holding_trades + closed_trades
-        
-        print("\n=== 最终排序后的交易列表 ===")
-        print("持仓中的交易:")
-        for trade in [t for t in sorted_trades if t['status'] == "Active"]:
-            print(f"Symbol: {trade['symbol']}")
-            print(f"Entry Date: {trade.get('entry_date')}")
-            print(f"Original Entry Date: {trade.get('original_entry_date')}")
-            print("---")
-        
-        print("\n平仓的交易:")
-        for trade in [t for t in sorted_trades if t['status'] == "Closed"]:
-            print(f"Symbol: {trade['symbol']}")
-            print(f"Exit Date: {trade.get('exit_date')}")
-            print(f"Original Exit Date: {trade.get('original_exit_date')}")
-            print("---")
         
         # 计算总览数据
         total_trades = len(sorted_trades)
@@ -498,10 +396,6 @@ def index():
             'updated_at': datetime.now(pytz.UTC).strftime('%Y-%m-%d %H:%M:%S.%f+00:00')
         }
         
-        # 格式化更新时间
-        if strategy_info.get('updated_at'):
-            strategy_info['formatted_time'] = format_datetime(strategy_info['updated_at'])
-        
         # 计算总利润
         total_profit = sum(t.get('profit_amount', 0) for t in sorted_trades)
 
@@ -522,7 +416,6 @@ def index():
                             trades=sorted_trades,
                             trader_info=trader_info)
     except Exception as e:
-        print(f"Error in index route: {e}")
         return render_template('index.html', 
                             trades=[],
                             trader_info={
@@ -627,7 +520,6 @@ def upload_avatar():
             'url': file_url
         })
     except Exception as e:
-        print(f"Upload failed: {str(e)}")
         return jsonify({'success': False, 'message': 'Upload failed, please try again later'}), 500
 
 @app.route('/api/get-avatar', methods=['GET'])
@@ -643,7 +535,6 @@ def get_avatar():
             avatar_url = default_avatar
         return jsonify({'success': True, 'url': avatar_url})
     except Exception as e:
-        print(f"Failed to get avatar: {str(e)}")
         return jsonify({'success': False, 'message': 'Failed to get avatar'}), 500
 
 @app.route('/api/price')
@@ -775,44 +666,18 @@ def vip_dashboard():
     level_en = get_level_en(level_cn)
     initial_asset = float(user.get('initial_asset', 0) or 0)
 
-    # --- 新增：同步所有用户收益到users表 ---
-    all_users_resp = supabase.table('users').select('id,username').execute()
-    all_users = all_users_resp.data if all_users_resp.data else []
-    now = datetime.now()
-    for u in all_users:
-        trades_resp = supabase.table('trades').select('*').eq('user_id', u['id']).execute()
-        trades = trades_resp.data if trades_resp.data else []
-        total_profit = 0
-        monthly_profit = 0
-        for trade in trades:
-            entry_price = float(trade.get('entry_price') or 0)
-            exit_price = float(trade.get('exit_price') or 0)
-            size = float(trade.get('size') or 0)
-            profit = 0
-            if trade.get('exit_price') is not None:
-                profit = (exit_price - entry_price) * size
-                total_profit += profit
-                if trade.get('exit_date') and str(trade['exit_date']).startswith(now.strftime('%Y-%m')):
-                    monthly_profit += profit
-        supabase.table('users').update({
-            'total_profit': total_profit,
-            'monthly_profit': monthly_profit
-        }).eq('id', u['id']).execute()
-    # --- 同步结束 ---
-
-    # 用 user_id 查询交易记录
+    # 只统计当前用户自己的收益
     trades_resp = supabase.table('trades').select('*').eq('user_id', user['id']).execute()
     trades = trades_resp.data if trades_resp.data else []
 
-    # 统计变量初始化
     total_profit = 0
     monthly_profit = 0
     holding_profit = 0
     closed_profit = 0
     now = datetime.now()
-    total_market_value = 0  # 总市值
-    holding_cost = 0  # 所有持仓的买入价*数量
-    closed_profit_sum = 0  # 所有已平仓盈亏
+    total_market_value = 0
+    holding_cost = 0
+    closed_profit_sum = 0
     for trade in trades:
         entry_price = float(trade.get('entry_price') or 0)
         exit_price = float(trade.get('exit_price') or 0)
@@ -825,7 +690,6 @@ def vip_dashboard():
         else:
             profit = (exit_price - entry_price) * size
             closed_profit_sum += profit
-        # 盈亏统计逻辑保持原样
         if trade.get('exit_price') is not None:
             profit = (exit_price - entry_price) * size
             total_profit += profit
@@ -838,7 +702,7 @@ def vip_dashboard():
     available_funds = initial_asset + closed_profit_sum - holding_cost
     dynamic_total_asset = total_market_value + available_funds
 
-    # 查询所有用户的用户名、等级、头像、本月收益和总收益，按本月收益降序
+    # 查询排行榜
     users_resp = supabase.table('users').select('username,membership_level,avatar_url,monthly_profit,total_profit').order('monthly_profit', desc=True).limit(50).execute()
     top_users = users_resp.data if users_resp.data else []
 
@@ -953,12 +817,10 @@ def assign_membership():
     try:
         # 检查管理员权限
         if 'role' not in session or session['role'] != 'admin':
-            print("权限检查失败：不是管理员")
             return jsonify({'success': False, 'message': '无权限访问'}), 403
             
         data = request.get_json()
         if not data.get('user_id'):
-            print("缺少用户ID")
             return jsonify({'success': False, 'message': '缺少用户ID'}), 400
 
         # 根据level_id获取会员等级名称
@@ -971,25 +833,19 @@ def assign_membership():
         
         level_name = membership_levels.get(str(data.get('level_id')))
         if not level_name:
-            print(f"无效的会员等级ID: {data.get('level_id')}")
             return jsonify({'success': False, 'message': '无效的会员等级'}), 400
 
-        print(f"准备更新用户 {data['user_id']} 的会员等级为 {level_name}")
-        
         # 直接更新users表
         response = supabase.table('users').update({
             'membership_level': level_name
         }).eq('id', data['user_id']).execute()
         
         if not response.data:
-            print("更新失败，未找到用户")
             return jsonify({'success': False, 'message': '用户不存在'}), 404
             
-        print("会员等级更新成功")
         return jsonify({'success': True, 'message': '会员等级分配成功'})
         
     except Exception as e:
-        print(f"分配会员等级时发生错误: {str(e)}")
         return jsonify({'success': False, 'message': f'操作失败: {str(e)}'}), 500
 
 # --- 获取用户会员等级信息 ---
@@ -1029,7 +885,6 @@ def get_user_membership():
             })
             
     except Exception as e:
-        print(f"Get user membership error: {str(e)}")
         return jsonify({'success': False, 'message': '获取会员信息失败'}), 500
 
 # --- 会员等级管理API ---
@@ -1112,7 +967,6 @@ def manage_membership_levels():
             return jsonify({'success': True, 'message': '会员等级删除成功'})
             
     except Exception as e:
-        print(f"Manage membership levels error: {str(e)}")
         return jsonify({'success': False, 'message': '操作失败'}), 500
 
 # --- 登录接口（Supabase版） ---
@@ -1172,7 +1026,6 @@ def login():
         })
         
     except Exception as e:
-        print(f"Login error: {str(e)}")
         return jsonify({'success': False, 'message': '登录失败'}), 500
 
 # --- 登出接口 ---
@@ -1183,94 +1036,66 @@ def logout():
         session.clear()
         return jsonify({'success': True, 'message': '已成功登出'})
     except Exception as e:
-        print(f"Logout error: {str(e)}")
         return jsonify({'success': False, 'message': '登出失败'}), 500
 
 def update_holding_stocks_prices():
     """更新所有持有中股票的实时价格"""
     try:
-        print("\n=== 开始更新持有股票价格 ===")
         # 获取所有持有中的股票
         response = supabase.table('trades1').select("*").execute()
         trades = response.data
         
         if not trades:
-            print("No trades found")
             return
         
-        print(f"找到 {len(trades)} 条交易记录")
-        
-        # 遍历每个持有中的股票
         for trade in trades:
             # 检查是否是持有中的股票
             if trade.get('exit_price') is None and trade.get('exit_date') is None:
                 symbol = trade['symbol']
-                print(f"\n处理股票: {symbol}")
-                print(f"交易ID: {trade['id']}")
-                print(f"当前价格: {trade.get('current_price')}")
-                
-                # 获取实时价格
                 current_price = get_real_time_price(symbol)
                 
                 if current_price:
-                    print(f"获取到新价格: {current_price}")
                     # 计算新的数据
                     entry_amount = trade['entry_price'] * trade['size']
                     current_amount = current_price * trade['size']
                     profit_amount = current_amount - entry_amount
                     profit_ratio = (profit_amount / entry_amount) * 100 if entry_amount else 0
                     
-                    print(f"计算得到:")
-                    print(f"入场金额: {entry_amount}")
-                    print(f"当前金额: {current_amount}")
-                    print(f"盈亏金额: {profit_amount}")
-                    print(f"盈亏比例: {profit_ratio}%")
-                    
                     try:
                         # 只更新current_price字段
                         update_data = {
                             'current_price': current_price
                         }
-                        print(f"准备更新数据: {update_data}")
                         
                         update_response = supabase.table('trades1').update(update_data).eq('id', trade['id']).execute()
                         
                         if update_response.data:
-                            print(f"数据库更新成功: {update_response.data}")
                             # 验证更新是否成功
                             verify_response = supabase.table('trades1').select('current_price').eq('id', trade['id']).execute()
-                            if verify_response.data:
-                                print(f"验证更新后的价格: {verify_response.data[0]['current_price']}")
-                        else:
-                            print("数据库更新失败，没有返回数据")
-                            
                     except Exception as e:
+                        import traceback
                         print(f"更新数据库时发生错误: {str(e)}")
                         print(f"错误详情: {type(e).__name__}")
-                        import traceback
                         print(f"错误堆栈: {traceback.format_exc()}")
                 
-                    print(f"成功更新 {symbol} 的价格: {current_price}")
                 else:
-                    print(f"获取 {symbol} 价格失败")
+                    pass
             else:
-                print(f"\n跳过已平仓的股票: {trade['symbol']}")
+                pass
                 
     except Exception as e:
-        print(f"更新股票价格时发生错误: {str(e)}")
         import traceback
+        print(f"更新股票价格时发生错误: {str(e)}")
         print(f"错误堆栈: {traceback.format_exc()}")
 
 def update_all_trades_prices():
     """同步所有交易表的未平仓记录的实时价格"""
     tables = ['trades1', 'trades', 'vip_trades']
     for table in tables:
-        print(f"=== 开始同步 {table} ===")
         try:
             response = supabase.table(table).select("*").execute()
             trades = response.data
             if not trades:
-                print(f"{table} 没有记录")
                 continue
             for trade in trades:
                 # 只同步未平仓（exit_price为空或None）
@@ -1282,7 +1107,6 @@ def update_all_trades_prices():
                     if current_price:
                         try:
                             supabase.table(table).update({'current_price': current_price}).eq('id', trade['id']).execute()
-                            print(f"{table} {symbol} 价格已更新为 {current_price}")
                         except Exception as e:
                             print(f"{table} {symbol} 更新失败: {e}")
                     else:
@@ -1337,7 +1161,6 @@ def check_login():
                 })
         return jsonify({'isLoggedIn': False})
     except Exception as e:
-        print(f"Check login error: {str(e)}")
         return jsonify({'isLoggedIn': False}), 500
 
 # --- 管理员接口 ---
@@ -1407,7 +1230,6 @@ def manage_users():
             })
             
     except Exception as e:
-        print(f"Manage users error: {str(e)}")
         return jsonify({'success': False, 'message': '操作失败'}), 500
 
 @app.route('/api/admin/users/<user_id>', methods=['PUT', 'DELETE'])
@@ -1454,7 +1276,6 @@ def update_user(user_id):
             })
             
     except Exception as e:
-        print(f"Update user error: {str(e)}")
         return jsonify({'success': False, 'message': '操作失败'}), 500
 
 @app.route('/api/admin/users/batch', methods=['POST'])
@@ -1483,7 +1304,6 @@ def batch_update_users():
         })
         
     except Exception as e:
-        print(f"Batch update error: {str(e)}")
         return jsonify({'success': False, 'message': '批量操作失败'}), 500
 
 @app.route('/api/admin/logs', methods=['GET'])
@@ -1502,7 +1322,6 @@ def get_login_logs():
         })
         
     except Exception as e:
-        print(f"Get logs error: {str(e)}")
         return jsonify({'success': False, 'message': '获取日志失败'}), 500
 
 # --- 测试路由 ---
@@ -1656,7 +1475,6 @@ def manage_strategy():
                     
                 return jsonify({'success': True, 'message': '策略保存成功'})
             except Exception as e:
-                print(f"Error creating strategy: {str(e)}")
                 return jsonify({'success': False, 'message': f'创建失败: {str(e)}'}), 500
             
         elif request.method == 'DELETE':
@@ -1672,16 +1490,11 @@ def manage_strategy():
             return jsonify({'success': True, 'message': '策略删除成功'})
             
     except Exception as e:
-        print(f"Strategy management error: {str(e)}")
         return jsonify({'success': False, 'message': '操作失败'}), 500
 
 @app.route('/api/admin/strategy/history', methods=['GET'])
 def get_strategy_history():
     try:
-        # 检查管理员权限
-        if 'role' not in session or session['role'] != 'admin':
-            return jsonify({'success': False, 'message': '无权限访问'}), 403
-            
         # 从 Supabase 获取所有策略记录，按时间倒序排列
         response = supabase.table('trading_strategies').select("*").order('updated_at', desc=True).execute()
         
@@ -1716,7 +1529,6 @@ def get_strategy_history():
         })
         
     except Exception as e:
-        print(f"Get strategy history error: {str(e)}")
         return jsonify({'success': False, 'message': '获取历史记录失败'}), 500
 
 @app.route('/admin/strategy/permissions')
@@ -1729,10 +1541,6 @@ def strategy_permissions():
 @app.route('/api/admin/strategy/history/<int:history_id>', methods=['DELETE'])
 def delete_strategy_history(history_id):
     try:
-        # 检查管理员权限
-        if 'role' not in session or session['role'] != 'admin':
-            return jsonify({'success': False, 'message': '无权限访问'}), 403
-            
         # 从 Supabase 删除历史记录
         response = supabase.table('strategy_history').delete().eq('id', history_id).execute()
         
@@ -1742,7 +1550,6 @@ def delete_strategy_history(history_id):
         return jsonify({'success': True, 'message': '历史记录删除成功'})
         
     except Exception as e:
-        print(f"Delete strategy history error: {str(e)}")
         return jsonify({'success': False, 'message': '删除失败'}), 500
 
 # --- 股票交易管理路由 ---
@@ -1846,7 +1653,6 @@ def manage_trading():
             })
             
     except Exception as e:
-        print(f"Trading management error: {str(e)}")
         return jsonify({'success': False, 'message': '操作失败'}), 500
 
 # --- 排行榜管理路由 ---
@@ -1934,7 +1740,6 @@ def manage_leaderboard():
             })
             
     except Exception as e:
-        print(f"Leaderboard management error: {str(e)}")
         return jsonify({'success': False, 'message': '操作失败'}), 500
 
 # --- 交易记录表自动建表 ---
@@ -2041,7 +1846,7 @@ def add_test_data():
                 supabase.table('leaderboard').insert(record).execute()
                 
     except Exception as e:
-        print(f"Error adding test data: {str(e)}")
+        pass
 
 @app.route('/api/trader/<trader_name>')
 def get_trader_data(trader_name):
@@ -2065,7 +1870,6 @@ def get_trader_data(trader_name):
             }), 404
             
     except Exception as e:
-        print(f"Error fetching trader data: {e}")
         return jsonify({
             'success': False,
             'message': 'Error fetching trader data'
@@ -2103,7 +1907,6 @@ def like_trader(trader_name):
             }), 404
             
     except Exception as e:
-        print(f"Error updating likes: {e}")
         return jsonify({
             'success': False,
             'message': 'Error updating likes'
@@ -2112,7 +1915,6 @@ def like_trader(trader_name):
 @app.route('/api/admin/trade/upload-image', methods=['POST'])
 def upload_trade_image():
     try:
-        print('supabase type:', type(supabase))
         trade_id = request.form.get('trade_id')
         file = request.files.get('image')
         if not trade_id or not file:
@@ -2134,7 +1936,6 @@ def upload_trade_image():
         supabase.table('trades1').update({'image_url': file_url}).eq('id', trade_id).execute()
         return jsonify({'success': True, 'url': file_url})
     except Exception as e:
-        print(f"Trade image upload error: {str(e)}")
         return jsonify({'success': False, 'message': 'Upload failed'}), 500
 
 @app.route('/api/admin/whatsapp-agents', methods=['GET', 'POST', 'PUT', 'DELETE'])
@@ -2224,7 +2025,6 @@ def manage_whatsapp_agents():
             })
             
     except Exception as e:
-        print(f"Manage WhatsApp agents error: {str(e)}")
         return jsonify({'success': False, 'message': '操作失败'}), 500
 
 @app.route('/api/upload-trade', methods=['POST'])
@@ -2293,7 +2093,7 @@ def change_password():
 
         # 更新密码
         supabase.table('users').update({'password_hash': new_password}).eq('id', user_id).execute()
-        return jsonify({'success': True, 'message': '密码修改成功'})
+        return jsonify({'success': True, 'message': 'Password changed successfully'})
     except Exception as e:
         return jsonify({'success': False, 'message': str(e)}), 500
 
@@ -2343,7 +2143,6 @@ def manage_documents():
                 return jsonify({'success': False, 'message': f'写入数据库失败: {insert_resp.error}'}), 500
             return jsonify({'success': True, 'message': '上传成功', 'document': insert_resp.data[0]})
     except Exception as e:
-        print(f"文档上传异常: {str(e)}")
         return jsonify({'success': False, 'message': str(e)}), 500
 
 @app.route('/api/admin/documents/<int:doc_id>', methods=['PUT', 'DELETE'])
@@ -2433,7 +2232,6 @@ def manage_videos():
                 )
                 
                 if hasattr(result, 'error') and result.error:
-                    print(f"Storage上传错误: {result.error}")
                     return jsonify({'success': False, 'message': f'视频上传失败: {result.error}'}), 500
                     
                 # 获取公开URL
@@ -2450,27 +2248,14 @@ def manage_videos():
                 insert_resp = supabase.table('videos').insert(video_data).execute()
                 
                 if hasattr(insert_resp, 'error') and insert_resp.error:
-                    print(f"数据库写入错误: {insert_resp.error}")
-                    # 如果数据库写入失败，尝试删除已上传的文件
-                    try:
-                        supabase.storage.from_('videos').remove([file_path])
-                    except Exception as e:
-                        print(f"清理文件失败: {str(e)}")
                     return jsonify({'success': False, 'message': f'写入数据库失败: {insert_resp.error}'}), 500
                     
                 return jsonify({'success': True, 'message': '上传成功', 'video': insert_resp.data[0]})
                 
             except Exception as e:
-                print(f"上传过程异常: {str(e)}")
-                # 尝试清理已上传的文件
-                try:
-                    supabase.storage.from_('videos').remove([file_path])
-                except:
-                    pass
                 return jsonify({'success': False, 'message': f'上传失败: {str(e)}'}), 500
                 
     except Exception as e:
-        print(f"视频管理异常: {str(e)}")
         return jsonify({'success': False, 'message': str(e)}), 500
 
 @app.route('/api/admin/videos/<int:video_id>', methods=['PUT', 'DELETE'])
@@ -2503,7 +2288,6 @@ def update_video(video_id):
                 return jsonify({'success': False, 'message': f'删除失败: {del_resp.error}'}), 500
             return jsonify({'success': True, 'message': '删除成功'})
     except Exception as e:
-        print(f"视频管理异常: {str(e)}")
         return jsonify({'success': False, 'message': str(e)}), 500
 
 # 默认头像URL和补头像函数
@@ -2572,7 +2356,6 @@ def admin_change_avatar():
             else:
                 return jsonify({'success': False, 'message': '数据库连接失败'})
         except Exception as e:
-            print(f"Error updating avatar: {str(e)}")
             return jsonify({'success': False, 'message': '更新头像失败'})
     
     return jsonify({'success': False, 'message': '无效的文件'})
@@ -2589,7 +2372,6 @@ def get_vip_announcements():
         announcements = resp.data if resp.data else []
         return jsonify({'success': True, 'announcements': announcements})
     except Exception as e:
-        print(f"获取VIP策略公告失败: {str(e)}")
         return jsonify({'success': False, 'message': f'获取策略公告失败: {str(e)}'}), 500
 
 # 创建VIP投资策略公告（Supabase版）
@@ -2620,7 +2402,6 @@ def create_vip_announcement():
             
         return jsonify({'success': True, 'message': '策略公告已创建'})
     except Exception as e:
-        print(f"创建VIP策略公告失败: {str(e)}")
         return jsonify({'success': False, 'message': f'创建策略公告失败: {str(e)}'}), 500
 
 # 编辑VIP投资策略公告（Supabase版）
@@ -2642,7 +2423,6 @@ def edit_vip_announcement(announcement_id):
             
         return jsonify({'success': True, 'message': '策略公告已更新'})
     except Exception as e:
-        print(f"更新VIP策略公告失败: {str(e)}")
         return jsonify({'success': False, 'message': f'更新策略公告失败: {str(e)}'}), 500
 
 # 删除VIP投资策略公告（Supabase版）
@@ -2659,7 +2439,6 @@ def delete_vip_announcement(announcement_id):
             
         return jsonify({'success': True, 'message': '策略公告已删除'})
     except Exception as e:
-        print(f"删除VIP策略公告失败: {str(e)}")
         return jsonify({'success': False, 'message': f'删除策略公告失败: {str(e)}'}), 500
 
 # 获取所有VIP交易记录（Supabase版）
@@ -2704,7 +2483,6 @@ def get_vip_trades():
             'trades': trades
         })
     except Exception as e:
-        print(f"获取VIP交易记录失败: {str(e)}")
         return jsonify({'success': False, 'message': f'获取交易记录失败: {str(e)}'}), 500
 
 # 新增VIP交易记录（Supabase版）
@@ -2759,7 +2537,6 @@ def add_vip_trade():
             
         return jsonify({'success': True, 'message': '交易记录已添加'})
     except Exception as e:
-        print(f"添加VIP交易记录失败: {str(e)}")
         return jsonify({'success': False, 'message': f'添加交易记录失败: {str(e)}'}), 500
 
 # 编辑VIP交易记录（Supabase版）
@@ -2801,7 +2578,6 @@ def edit_vip_trade(trade_id):
             
         return jsonify({'success': True, 'message': '交易记录已更新'})
     except Exception as e:
-        print(f"更新VIP交易记录失败: {str(e)}")
         return jsonify({'success': False, 'message': f'更新交易记录失败: {str(e)}'}), 500
 
 # 删除VIP交易记录（Supabase版）
@@ -2818,7 +2594,6 @@ def delete_vip_trade(trade_id):
             
         return jsonify({'success': True, 'message': '交易记录已删除'})
     except Exception as e:
-        print(f"删除VIP交易记录失败: {str(e)}")
         return jsonify({'success': False, 'message': f'删除交易记录失败: {str(e)}'}), 500
 
 @app.route('/download-proxy')
