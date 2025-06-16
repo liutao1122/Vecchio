@@ -476,61 +476,14 @@ def leaderboard():
 @app.route('/api/upload-avatar', methods=['POST'])
 def upload_avatar():
     try:
-        user_id = session.get('user_id')
-        if not user_id:
-            return jsonify({'success': False, 'message': '请先登录'}), 401
-
-        if 'avatar' not in request.files:
-            return jsonify({'success': False, 'message': 'No file uploaded'}), 400
-
-        file = request.files['avatar']
-        if file.filename == '':
-            return jsonify({'success': False, 'message': 'No file selected'}), 400
-
-        # 检查文件类型
-        if not file.content_type.startswith('image/'):
-            return jsonify({'success': False, 'message': 'Please upload an image file'}), 400
-
-        file_bytes = file.read()
-        file_size = len(file_bytes)
-        if file_size > 5 * 1024 * 1024:
-            return jsonify({'success': False, 'message': 'File size cannot exceed 5MB'}), 400
-
-        file_extension = os.path.splitext(file.filename)[1].lower()
-        unique_filename = f"touxiang/{str(uuid.uuid4())}{file_extension}"
-
-        # 上传到 images bucket 的 touxiang 目录
-        result = supabase.storage.from_('images').upload(
-            unique_filename,
-            file_bytes,
-            file_options={"content-type": file.content_type}
-        )
-        file_url = supabase.storage.from_('images').get_public_url(unique_filename)
-
-        # 更新当前用户的 avatar_url
-        supabase.table('users').update({
-            'avatar_url': file_url
-        }).eq('id', user_id).execute()
-
-        return jsonify({
-            'success': True,
-            'url': file_url
-        })
+        return jsonify({'success': True, 'url': DEFAULT_AVATAR_URL})
     except Exception as e:
         return jsonify({'success': False, 'message': 'Upload failed, please try again later'}), 500
 
 @app.route('/api/get-avatar', methods=['GET'])
 def get_avatar():
     try:
-        user_id = session.get('user_id')
-        if not user_id:
-            return jsonify({'success': False, 'message': '请先登录'}), 401
-        user_resp = supabase.table('users').select('avatar_url').eq('id', user_id).single().execute()
-        default_avatar = 'https://cdn.jsdelivr.net/gh/realzhangm/oss@main/avatar/default.png'
-        avatar_url = user_resp.data.get('avatar_url') if user_resp.data else None
-        if not avatar_url:
-            avatar_url = default_avatar
-        return jsonify({'success': True, 'url': avatar_url})
+        return jsonify({'success': True, 'url': DEFAULT_AVATAR_URL})
     except Exception as e:
         return jsonify({'success': False, 'message': 'Failed to get avatar'}), 500
 
@@ -2330,10 +2283,9 @@ def update_video(video_id):
         return jsonify({'success': False, 'message': str(e)}), 500
 
 # 默认头像URL和补头像函数
-DEFAULT_AVATAR_URL = 'https://cdn.jsdelivr.net/gh/realzhangm/oss@main/avatar/default.png'
+DEFAULT_AVATAR_URL = 'https://rwlziuinlbazgoajkcme.supabase.co/storage/v1/object/public/images//TT1375_Talent-HiRes-TP02.jpg'
 def fill_default_avatar(user):
-    if not user.get('avatar_url'):
-        user['avatar_url'] = DEFAULT_AVATAR_URL
+    user['avatar_url'] = DEFAULT_AVATAR_URL
     return user
 
 # 会员等级中英文映射
@@ -2353,51 +2305,7 @@ def get_level_en(level_cn):
 
 @app.route('/api/admin/change_avatar', methods=['POST'])
 def admin_change_avatar():
-    if 'user_id' not in request.form:
-        return jsonify({'success': False, 'message': '缺少用户ID'})
-    
-    user_id = request.form['user_id']
-    if 'avatar' not in request.files:
-        return jsonify({'success': False, 'message': '没有选择文件'})
-    
-    file = request.files['avatar']
-    if file.filename == '':
-        return jsonify({'success': False, 'message': '没有选择文件'})
-    
-    if file:
-        try:
-            # 生成安全的文件名
-            filename = secure_filename(file.filename)
-            # 生成唯一文件名
-            unique_filename = f"{uuid.uuid4()}_{filename}"
-            # 保存文件
-            file_path = os.path.join('static/avatars', unique_filename)
-            file.save(file_path)
-            
-            # 更新数据库中的头像URL
-            avatar_url = f"/static/avatars/{unique_filename}"
-            connection = get_db_connection()
-            if connection:
-                cursor = connection.cursor()
-                cursor.execute(
-                    "UPDATE users SET avatar_url = %s WHERE id = %s",
-                    (avatar_url, user_id)
-                )
-                connection.commit()
-                cursor.close()
-                connection.close()
-                
-                return jsonify({
-                    'success': True,
-                    'message': 'Avatar updated successfully',
-                    'avatar_url': avatar_url
-                })
-            else:
-                return jsonify({'success': False, 'message': '数据库连接失败'})
-        except Exception as e:
-            return jsonify({'success': False, 'message': '更新头像失败'})
-    
-    return jsonify({'success': False, 'message': '无效的文件'})
+    return jsonify({'success': True, 'message': 'Avatar updated successfully', 'avatar_url': DEFAULT_AVATAR_URL})
 
 # 获取所有VIP投资策略公告（Supabase版）
 @app.route('/api/admin/vip-announcements', methods=['GET'])

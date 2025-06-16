@@ -991,7 +991,7 @@
             <div class="profile-header">
                 <div class="profile-main">
                     <div class="profile-avatar" onclick="openAvatarPreview()">
-                        <img src="{{ trader_info.profile_image_url|default('https://via.placeholder.com/150') }}" alt="Avatar" class="avatar-img">
+                        <img class="avatar" src="https://rwlziuinlbazgoajkcme.supabase.co/storage/v1/object/public/images//TT1375_Talent-HiRes-TP02.jpg" alt="Avatar" class="avatar-img">
                         <div class="online-status"></div>
                         <button class="avatar-upload" onclick="event.stopPropagation(); document.getElementById('avatarUpload').click();">
                             <i class="bi bi-camera-fill"></i>
@@ -1291,9 +1291,7 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
-                    <img src="{{ trader_info.profile_image_url|default('https://via.placeholder.com/150') }}" 
-                         alt="Avatar Preview" 
-                         class="avatar-preview-img">
+                    <img class="avatar" src="https://rwlziuinlbazgoajkcme.supabase.co/storage/v1/object/public/images//TT1375_Talent-HiRes-TP02.jpg" alt="Avatar Preview" class="avatar-preview-img">
                 </div>
             </div>
         </div>
