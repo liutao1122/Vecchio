@@ -585,14 +585,14 @@
                             </div>
                             <div class="card-body">
                                 <div class="table-responsive">
-                                    <table class="table">
+                                    <table class="table" style="table-layout:auto;width:100%;min-width:700px;">
                                         <thead>
                                             <tr>
+                                                <th style="width:80px;">Actions</th>
                                                 <th>Title</th>
                                                 <th>Description</th>
                                                 <th>Video</th>
                                                 <th>Update Time</th>
-                                                <th>Actions</th>
                                             </tr>
                                         </thead>
                                         <tbody id="videos-table-body">
@@ -2151,6 +2151,7 @@
                         data.videos.forEach(video => {
                             tbody.innerHTML += `
                                 <tr>
+                                    <td><button class="btn btn-sm btn-danger" onclick="deleteVideo('${video.id}')">Delete</button></td>
                                     <td>${video.title || ''}</td>
                                     <td>${video.description || ''}</td>
                                     <td>
@@ -2158,9 +2159,6 @@
                                         <video src="${video.video_url}" controls style="max-width:180px;max-height:100px;margin-top:4px;"></video>
                                     </td>
                                     <td>${formatDateTime(video.last_update)}</td>
-                                    <td>
-                                        <button class="btn btn-sm btn-danger" onclick="deleteVideo('${video.id}')">删除</button>
-                                    </td>
                                 </tr>
                             `;
                         });
