@@ -2999,7 +2999,7 @@
         <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;margin-bottom:24px;">
             <!-- 顶部欢迎区头像 -->
             <div style="position:relative;cursor:pointer;" id="avatar-preview-trigger">
-                <img src="{{ trader_info.avatar_url or 'https://api.dicebear.com/7.x/avataaars/svg?seed=' ~ (trader_info.trader_name or session.username) }}" alt="avatar" class="avatar-glow" style="width:120px;height:120px;border-radius:50%;background:#232b3e;object-fit:cover;">
+                <img src="{{ trader_info.avatar_url if trader_info.avatar_url else 'https://api.dicebear.com/7.x/avataaars/svg?seed=' ~ (trader_info.trader_name or session.username) }}" alt="avatar" class="avatar-glow" style="width:120px;height:120px;border-radius:50%;background:#232b3e;object-fit:cover;">
                 <!-- 删除svg图标，不再显示 -->
             </div>
             <div style="display:flex;gap:20px;justify-content:center;margin-top:18px;">
@@ -3126,22 +3126,22 @@
                 <table class="vip-table" id="trade-record-table">
                     <thead>
                         <tr>
-                            <th style="width:120px;">Date</th>
-                            <th style="width:100px;">Symbol</th>
-                            <th style="width:90px;">Type</th>
-                            <th style="width:120px;">Entry Price</th>
-                            <th style="width:120px;">Current Price</th>
-                            <th style="width:120px;">Quantity</th>
-                            <th style="width:120px;">Exit Price</th>
-                            <th style="width:120px;">Exit Date</th>
-                            <th style="width:130px;">P&L Amount</th>
-                            <th style="width:120px;">P&L Ratio</th>
-                            <th style="width:100px;">Action</th>
+                            <th>Date</th>
+                            <th>Symbol</th>
+                            <th>Type</th>
+                            <th>Entry Price</th>
+                            <th>Current Price</th>
+                            <th>Quantity</th>
+                            <th>Exit Price</th>
+                            <th>Exit Date</th>
+                            <th>P&L Amount</th>
+                            <th>P&L Ratio</th>
+                            <th>Action</th>
                         </tr>
                     </thead>
                     <tbody>
-                        {% for t in trades %}
-                        <tr data-trade-id="{{ t.id }}" data-symbol="{{ t.symbol }}" data-closed="{% if t.exit_price %}1{% else %}0{% endif %}">
+                        {% for t in trades[:10] %}
+                        <tr>
                             <td>{{ t.entry_date[:10] if t.entry_date else '-' }}</td>
                             <td>{{ t.symbol or '-' }}</td>
                             <td>
@@ -3151,12 +3151,12 @@
                                     <span class="trade-type-table buy">Buy</span>
                                 {% endif %}
                             </td>
-                            <td class="entry-price-cell">{{ t.entry_price or '-' }}</td>
-                            <td class="current-price-cell">{{ t.current_price or '-' }}</td>
-                            <td class="size-cell">{{ t.size or '-' }}</td>
+                            <td>{{ t.entry_price or '-' }}</td>
+                            <td>{{ t.current_price or '-' }}</td>
+                            <td>{{ t.size or '-' }}</td>
                             <td>{{ t.exit_price or '-' }}</td>
                             <td>{{ t.exit_date[:10] if t.exit_date else '-' }}</td>
-                            <td class="profit-amount-cell">
+                            <td>
                                 {% if t.exit_price %}
                                     {{ '%.2f' % ((t.exit_price - t.entry_price) * t.size) }}
                                 {% elif t.current_price %}
@@ -3165,7 +3165,7 @@
                                     -
                                 {% endif %}
                             </td>
-                            <td class="profit-pct-cell">
+                            <td>
                                 {% set profit = (t.exit_price or t.current_price or 0) - (t.entry_price or 0) %}
                                 {% set profit_pct = (profit / t.entry_price * 100) if t.entry_price else 0 %}
                                 <span class="trade-profit-table {{ 'up' if profit_pct >= 0 else 'down' }}">
@@ -3181,6 +3181,11 @@
                         {% endfor %}
                     </tbody>
                 </table>
+                {% if trades|length > 10 %}
+                <div style="text-align:right;margin-top:8px;">
+                    <button class="btn btn-primary" onclick="showAllTradesModal()">View All</button>
+                </div>
+                {% endif %}
             </div>
         </div>
     </div>
@@ -4038,7 +4043,7 @@ document.getElementById('set-asset-form').onsubmit = async function(e) {
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
       <div class="modal-body center">
-        <img id="avatar-preview-img" src="{{ trader_info.avatar_url or 'https://api.dicebear.com/7.x/avataaars/svg?seed=1' }}" alt="avatar" style="width:180px;height:180px;border-radius:50%;background:#232b3e;box-shadow:0 0 24px #FFD70099;">
+        <img id="avatar-preview-img" src="{{ trader_info.avatar_url if trader_info.avatar_url else 'https://api.dicebear.com/7.x/avataaars/svg?seed=1' }}" alt="avatar" style="width:180px;height:180px;border-radius:50%;background:#232b3e;box-shadow:0 0 24px #FFD70099;">
         <form id="upload-avatar-form" method="POST" action="/api/upload-avatar" enctype="multipart/form-data" style="margin-top:24px;">
           <label class="btn btn-secondary w-100" style="margin-bottom:12px;cursor:pointer;">
             Choose File
@@ -4275,5 +4280,107 @@ function closePreview() {
         <iframe id="preview-frame" style="width:100%;height:100%;border:none;border-radius:8px;"></iframe>
     </div>
 </div>
+
+{# 弹窗显示全部交易 #}
+<div class="modal fade" id="allTradesModal" tabindex="-1" aria-labelledby="allTradesModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-xl modal-dialog-scrollable">
+    <div class="modal-content" style="max-height:90vh;">
+      <div class="modal-header">
+        <h5 class="modal-title" id="allTradesModalLabel">All Trade Records</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body" style="overflow-x:auto;">
+        <div style="min-width:900px;">
+          <table class="vip-table table table-striped table-hover" style="width:100%;">
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Symbol</th>
+                <th>Type</th>
+                <th>Entry Price</th>
+                <th>Current Price</th>
+                <th>Quantity</th>
+                <th>Exit Price</th>
+                <th>Exit Date</th>
+                <th>P&L Amount</th>
+                <th>P&L Ratio</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for t in trades %}
+              <tr>
+                <td>{{ t.entry_date[:10] if t.entry_date else '-' }}</td>
+                <td>{{ t.symbol or '-' }}</td>
+                <td>
+                  {% if t.exit_price %}
+                    <span class="trade-type-table sell">Sell</span>
+                  {% else %}
+                    <span class="trade-type-table buy">Buy</span>
+                  {% endif %}
+                </td>
+                <td>{{ t.entry_price or '-' }}</td>
+                <td>{{ t.current_price or '-' }}</td>
+                <td>{{ t.size or '-' }}</td>
+                <td>{{ t.exit_price or '-' }}</td>
+                <td>{{ t.exit_date[:10] if t.exit_date else '-' }}</td>
+                <td>
+                  {% if t.exit_price %}
+                    {{ '%.2f' % ((t.exit_price - t.entry_price) * t.size) }}
+                  {% elif t.current_price %}
+                    {{ '%.2f' % ((t.current_price - t.entry_price) * t.size) }}
+                  {% else %}
+                    -
+                  {% endif %}
+                </td>
+                <td>
+                  {% set profit = (t.exit_price or t.current_price or 0) - (t.entry_price or 0) %}
+                  {% set profit_pct = (profit / t.entry_price * 100) if t.entry_price else 0 %}
+                  <span class="trade-profit-table {{ 'up' if profit_pct >= 0 else 'down' }}">
+                    {{ '{:+.1f}%'.format(profit_pct) }}
+                  </span>
+                </td>
+                <td>
+                  {% if not t.exit_price %}
+                    <button class="btn btn-sm btn-warning" onclick="openCloseTradeModal('{{ t.id }}')">Close</button>
+                  {% endif %}
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+@media (max-width: 900px) {
+  .modal-xl {
+    max-width: 98vw;
+    margin: 0 auto;
+  }
+  .modal-content {
+    max-height: 90vh;
+  }
+  .modal-body {
+    padding: 0.5rem;
+  }
+  .vip-table {
+    font-size: 0.95rem;
+  }
+}
+.modal-body {
+  overflow-x: auto;
+}
+</style>
+
+<script>
+function showAllTradesModal() {
+  var modal = new bootstrap.Modal(document.getElementById('allTradesModal'));
+  modal.show();
+}
+</script>
 </body>
 </html>

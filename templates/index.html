@@ -991,7 +991,7 @@
             <div class="profile-header">
                 <div class="profile-main">
                     <div class="profile-avatar" onclick="openAvatarPreview()">
-                        <img class="avatar" src="https://rwlziuinlbazgoajkcme.supabase.co/storage/v1/object/public/images//TT1375_Talent-HiRes-TP02.jpg" alt="Avatar" class="avatar-img">
+                        <img src="{{ trader_info.profile_image_url|default('https://via.placeholder.com/150') }}" alt="Avatar" class="avatar-img">
                         <div class="online-status"></div>
                         <button class="avatar-upload" onclick="event.stopPropagation(); document.getElementById('avatarUpload').click();">
                             <i class="bi bi-camera-fill"></i>
@@ -1291,7 +1291,9 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
-                    <img class="avatar" src="https://rwlziuinlbazgoajkcme.supabase.co/storage/v1/object/public/images//TT1375_Talent-HiRes-TP02.jpg" alt="Avatar Preview" class="avatar-preview-img">
+                    <img src="{{ trader_info.profile_image_url|default('https://via.placeholder.com/150') }}" 
+                         alt="Avatar Preview" 
+                         class="avatar-preview-img">
                 </div>
             </div>
         </div>
@@ -1376,7 +1378,7 @@
                     stats[2].querySelector('.stat-value').textContent = profile.win_rate + '%';
                 }
             } catch (error) {
-                console.error('Failed to load profile:', error);
+                console.error('加载个人资料失败:', error);
             }
         }
 
@@ -1425,7 +1427,7 @@
                 }
             })
             .catch(error => {
-                console.error('Connection failed, please try again later');
+                console.error('Error:', error);
                 redirectMsg.classList.remove('show');
                 alert('Connection failed, please try again later');
             });
@@ -1453,12 +1455,12 @@
 
             // Check file type and size
             if (!file.type.startsWith('image/')) {
-                alert('Please upload an image file');
+                alert('请上传图片文件');
                 return;
             }
 
             if (file.size > 5 * 1024 * 1024) {
-                alert('Image size should not exceed 5MB');
+                alert('图片大小不能超过5MB');
                 return;
             }
 
@@ -1479,13 +1481,13 @@
                     const previewImg = document.querySelector('.avatar-preview-img');
                     avatarImg.src = result.url;
                     previewImg.src = result.url;
-                    alert('Avatar uploaded successfully!');
+                    alert('头像上传成功！');
                 } else {
                     throw new Error(result.message);
                 }
             } catch (error) {
-                console.error('Upload failed:', error);
-                alert('Upload failed, please try again later');
+                console.error('上传失败:', error);
+                alert('上传失败，请稍后重试');
             }
         }
 
@@ -1501,7 +1503,7 @@
                         }
                     }
                 })
-                .catch(error => console.error('Failed to check avatar update:', error));
+                .catch(error => console.error('检查头像更新失败:', error));
         }
 
         // Start checking avatar update periodically after page loads
@@ -1619,11 +1621,11 @@
                 } else if (data.message && data.message.includes('already liked')) {
                     alert('You have already liked today. Thank you for your support and trust!');
                 } else {
-                    alert('Like failed: ' + data.message);
+                    alert('点赞失败: ' + data.message);
                 }
             })
             .catch(error => {
-                alert('Like failed, please try again');
+                alert('点赞失败，请重试');
             });
         }
 
