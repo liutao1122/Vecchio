@@ -105,6 +105,8 @@ function loadPermissions() {
                     `;
                     tableBody.appendChild(row);
                 });
+            } else {
+                alert('Failed to load permissions');
             }
         })
         .catch(error => {

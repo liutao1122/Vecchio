@@ -1166,10 +1166,10 @@
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    // 登录成功，刷新页面显示新的会员信息
+                    // Login successful, refresh page to show new membership info
                     window.location.reload();
                 } else {
-                    // 登录失败
+                    // Login failed
                     alert(data.message || 'Login failed. Please check your username and password.');
                 }
             })
@@ -1190,7 +1190,7 @@
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    // 登出成功后立即刷新页面
+                    // Refresh page immediately after successful logout
                     window.location.reload();
                 } else {
                     showToast('Logout failed', 'error');
@@ -1202,7 +1202,7 @@
             });
         }
 
-        // Toast 提示组件
+        // Toast notification component
         function showToast(message, type = 'info') {
             const toastContainer = document.getElementById('toastContainer') || createToastContainer();
             const toast = document.createElement('div');

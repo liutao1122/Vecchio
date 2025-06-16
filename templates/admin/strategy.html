@@ -6,21 +6,21 @@
         <div class="card mb-4">
             <div class="card-header d-flex justify-content-between align-items-center">
                 <h5 class="mb-0">
-                    <i class="bi bi-lightbulb me-2"></i>今日交易策略
+                    <i class="bi bi-lightbulb me-2"></i>Today's Trading Strategy
                 </h5>
                 <button class="btn btn-primary" onclick="saveStrategy()">
-                    <i class="bi bi-save me-1"></i>保存策略
+                    <i class="bi bi-save me-1"></i>Save Strategy
                 </button>
             </div>
             <div class="card-body">
                 <form id="strategyForm">
                     <input type="hidden" id="strategyId">
                     <div class="mb-3">
-                        <label for="marketAnalysis" class="form-label">市场分析</label>
+                        <label for="marketAnalysis" class="form-label">Market Analysis</label>
                         <textarea class="form-control" id="marketAnalysis" rows="4" required></textarea>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label">关注重点</label>
+                        <label class="form-label">Focus Areas</label>
                         <div id="focusAreas">
                             <div class="input-group mb-2">
                                 <input type="text" class="form-control focus-area" required>
@@ -30,11 +30,11 @@
                             </div>
                         </div>
                         <button type="button" class="btn btn-outline-primary btn-sm" onclick="addFocusArea()">
-                            <i class="bi bi-plus"></i>添加关注点
+                            <i class="bi bi-plus"></i>Add Focus Area
                         </button>
                     </div>
                     <div class="mb-3">
-                        <label for="riskWarning" class="form-label">风险提示</label>
+                        <label for="riskWarning" class="form-label">Risk Warning</label>
                         <textarea class="form-control" id="riskWarning" rows="3" required></textarea>
                     </div>
                 </form>
@@ -44,21 +44,21 @@
         <div class="card mt-4">
             <div class="card-header">
                 <h5 class="mb-0">
-                    <i class="bi bi-clock-history me-2"></i>策略历史记录
+                    <i class="bi bi-clock-history me-2"></i>Strategy History
                 </h5>
             </div>
             <div class="card-body">
                 <div class="history-section mt-4">
-                    <h3>策略历史记录</h3>
+                    <h3>Strategy History</h3>
                     <div class="table-responsive">
                         <table class="table table-striped">
                             <thead>
                                 <tr>
-                                    <th>更新时间</th>
-                                    <th>市场分析</th>
-                                    <th>关注重点</th>
-                                    <th>风险提示</th>
-                                    <th>操作</th>
+                                    <th>Updated Time</th>
+                                    <th>Market Analysis</th>
+                                    <th>Focus Areas</th>
+                                    <th>Risk Warning</th>
+                                    <th>Actions</th>
                                 </tr>
                             </thead>
                             <tbody id="historyTableBody">
@@ -74,24 +74,24 @@
             <div class="modal-dialog modal-lg">
                 <div class="modal-content">
                     <div class="modal-header">
-                        <h5 class="modal-title">策略历史详情</h5>
+                        <h5 class="modal-title">Strategy History Details</h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                     </div>
                     <div class="modal-body">
                         <div class="mb-3">
-                            <label class="form-label">市场分析</label>
+                            <label class="form-label">Market Analysis</label>
                             <p id="historyMarketAnalysis" class="form-control-plaintext"></p>
                         </div>
                         <div class="mb-3">
-                            <label class="form-label">关注重点</label>
+                            <label class="form-label">Focus Areas</label>
                             <ul id="historyFocusAreas" class="list-group"></ul>
                         </div>
                         <div class="mb-3">
-                            <label class="form-label">风险提示</label>
+                            <label class="form-label">Risk Warning</label>
                             <p id="historyRiskWarning" class="form-control-plaintext"></p>
                         </div>
                         <div class="mb-3">
-                            <label class="form-label">更新信息</label>
+                            <label class="form-label">Update Information</label>
                             <p id="historyUpdateInfo" class="form-control-plaintext"></p>
                         </div>
                     </div>
@@ -182,12 +182,12 @@
                     historyTableBody.appendChild(row);
                 });
             } else {
-                showError('加载历史记录失败：' + data.message);
+                showError('Failed to load history: ' + data.message);
             }
         })
         .catch(error => {
             console.error('Error:', error);
-            showError('加载历史记录失败');
+            showError('Failed to load history');
         });
     }
 
@@ -223,7 +223,7 @@
         const riskWarning = document.getElementById('riskWarning').value;
         
         if (!marketAnalysis || !focusAreas.length || !riskWarning) {
-            alert('请填写所有必要字段');
+            alert('Please fill in all required fields!');
             return;
         }
         
@@ -241,7 +241,7 @@
         .then(response => response.json())
         .then(data => {
             if (data.success) {
-                alert('策略保存成功！');
+                alert('Strategy saved successfully!');
                 loadStrategyHistory(); // 重新加载历史记录
                 // 清空表单
                 document.getElementById('marketAnalysis').value = '';
@@ -257,12 +257,12 @@
                     </div>
                 `;
             } else {
-                alert('保存失败：' + data.message);
+                alert('Save failed: ' + data.message);
             }
         })
         .catch(error => {
             console.error('Error:', error);
-            alert('保存失败，请重试');
+            alert('Save failed, please try again');
         });
     }
 
@@ -281,16 +281,16 @@
         .then(response => response.json())
         .then(data => {
             if (data.success) {
-                alert('策略删除成功');
+                alert('Strategy deleted successfully');
                 // 刷新整个页面
                 window.location.reload();
             } else {
-                alert('删除失败：' + data.message);
+                alert('Delete failed: ' + data.message);
             }
         })
         .catch(error => {
             console.error('Error:', error);
-            alert('删除失败，请重试');
+            alert('Delete failed, please try again');
         });
     }
 

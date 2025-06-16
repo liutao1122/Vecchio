@@ -3808,6 +3808,32 @@ document.addEventListener('DOMContentLoaded', loadDocuments);
             <label for="entry_date" class="form-label">Entry Date</label>
             <input name="entry_date" id="entry_date" type="datetime-local" class="form-control" required>
           </div>
+          <div class="mb-3">
+            <label for="asset_type" class="form-label">Asset Type</label>
+            <select name="asset_type" id="asset_type" class="form-control" required>
+              <option value="">--Please select--</option>
+              <option value="stock">Stock</option>
+              <option value="crypto">Crypto</option>
+              <option value="forex">Forex</option>
+              <option value="fund">Fund</option>
+            </select>
+          </div>
+          <div class="mb-3">
+            <label for="direction" class="form-label">Direction</label>
+            <select name="direction" id="direction" class="form-control" required>
+              <option value="">--Please select--</option>
+              <option value="long">Long</option>
+              <option value="short">Short</option>
+            </select>
+          </div>
+          <div class="mb-3">
+            <label for="trade_type" class="form-label">Trade Type</label>
+            <input name="trade_type" id="trade_type" class="form-control">
+          </div>
+          <div class="mb-3">
+            <label for="trade_image" class="form-label">Trade Image</label>
+            <input type="file" name="trade_image" id="trade_image" class="form-control" accept="image/*">
+          </div>
         </div>
         <div class="modal-footer">
           <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
@@ -4035,20 +4061,42 @@ document.getElementById('avatar').onchange = function() {
 document.getElementById('trade-upload-form').onsubmit = async function(e) {
     e.preventDefault();
     const formData = new FormData(this);
+
+    // 1. 先上传交易记录（不带图片）
     const resp = await fetch('/api/upload-trade', {
-        method: 'POST',
-        body: formData,
-        credentials: 'include'
+      method: 'POST',
+      body: formData,
+      credentials: 'include'
     });
     const res = await resp.json();
-    if (res.success) {
-        alert(res.message || 'Upload successful!');
-        var modal = bootstrap.Modal.getInstance(document.getElementById('tradeUploadModal'));
-        if (modal) modal.hide();
-        location.reload();
-    } else {
-        alert(res.message || 'Upload failed!');
+    if (!res.success) {
+      alert(res.message || 'Upload failed!');
+      return;
     }
+    const tradeId = res.trade_id;
+
+    // 2. 再上传图片（如有）
+    const imageInput = document.getElementById('trade_image');
+    if (imageInput.files.length > 0 && tradeId) {
+      const imgForm = new FormData();
+      imgForm.append('trade_id', tradeId);
+      imgForm.append('image', imageInput.files[0]);
+      const imgResp = await fetch('/api/admin/trade/upload-image', {
+        method: 'POST',
+        body: imgForm,
+        credentials: 'include'
+      });
+      const imgData = await imgResp.json();
+      if (!imgData.success) {
+        alert('图片上传失败: ' + (imgData.message || ''));
+        return;
+      }
+    }
+
+    alert(res.message || 'Upload successful!');
+    var modal = bootstrap.Modal.getInstance(document.getElementById('tradeUploadModal'));
+    if (modal) modal.hide();
+    location.reload();
 };
 </script>
 <script>

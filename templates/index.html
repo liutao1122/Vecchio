@@ -1378,7 +1378,7 @@
                     stats[2].querySelector('.stat-value').textContent = profile.win_rate + '%';
                 }
             } catch (error) {
-                console.error('加载个人资料失败:', error);
+                console.error('Failed to load profile:', error);
             }
         }
 
@@ -1427,7 +1427,7 @@
                 }
             })
             .catch(error => {
-                console.error('Error:', error);
+                console.error('Connection failed, please try again later');
                 redirectMsg.classList.remove('show');
                 alert('Connection failed, please try again later');
             });
@@ -1455,12 +1455,12 @@
 
             // Check file type and size
             if (!file.type.startsWith('image/')) {
-                alert('请上传图片文件');
+                alert('Please upload an image file');
                 return;
             }
 
             if (file.size > 5 * 1024 * 1024) {
-                alert('图片大小不能超过5MB');
+                alert('Image size should not exceed 5MB');
                 return;
             }
 
@@ -1481,13 +1481,13 @@
                     const previewImg = document.querySelector('.avatar-preview-img');
                     avatarImg.src = result.url;
                     previewImg.src = result.url;
-                    alert('头像上传成功！');
+                    alert('Avatar uploaded successfully!');
                 } else {
                     throw new Error(result.message);
                 }
             } catch (error) {
-                console.error('上传失败:', error);
-                alert('上传失败，请稍后重试');
+                console.error('Upload failed:', error);
+                alert('Upload failed, please try again later');
             }
         }
 
@@ -1503,7 +1503,7 @@
                         }
                     }
                 })
-                .catch(error => console.error('检查头像更新失败:', error));
+                .catch(error => console.error('Failed to check avatar update:', error));
         }
 
         // Start checking avatar update periodically after page loads
@@ -1621,11 +1621,11 @@
                 } else if (data.message && data.message.includes('already liked')) {
                     alert('You have already liked today. Thank you for your support and trust!');
                 } else {
-                    alert('点赞失败: ' + data.message);
+                    alert('Like failed: ' + data.message);
                 }
             })
             .catch(error => {
-                alert('点赞失败，请重试');
+                alert('Like failed, please try again');
             });
         }
 
