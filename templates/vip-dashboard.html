@@ -264,9 +264,8 @@
         /* 高端表格升级 */
         .vip-table {
             width: 100%;
-            min-width: unset; /* 移除超大min-width */
-            max-width: 100%;
-            table-layout: fixed; /* 列宽自适应且紧凑 */
+            min-width: 900px;
+            table-layout: auto;
             border-collapse: separate;
             border-spacing: 0 6px;
             background: rgba(24, 31, 42, 0.98);
@@ -275,10 +274,10 @@
             padding: 10px 6px; /* 更紧凑 */
             font-size: 1rem;
             text-align: center;
-            max-width: 120px;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
+            /* max-width: 120px; */
+            /* white-space: nowrap; */
+            /* overflow: hidden; */
+            /* text-overflow: ellipsis; */
         }
         .vip-table th {
             background: #232e4a;
@@ -295,7 +294,19 @@
             color: #232B3E;
         }
         @media (max-width: 900px) {
-            .vip-table th, .vip-table td { font-size: 0.92rem; padding: 6px 2px; max-width: 80px; }
+            .vip-table {
+                min-width: 900px !important;
+                font-size: 0.98rem;
+                border-radius: 8px;
+            }
+            .vip-table th, .vip-table td {
+                padding: 8px 4px !important;
+                font-size: 0.98rem !important;
+                max-width: unset !important;
+                overflow: visible !important;
+                text-overflow: unset !important;
+                white-space: normal !important;
+            }
         }
         /* 去除表格外层横向滚动 */
         .table-wrapper {
@@ -3122,7 +3133,7 @@
             <div class="flex-row mb-24">
                 <!-- 这里可以根据需要展示统计卡片 -->
             </div>
-            <div class="table-wrapper" style="margin-top:12px;">
+            <div class="table-wrapper" style="margin-top:12px;overflow-x:auto;">
                 <table class="vip-table" id="trade-record-table">
                     <thead>
                         <tr>
@@ -3837,7 +3848,11 @@ document.addEventListener('DOMContentLoaded', loadDocuments);
           </div>
           <div class="mb-3">
             <label for="trade_image" class="form-label">Trade Image</label>
-            <input type="file" name="trade_image" id="trade_image" class="form-control" accept="image/*">
+            <div class="custom-file">
+              <input type="file" name="trade_image" id="trade_image" class="form-control" accept="image/*" style="display:none;">
+              <button type="button" id="customFileBtn" class="btn btn-outline-primary w-100">Choose File</button>
+              <span id="customFileName" style="display:block;margin-top:8px;color:#FFD700;text-align:center;">No file chosen</span>
+            </div>
           </div>
         </div>
         <div class="modal-footer">
@@ -3931,11 +3946,11 @@ async function updateCurrentPrices() {
       });
     }
   }
-  // 刷新持仓收益卡片
-  const holdingProfitCard = document.getElementById('holding-profit-card');
-  if (holdingProfitCard) {
-    holdingProfitCard.innerHTML = holdingProfit.toFixed(2) + '<span class="glass-stat-unit">$</span>';
-  }
+  // 注释掉前端对持仓利润卡片的赋值，防止覆盖后端渲染值
+  // const holdingProfitCard = document.getElementById('holding-profit-card');
+  // if (holdingProfitCard) {
+  //   holdingProfitCard.innerHTML = holdingProfit.toFixed(2) + '<span class="glass-stat-unit">$</span>';
+  // }
 }
 window.addEventListener('DOMContentLoaded', updateCurrentPrices);
 </script>
@@ -4381,6 +4396,15 @@ function showAllTradesModal() {
   var modal = new bootstrap.Modal(document.getElementById('allTradesModal'));
   modal.show();
 }
+</script>
+<script>
+document.getElementById('customFileBtn').onclick = function() {
+  document.getElementById('trade_image').click();
+};
+document.getElementById('trade_image').onchange = function() {
+  var fileName = this.files[0] ? this.files[0].name : 'No file chosen';
+  document.getElementById('customFileName').textContent = fileName;
+};
 </script>
 </body>
 </html>

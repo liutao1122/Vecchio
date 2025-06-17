@@ -663,6 +663,10 @@
                             </select>
                         </div>
                         <div class="mb-3">
+                            <label class="form-label">Membership Level</label>
+                            <select class="form-control" name="membership_level" id="create_membership_level"></select>
+                        </div>
+                        <div class="mb-3">
                           <label class="form-label">Initial Asset</label>
                           <input type="number" class="form-control" name="initial_asset" step="0.01" min="0" value="0">
                         </div>
@@ -1109,19 +1113,23 @@
             <form id="editUserForm">
               <input type="hidden" name="user_id" id="edit_user_id">
               <div class="mb-3">
-                <label class="form-label">Username</label>
+                <label class="form-label">用户名</label>
                 <input type="text" class="form-control" name="username" id="edit_username" readonly>
               </div>
               <div class="mb-3">
-                <label class="form-label">Email</label>
+                <label class="form-label">电子邮件</label>
                 <input type="email" class="form-control" name="email" id="edit_email" readonly>
               </div>
               <div class="mb-3">
-                <label class="form-label">Role</label>
+                <label class="form-label">角色</label>
                 <input type="text" class="form-control" name="role" id="edit_role" readonly>
               </div>
               <div class="mb-3">
-                <label class="form-label">Initial Asset</label>
+                <label class="form-label">会员等级</label>
+                <select class="form-control" name="membership_level" id="edit_membership_level"></select>
+              </div>
+              <div class="mb-3">
+                <label class="form-label">初始资产</label>
                 <input type="number" class="form-control" name="initial_asset" id="edit_initial_asset" step="0.01" min="0">
               </div>
             </form>
@@ -1619,7 +1627,8 @@
                 password: formData.get('password'),
                 email: formData.get('email'),
                 role: formData.get('role'),
-                initial_asset: formData.get('initial_asset')
+                initial_asset: formData.get('initial_asset'),
+                membership_level: formData.get('membership_level')
             };
 
             fetch('/api/admin/users', {
@@ -1690,6 +1699,7 @@
 
         // 显示创建用户模态框
         function showCreateUserModal() {
+            loadMembershipLevelsForCreate();
             new bootstrap.Modal(document.getElementById('createUserModal')).show();
         }
 
@@ -2558,7 +2568,6 @@
         }
 
         function editUser(userId) {
-          // 假设有全局users数据或通过AJAX获取用户详情
           fetch(`/api/admin/users?id=${userId}`)
             .then(res => res.json())
             .then(data => {
@@ -2569,22 +2578,39 @@
                 document.getElementById('edit_email').value = user.email || '';
                 document.getElementById('edit_role').value = user.role || '';
                 document.getElementById('edit_initial_asset').value = user.initial_asset !== undefined ? user.initial_asset : 0;
-                new bootstrap.Modal(document.getElementById('editUserModal')).show();
+                // 加载会员等级选项
+                fetch('/api/admin/membership-levels')
+                  .then(resp => resp.json())
+                  .then(levelData => {
+                    if (levelData.success && levelData.levels) {
+                      const select = document.getElementById('edit_membership_level');
+                      select.innerHTML = '';
+                      levelData.levels.forEach(level => {
+                        const option = document.createElement('option');
+                        option.value = level.name; // 中文
+                        option.textContent = getLevelEn(level.name); // 英文
+                        if (user.membership_level === level.name || getLevelEn(user.membership_level) === getLevelEn(level.name)) option.selected = true;
+                        select.appendChild(option);
+                      });
+                    }
+                    new bootstrap.Modal(document.getElementById('editUserModal')).show();
+                  });
               }
             });
         }
         function saveEditUser() {
           const userId = document.getElementById('edit_user_id').value;
           const initialAsset = document.getElementById('edit_initial_asset').value;
+          const membershipLevel = document.getElementById('edit_membership_level').value;
           fetch(`/api/admin/users/${userId}`, {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ initial_asset: initialAsset })
+            body: JSON.stringify({ initial_asset: initialAsset, membership_level: membershipLevel })
           })
           .then(res => res.json())
           .then(data => {
             if (data.success) {
-              alert('Initial capital updated');
+              alert('User updated');
               bootstrap.Modal.getInstance(document.getElementById('editUserModal')).hide();
               loadUsers();
             } else {
@@ -2630,6 +2656,37 @@
             document.getElementById('editAnnouncementPriority').value = priority;
             document.getElementById('editAnnouncementType').value = type;
             new bootstrap.Modal(document.getElementById('editVipAnnouncementModal')).show();
+        }
+
+        function getLevelEn(levelCn) {
+          const map = {
+            '普通会员': 'Regular Member',
+            '黄金会员': 'Gold Member',
+            '钻石会员': 'Diamond Member',
+            '至尊黑卡': 'Supreme Black Card',
+            'Regular Member': 'Regular Member',
+            'Gold Member': 'Gold Member',
+            'Diamond Member': 'Diamond Member',
+            'Supreme Black Card': 'Supreme Black Card'
+          };
+          return map[levelCn] || levelCn;
+        }
+
+        function loadMembershipLevelsForCreate() {
+          fetch('/api/admin/membership-levels')
+            .then(resp => resp.json())
+            .then(levelData => {
+              if (levelData.success && levelData.levels) {
+                const select = document.getElementById('create_membership_level');
+                select.innerHTML = '';
+                levelData.levels.forEach(level => {
+                  const option = document.createElement('option');
+                  option.value = level.name; // 中文
+                  option.textContent = getLevelEn(level.name); // 英文
+                  select.appendChild(option);
+                });
+              }
+            });
         }
     </script>
 </body>
