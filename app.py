@@ -646,18 +646,12 @@ def vip_dashboard():
     trades_resp = supabase.table('trades').select('*').eq('user_id', user['id']).execute()
     trades = trades_resp.data if trades_resp.data else []
 
-    # --- 新增排序逻辑 ---
-    def parse_dt(dt):
-        try:
-            return datetime.fromisoformat(str(dt).replace('Z', '+00:00'))
-        except Exception:
-            return datetime.min
-    holding_trades = [t for t in trades if not t.get('exit_price') or not t.get('exit_date')]
-    closed_trades = [t for t in trades if t.get('exit_price') and t.get('exit_date')]
-    holding_trades.sort(key=lambda x: parse_dt(x.get('updated_at')), reverse=True)
-    closed_trades.sort(key=lambda x: parse_dt(x.get('updated_at')), reverse=True)
-    sorted_trades = holding_trades + closed_trades
-    trades = sorted_trades
+    # --- 新增：实时获取未平仓持仓的最新价格 ---
+    for trade in trades:
+        if not trade.get('exit_price'):
+            latest_price = get_real_time_price(trade.get('symbol'))
+            if latest_price:
+                trade['current_price'] = latest_price
     # --- 其它统计逻辑保持不变 ---
     total_profit = 0
     monthly_profit = 0
@@ -671,10 +665,27 @@ def vip_dashboard():
         entry_price = float(trade.get('entry_price') or 0)
         exit_price = float(trade.get('exit_price') or 0)
         size = float(trade.get('size') or 0)
-        current_price = float(trade.get('current_price') or 0)
         profit = 0
         if not trade.get('exit_price'):
-            total_market_value += current_price * size
+            symbol = trade.get('symbol')
+            if not symbol:
+                print(f"[HoldingProfit] WARNING: 持仓有空symbol，entry_price={entry_price}, size={size}")
+                continue
+            # 用本地API查价，和前端一致
+            try:
+                resp = requests.get(f"http://127.0.0.1:5000/api/price?symbol={symbol}", timeout=3)
+                data = resp.json()
+                latest_price = data.get('price') if data.get('success') else None
+            except Exception as e:
+                print(f"[HoldingProfit] ERROR: 请求本地/api/price失败: {e}")
+                latest_price = None
+            print(f"[HoldingProfit] symbol={symbol}, entry_price={entry_price}, latest_price={latest_price}, size={size}")
+            if latest_price is not None:
+                profit = (latest_price - entry_price) * size
+                holding_profit += profit
+            else:
+                print(f"[HoldingProfit] WARNING: /api/price?symbol={symbol} 返回None，无法计算持仓利润")
+            total_market_value += (latest_price or 0) * size
             holding_cost += entry_price * size
         else:
             profit = (exit_price - entry_price) * size
@@ -685,9 +696,6 @@ def vip_dashboard():
             if trade.get('exit_date') and str(trade['exit_date']).startswith(now.strftime('%Y-%m')):
                 monthly_profit += profit
             closed_profit = total_profit
-        else:
-            profit = (current_price - entry_price) * size
-            holding_profit += profit
     available_funds = initial_asset + closed_profit_sum - holding_cost
     dynamic_total_asset = total_market_value + available_funds
 
@@ -1205,7 +1213,7 @@ def manage_users():
                 'email': data.get('email'),
                 'role': data.get('role', 'user'),
                 'status': 'active',
-                'membership_level': '普通会员',
+                'membership_level': data.get('membership_level', '普通会员'),
                 'created_at': datetime.now(pytz.UTC).isoformat(),
                 'initial_asset': float(data.get('initial_asset', 0) or 0)
             }
@@ -1231,7 +1239,7 @@ def update_user(user_id):
         if request.method == 'PUT':
             data = request.get_json()
             # 只允许更新特定字段
-            allowed_fields = ['status', 'role', 'password_hash', 'initial_asset']
+            allowed_fields = ['status', 'role', 'password_hash', 'initial_asset', 'membership_level']
             update_data = {k: v for k, v in data.items() if k in allowed_fields}
             if not update_data:
                 return jsonify({'success': False, 'message': '没有可更新的字段'}), 400
