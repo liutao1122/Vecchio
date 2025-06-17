@@ -2,7 +2,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.http import JsonResponse
 from django.views.decorators.http import require_http_methods
 from django.core.paginator import Paginator
-from django.db.models import Q
+from django.db.models import Q, Case, When, Value, IntegerField
 from .models import TradingRecord
 from .utils import get_crypto_price, get_stock_price, get_forex_price, get_commodity_price
 import json
@@ -10,7 +10,13 @@ from decimal import Decimal
 from datetime import datetime
 
 def trading_list(request):
-    records = TradingRecord.objects.all().order_by('-entry_time')
+    records = TradingRecord.objects.all().annotate(
+        status_order=Case(
+            When(status='open', then=Value(0)),
+            When(status='closed', then=Value(1)),
+            output_field=IntegerField(),
+        )
+    ).order_by('status_order', '-entry_time')
     paginator = Paginator(records, 10)
     page = request.GET.get('page')
     records = paginator.get_page(page)
