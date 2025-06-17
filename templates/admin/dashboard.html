@@ -2573,7 +2573,7 @@
             .then(data => {
               if (data.success && data.users && data.users.length > 0) {
                 const user = data.users[0];
-                document.getElementById('edit_user_id').value = user.id;
+                document.getElementById('edit_user_id').value = userId; // 强制用参数userId，确保正确
                 document.getElementById('edit_username').value = user.username;
                 document.getElementById('edit_email').value = user.email || '';
                 document.getElementById('edit_role').value = user.role || '';
