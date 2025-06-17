@@ -718,6 +718,9 @@ def vip_dashboard():
     vip_trades_resp = supabase.table('vip_trades').select('*').order('entry_time', desc=True).limit(10).execute()
     vip_trades = vip_trades_resp.data if vip_trades_resp.data else []
 
+    # --- trades排序：未平仓排前面，再按entry_date降序 ---
+    trades.sort(key=lambda t: (0 if not t.get('exit_price') else 1, t.get('entry_date') or ''), reverse=True)
+
     return render_template(
         'vip-dashboard.html',
         trader_info=trader_info,

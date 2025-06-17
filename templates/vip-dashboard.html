@@ -2983,6 +2983,100 @@
           .vip-meta-row { gap: 12px; }
         }
         </style>
+        <style>
+        .trade-card-list {
+          margin-top: 10px;
+          display: flex;
+          flex-direction: column;
+          gap: 16px;
+        }
+        .trade-card {
+          background: #232B3E;
+          border-radius: 16px;
+          box-shadow: 0 2px 12px #FFD70022;
+          border: 1.5px solid #FFD70033;
+          padding: 16px 14px 10px 14px;
+          color: #fff;
+          font-size: 1.08rem;
+          display: flex;
+          flex-direction: column;
+          gap: 8px;
+        }
+        .trade-card-header {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          margin-bottom: 6px;
+        }
+        .trade-symbol {
+          font-size: 1.25rem;
+          font-weight: 900;
+          color: #FFD700;
+          letter-spacing: 1px;
+        }
+        .trade-type {
+          font-size: 1.05rem;
+          font-weight: 700;
+          border-radius: 8px;
+          padding: 2px 12px;
+          margin-left: 4px;
+        }
+        .trade-type.buy {
+          background: #00ffae22;
+          color: #00ffae;
+          border: 1.5px solid #00ffae;
+        }
+        .trade-type.sell {
+          background: #cf132222;
+          color: #cf1322;
+          border: 1.5px solid #cf1322;
+        }
+        .trade-date {
+          margin-left: auto;
+          color: #b0c4e6;
+          font-size: 0.98rem;
+        }
+        .trade-info-group {
+          display: flex;
+          gap: 18px;
+          margin-bottom: 2px;
+        }
+        .label {
+          color: #b0c4e6;
+          font-size: 0.98em;
+          margin-right: 2px;
+        }
+        .trade-pnl.up { color: #00ffae; font-weight: 900; }
+        .trade-pnl.down { color: #cf1322; font-weight: 900; }
+        .trade-ratio-badge {
+          display: inline-block;
+          min-width: 54px;
+          text-align: center;
+          border-radius: 8px;
+          font-weight: 900;
+          padding: 2px 8px;
+          margin-left: 2px;
+        }
+        .trade-ratio-badge.up { background: #00ffae22; color: #00ffae; }
+        .trade-ratio-badge.down { background: #cf132222; color: #cf1322; }
+        .trade-notes {
+          margin-top: 4px;
+          color: #b0c4e6;
+          font-size: 0.97em;
+          word-break: break-all;
+        }
+        .trade-card-footer {
+          margin-top: 10px;
+          display: flex;
+          justify-content: flex-end;
+        }
+        .btn-block {
+          width: 100%;
+          font-size: 1.08rem;
+          font-weight: 700;
+          border-radius: 8px;
+        }
+        </style>
     </style>
 </head>
 <body>
@@ -3130,76 +3224,145 @@
             </div>
         </div>
         <div id="trade-record-detail">
-            <div class="flex-row mb-24">
-                <!-- 这里可以根据需要展示统计卡片 -->
+          <!-- PC端表格（10条） -->
+          <div class="table-wrapper trade-table-pc" style="margin-top:12px;overflow-x:auto;">
+            <table class="vip-table" id="trade-record-table">
+              <thead>
+                <tr>
+                  <th>Date</th>
+                  <th>Symbol</th>
+                  <th>Type</th>
+                  <th>Entry Price</th>
+                  <th>Current Price</th>
+                  <th>Quantity</th>
+                  <th>Exit Price</th>
+                  <th>Exit Date</th>
+                  <th>P&L Amount</th>
+                  <th>P&L Ratio</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for t in trades[:10] %}
+                <tr>
+                  <td>{{ t.entry_date[:10] if t.entry_date else '-' }}</td>
+                  <td>{{ t.symbol or '-' }}</td>
+                  <td>
+                    {% if t.exit_price %}
+                      <span class="trade-type-table sell">Sell</span>
+                    {% else %}
+                      <span class="trade-type-table buy">Buy</span>
+                    {% endif %}
+                  </td>
+                  <td>{{ t.entry_price or '-' }}</td>
+                  <td>{{ t.current_price or '-' }}</td>
+                  <td>{{ t.size or '-' }}</td>
+                  <td>{{ t.exit_price or '-' }}</td>
+                  <td>{{ t.exit_date[:10] if t.exit_date else '-' }}</td>
+                  <td>
+                    {% if t.exit_price %}
+                      {{ '%.2f' % ((t.exit_price - t.entry_price) * t.size) }}
+                    {% elif t.current_price %}
+                      {{ '%.2f' % ((t.current_price - t.entry_price) * t.size) }}
+                    {% else %}-{% endif %}
+                  </td>
+                  <td>
+                    {% set profit = (t.exit_price or t.current_price or 0) - (t.entry_price or 0) %}
+                    {% set profit_pct = (profit / t.entry_price * 100) if t.entry_price else 0 %}
+                    <span class="trade-profit-table {{ 'up' if profit_pct >= 0 else 'down' }}">
+                      {{ '{:+.1f}%'.format(profit_pct) }}
+                    </span>
+                  </td>
+                  <td>
+                    {% if not t.exit_price %}
+                      <button class="btn btn-sm btn-warning" onclick="openCloseTradeModal('{{ t.id }}')">Close</button>
+                    {% endif %}
+                  </td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+            {% if trades|length > 10 %}
+            <div style="text-align:right;margin-top:8px;">
+              <button class="btn btn-primary" onclick="showAllTradesModal()">View All</button>
             </div>
-            <div class="table-wrapper" style="margin-top:12px;overflow-x:auto;">
-                <table class="vip-table" id="trade-record-table">
-                    <thead>
-                        <tr>
-                            <th>Date</th>
-                            <th>Symbol</th>
-                            <th>Type</th>
-                            <th>Entry Price</th>
-                            <th>Current Price</th>
-                            <th>Quantity</th>
-                            <th>Exit Price</th>
-                            <th>Exit Date</th>
-                            <th>P&L Amount</th>
-                            <th>P&L Ratio</th>
-                            <th>Action</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for t in trades[:10] %}
-                        <tr>
-                            <td>{{ t.entry_date[:10] if t.entry_date else '-' }}</td>
-                            <td>{{ t.symbol or '-' }}</td>
-                            <td>
-                                {% if t.exit_price %}
-                                    <span class="trade-type-table sell">Sell</span>
-                                {% else %}
-                                    <span class="trade-type-table buy">Buy</span>
-                                {% endif %}
-                            </td>
-                            <td>{{ t.entry_price or '-' }}</td>
-                            <td>{{ t.current_price or '-' }}</td>
-                            <td>{{ t.size or '-' }}</td>
-                            <td>{{ t.exit_price or '-' }}</td>
-                            <td>{{ t.exit_date[:10] if t.exit_date else '-' }}</td>
-                            <td>
-                                {% if t.exit_price %}
-                                    {{ '%.2f' % ((t.exit_price - t.entry_price) * t.size) }}
-                                {% elif t.current_price %}
-                                    {{ '%.2f' % ((t.current_price - t.entry_price) * t.size) }}
-                                {% else %}
-                                    -
-                                {% endif %}
-                            </td>
-                            <td>
-                                {% set profit = (t.exit_price or t.current_price or 0) - (t.entry_price or 0) %}
-                                {% set profit_pct = (profit / t.entry_price * 100) if t.entry_price else 0 %}
-                                <span class="trade-profit-table {{ 'up' if profit_pct >= 0 else 'down' }}">
-                                    {{ '{:+.1f}%'.format(profit_pct) }}
-                                </span>
-                            </td>
-                            <td>
-                                {% if not t.exit_price %}
-                                    <button class="btn btn-sm btn-warning" onclick="openCloseTradeModal('{{ t.id }}')">Close</button>
-                                {% endif %}
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-                {% if trades|length > 10 %}
-                <div style="text-align:right;margin-top:8px;">
-                    <button class="btn btn-primary" onclick="showAllTradesModal()">View All</button>
+            {% endif %}
+          </div>
+          <!-- 移动端卡片（5条） -->
+          <div class="trade-card-list trade-mobile-list">
+            {% for t in trades[:5] %}
+            <div class="trade-card">
+              <div class="trade-card-header">
+                <span class="trade-symbol">{{ t.symbol or '-' }}</span>
+                {% if t.exit_price %}
+                  <span class="trade-type sell">Sell</span>
+                {% else %}
+                  <span class="trade-type buy">Buy</span>
+                {% endif %}
+                <span class="trade-date">{{ t.entry_date[:10] if t.entry_date else '-' }}</span>
+              </div>
+              <div class="trade-card-body">
+                <div class="trade-info-group">
+                  <div><span class="label">Entry:</span> <b>{{ t.entry_price or '-' }}</b></div>
+                  <div><span class="label">Current:</span> <b>{{ t.current_price or '-' }}</b></div>
+                  <div><span class="label">Exit:</span> <b>{{ t.exit_price or '-' }}</b></div>
+                </div>
+                <div class="trade-info-group">
+                  <div><span class="label">Qty:</span> <b>{{ t.size or '-' }}</b></div>
+                  <div><span class="label">Exit Date:</span> <b>{{ t.exit_date[:10] if t.exit_date else '-' }}</b></div>
+                </div>
+                <div class="trade-info-group">
+                  <div>
+                    <span class="label">P&L:</span>
+                    <span class="trade-pnl {% if t.exit_price or t.current_price and (t.exit_price or t.current_price) - (t.entry_price or 0) >= 0 %}up{% else %}down{% endif %}">
+                      {% if t.exit_price %}
+                        {{ '%.2f' % ((t.exit_price - t.entry_price) * t.size) }}
+                      {% elif t.current_price %}
+                        {{ '%.2f' % ((t.current_price - t.entry_price) * t.size) }}
+                      {% else %}-{% endif %}
+                    </span>
+                  </div>
+                  <div>
+                    <span class="label">Ratio:</span>
+                    {% set profit = (t.exit_price or t.current_price or 0) - (t.entry_price or 0) %}
+                    {% set profit_pct = (profit / t.entry_price * 100) if t.entry_price else 0 %}
+                    <span class="trade-ratio-badge {% if profit_pct >= 0 %}up{% else %}down{% endif %}">
+                      {{ '{:+.1f}%'.format(profit_pct) }}
+                    </span>
+                  </div>
+                </div>
+                {% if t.notes %}
+                <div class="trade-notes">
+                  <span class="label">Notes:</span> {{ t.notes }}
                 </div>
                 {% endif %}
+              </div>
+              {% if not t.exit_price %}
+              <div class="trade-card-footer">
+                <button class="btn btn-warning btn-block" onclick="openCloseTradeModal('{{ t.id }}')">Close</button>
+              </div>
+              {% endif %}
             </div>
+            {% endfor %}
+            {% if trades|length > 5 %}
+            <div style="text-align:right;margin-top:8px;">
+              <button class="btn btn-primary" onclick="showAllTradesModal()">View All</button>
+            </div>
+            {% endif %}
+          </div>
         </div>
     </div>
+    <!-- 强制媒体查询，确保PC端只显示表格，移动端只显示卡片 -->
+<style>
+  @media (max-width: 700px) {
+    .trade-table-pc { display: none !important; }
+    .trade-mobile-list { display: block !important; }
+  }
+  @media (min-width: 701px) {
+    .trade-table-pc { display: block !important; }
+    .trade-mobile-list { display: none !important; }
+  }
+  </style>
     <!-- 会员收益排名 -->
     <div class="section">
         <h2 class="card-title" style="font-size:2.2rem;font-weight:900;color:#FFD700;text-shadow:0 2px 8px #181F2A88;margin-bottom:24px;">Member Profit Ranking</h2>
@@ -3554,7 +3717,7 @@
                             <tr>
                                 <td><span class="member-level">VIP</span></td>
                                 <td>Below $50,000</td>
-                                <td><span class="highlight">80%</span></td>
+                                <td><span class="highlight">70%</span></td>
                                 <td><span class="highlight">30%</span></td>
                             </tr>
                             <tr>
@@ -3689,7 +3852,6 @@ function renderDocumentsList(docs, container, showPreviewBtn = false) {
                     <div style="color:#b0c4e6;margin-bottom:16px;">${doc.description || 'No description'}</div>
                     <div style="display:flex;align-items:center;gap:16px;color:#b0c4e6;font-size:0.9rem;">
                         <span>Last Updated: ${doc.last_update ? new Date(doc.last_update).toLocaleString() : ''}</span>
-                        <span>Views: ${doc.views || 0}</span>
                     </div>
                     <div style="margin-top:16px;display:flex;gap:16px;">
                         <a href="${doc.file_url}" download target="_blank" style="color:#FFD700;text-decoration:none;display:inline-flex;align-items:center;gap:8px;">
