@@ -3162,42 +3162,279 @@
         {% else %}
             <div class="announcement-card" style="color:#b0c4e6;text-align:center;">No announcements available.</div>
         {% endif %}
-        <!-- 新VIP交易卡片区域 -->
-        <div class="vip-trade-cards-blackgold">
-          {% if vip_trades and vip_trades|length > 0 %}
+<!-- VIP交易记录表格区域 -->
+<div class="vip-trades-section">
+    {% if vip_trades and vip_trades|length > 0 %}
+      <div class="table-wrapper">
+        <table class="vip-trades-table">
+          <thead>
+            <tr>
+              <th>Symbol</th>
+              <th>Type</th>
+              <th>Entry Price</th>
+              <th>Current Price</th>
+              <th>Exit Price</th>
+              <th>Quantity</th>
+              <th>PnL</th>
+              <th>ROI</th>
+              <th>Date</th>
+            </tr>
+          </thead>
+          <tbody>
             {% for trade in vip_trades %}
-            <div class="vip-trade-card-new">
-              <div class="vip-trade-card-left">
-                <div class="vip-symbol">{{ trade.symbol }}</div>
-                <div class="vip-type {{ 'sell' if trade.trade_type not in ['买涨','buy','多','long'] else '' }}">{{ trade.trade_type|default(trade.direction)|capitalize }}</div>
-                <div class="vip-status status-{{ trade.status|lower }}">{{ trade.status|capitalize }}</div>
-              </div>
-              <div class="vip-trade-card-main">
-                <div class="vip-pnl-row">
-                  <span class="vip-pnl {% if trade.pnl >= 0 %}up{% else %}down{% endif %}">PnL {{ trade.pnl is not none and ('%.2f' % trade.pnl) or '-' }}</span>
-                  <span class="vip-roi">ROI <span class="{% if trade.roi >= 0 %}up{% else %}down{% endif %}">{{ trade.roi is not none and ('%.2f%%' % trade.roi) or '-' }}</span></span>
-                </div>
-                <div class="vip-meta-row">
-                  <span>Entry Price: <b>{{ trade.entry_price }}</b> × <b>{{ trade.quantity }}</b></span>
-                  <span>Current Price: <b>{{ trade.current_price or '-' }}</b></span>
-                </div>
-                <div class="vip-meta-row">
-                  <span>Entry Time: <b><span class="us-time" data-time="{{ trade.entry_time|e }}">{{ trade.entry_time or '-' }}</span></b></span>
-                  <span>Exit Price: <b>{{ trade.exit_price or '-' }}</b></span>
-                  <span>Exit Time: <b><span class="us-time" data-time="{{ trade.exit_time|e }}">{{ trade.exit_time or '-' }}</span></b></span>
-                </div>
-              </div>
-              <div class="vip-trade-card-btns">
-                <button class="btn btn-outline-warning btn-sm">Buy</button>
-                <button class="btn btn-outline-light btn-sm">持有</button>
-              </div>
-            </div>
+            <tr>
+              <td class="symbol-cell">{{ trade.symbol }}</td>
+              <td>
+                <span class="trade-type-badge {{ 'buy' if trade.direction in ['买涨','buy','多','long'] else 'sell' }}">
+                  {{ 'Buy' if trade.direction in ['买涨','buy','多','long'] else 'Sell' }}
+                </span>
+              </td>
+              <td>${{ "%.2f"|format(trade.entry_price) if trade.entry_price else '-' }}</td>
+              <td class="current-price" data-symbol="{{ trade.symbol }}">
+                ${{ "%.2f"|format(trade.current_price) if trade.current_price else '-' }}
+              </td>
+              <td>${{ "%.2f"|format(trade.exit_price) if trade.exit_price else '-' }}</td>
+              <td>{{ "%.1f"|format(trade.quantity) if trade.quantity else '-' }}</td>
+              <td class="pnl-cell" data-entry="{{ trade.entry_price }}" data-exit="{{ trade.exit_price }}" data-current="{{ trade.current_price }}" data-quantity="{{ trade.quantity }}" data-direction="{{ trade.direction }}">
+                <span class="pnl-value">Calculating...</span>
+              </td>
+              <td class="roi-cell" data-entry="{{ trade.entry_price }}" data-exit="{{ trade.exit_price }}" data-current="{{ trade.current_price }}" data-quantity="{{ trade.quantity }}" data-direction="{{ trade.direction }}">
+                <span class="roi-value">Calculating...</span>
+              </td>
+              <td class="date-cell">
+                {{ trade.entry_time[:10] if trade.entry_time else '-' }}
+              </td>
+            </tr>
             {% endfor %}
-          {% else %}
-            <div style="color:#b0c4e6;text-align:center;">No VIP trades available.</div>
-          {% endif %}
-        </div>
-        <!-- 新VIP交易卡片区域结束 -->
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <div class="no-trades-message">No VIP trades available.</div>
+    {% endif %}
+  </div>
+  
+  <style>
+  /* VIP交易表格样式 */
+  .vip-trades-section {
+    margin-top: 24px;
+  }
+  
+  .table-wrapper {
+    overflow-x: auto;
+    background-color: #232B3E;
+    border-radius: 8px;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.3);
+  }
+  
+  .vip-trades-table {
+    width: 100%;
+    border-collapse: collapse;
+    color: #fff;
+  }
+  
+  .vip-trades-table th, 
+  .vip-trades-table td {
+    padding: 16px 10px; /* 增加垂直内边距 */
+    text-align: center;
+    white-space: nowrap;
+    border: none;
+    font-size: 1.1rem; /* 加大基础字体 */
+    font-weight: 600; /* 基础字体加粗 */
+  }
+  
+  /* 各列宽度分配 */
+  .vip-trades-table th:nth-child(1), /* Symbol */
+  .vip-trades-table td:nth-child(1) { width: 12%; }
+  .vip-trades-table th:nth-child(2), /* Type */
+  .vip-trades-table td:nth-child(2) { width: 8%; }
+  .vip-trades-table th:nth-child(3), /* Entry Price */
+  .vip-trades-table td:nth-child(3),
+  .vip-trades-table th:nth-child(4), /* Current Price */
+  .vip-trades-table td:nth-child(4),
+  .vip-trades-table th:nth-child(5) { /* Exit Price */
+    width: 12%;
+  }
+  .vip-trades-table th:nth-child(6), /* Quantity */
+  .vip-trades-table td:nth-child(6) { width: 10%; }
+  .vip-trades-table th:nth-child(7), /* PnL */
+  .vip-trades-table td:nth-child(7),
+  .vip-trades-table th:nth-child(8) { /* ROI */
+    width: 12%;
+  }
+  .vip-trades-table th:nth-child(9), /* Date */
+  .vip-trades-table td:nth-child(9) { width: 10%; }
+  
+  .vip-trades-table thead tr {
+    border-bottom: 3px solid #FFD700;
+  }
+  
+  .vip-trades-table th {
+    color: #FFD700;
+    font-weight: 700; /* 表头更粗 */
+    font-size: 1rem; /* 表头字体大小 */
+    background-color: #232B3E;
+    text-transform: uppercase;
+    letter-spacing: 1px; /* 增加字母间距 */
+    padding: 14px 10px;
+  }
+  
+  .vip-trades-table tbody tr {
+    border-bottom: 1px solid #2e3c5d;
+    transition: background-color 0.3s ease;
+  }
+  
+  .vip-trades-table tbody tr:hover {
+    background-color: #2a3441;
+  }
+  
+  .symbol-cell {
+    font-weight: 700; /* Symbol更粗 */
+    color: #FFD700;
+    font-size: 1.2rem; /* Symbol更大 */
+  }
+  
+  .trade-type-badge {
+    padding: 5px 14px; /* 按钮内边距加大 */
+    border-radius: 6px;
+    font-weight: 700;
+    font-size: 0.95rem;
+    text-transform: uppercase;
+  }
+  
+  .trade-type-badge.buy {
+    background-color: #00ffae22;
+    color: #00ffae;
+    border: 1.5px solid #00ffae; /* 边框加粗 */
+  }
+  
+  .trade-type-badge.sell {
+    background-color: #cf132222;
+    color: #cf1322;
+    border: 1.5px solid #cf1322; /* 边框加粗 */
+  }
+  
+  .pnl-cell .pnl-value,
+  .roi-cell .roi-value {
+    font-weight: 700;
+    font-size: 1.1rem;
+  }
+  
+  .pnl-cell .pnl-value.up,
+  .roi-cell .roi-value.up {
+    color: #00ffae;
+  }
+  
+  .pnl-cell .pnl-value.down,
+  .roi-cell .roi-value.down {
+    color: #cf1322;
+  }
+  
+  .no-trades-message {
+    text-align: center;
+    color: #b0c4e6;
+    padding: 40px;
+    font-size: 1.1rem;
+  }
+  
+  /* 响应式设计 */
+  @media (max-width: 768px) {
+    .vip-trades-table th, 
+    .vip-trades-table td {
+      padding: 12px 6px;
+      font-size: 0.95rem;
+    }
+    
+    .vip-trades-table th {
+      font-size: 0.9rem;
+      padding: 12px 6px;
+    }
+  }
+  </style>
+  
+  <script>
+  // 格式化日期为美国格式 MM/DD/YY
+  function formatUsDates() {
+    const dateCells = document.querySelectorAll('.date-cell');
+    dateCells.forEach(cell => {
+      const isoDate = cell.textContent.trim();
+      if (isoDate && isoDate !== '-') { // 格式为 YYYY-MM-DD
+        const parts = isoDate.split('-');
+        if (parts.length === 3) {
+          const [year, month, day] = parts;
+          // 转换为 MM/DD/YY 格式
+          cell.textContent = `${month}/${day}/${year.slice(-2)}`;
+        }
+      }
+    });
+  }
+  
+  // 实时计算PnL和ROI
+  function calculatePnLAndROI() {
+    const pnlCells = document.querySelectorAll('.pnl-cell');
+    const roiCells = document.querySelectorAll('.roi-cell');
+    
+    pnlCells.forEach((cell, index) => {
+      const entryPrice = parseFloat(cell.dataset.entry);
+      const exitPrice = parseFloat(cell.dataset.exit);
+      const currentPrice = parseFloat(cell.dataset.current);
+      const quantity = parseFloat(cell.dataset.quantity);
+      const direction = cell.dataset.direction;
+      
+      const finalPrice = exitPrice || currentPrice;
+      
+      if (entryPrice && finalPrice && quantity) {
+        let pnl = 0;
+        if (direction && direction.toLowerCase().includes('sell')) {
+          pnl = (entryPrice - finalPrice) * quantity;
+        } else {
+          pnl = (finalPrice - entryPrice) * quantity;
+        }
+        
+        const pnlValue = cell.querySelector('.pnl-value');
+        pnlValue.textContent = `$${pnl.toFixed(2)}`;
+        pnlValue.className = `pnl-value ${pnl >= 0 ? 'up' : 'down'}`;
+        
+        const roiCell = roiCells[index];
+        const roiValue = roiCell.querySelector('.roi-value');
+        const roi = (pnl / (entryPrice * quantity)) * 100;
+        roiValue.textContent = `${roi.toFixed(2)}%`;
+        roiValue.className = `roi-value ${roi >= 0 ? 'up' : 'down'}`;
+      }
+    });
+  }
+  
+  // 更新实时价格
+  function updateCurrentPrices() {
+    const priceCells = document.querySelectorAll('.current-price');
+    
+    priceCells.forEach(cell => {
+      const symbol = cell.dataset.symbol;
+      if (symbol) {
+        fetch(`/api/price?symbol=${symbol}`)
+          .then(response => response.json())
+          .then(data => {
+            if (data.success && data.price) {
+              cell.textContent = `$${parseFloat(data.price).toFixed(2)}`;
+              const row = cell.closest('tr');
+              row.querySelector('.pnl-cell').dataset.current = data.price;
+              row.querySelector('.roi-cell').dataset.current = data.price;
+              calculatePnLAndROI();
+            }
+          })
+          .catch(error => console.error('Error fetching price:', error));
+      }
+    });
+  }
+  
+  // 页面加载完成后初始化
+  document.addEventListener('DOMContentLoaded', function() {
+    formatUsDates(); // 格式化日期
+    calculatePnLAndROI();
+    
+    setInterval(updateCurrentPrices, 30000);
+  });
+  </script>
     </div>
     <!-- 交易记录（持仓分析/历史交易） -->
     <div class="section">
