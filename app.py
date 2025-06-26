@@ -1930,7 +1930,8 @@ def upload_trade_image():
             file_options={"content-type": file.content_type}
         )
         file_url = supabase.storage.from_('avatars').get_public_url(unique_name)
-        supabase.table('trades').update({'image_url': file_url}).eq('id', trade_id).execute()
+        # 只操作trades1表，id用int
+        supabase.table('trades1').update({'image_url': file_url}).eq('id', int(trade_id)).execute()
         return jsonify({'success': True, 'url': file_url})
     except Exception as e:
         return jsonify({'success': False, 'message': f'Upload failed: {str(e)}'}), 500
@@ -2406,15 +2407,23 @@ def edit_vip_announcement(announcement_id):
             return jsonify({'success': False, 'message': '无权限访问'}), 403
             
         data = request.json
+        # 允许更新所有在截图中出现的字段
         update_fields = {k: v for k, v in data.items() if k in ['title', 'content', 'status', 'priority', 'type', 'publisher', 'date']}
         if not update_fields:
             return jsonify({'success': False, 'message': '没有可更新的字段'}), 400
             
         resp = supabase.table('vip_announcements').update(update_fields).eq('id', announcement_id).execute()
-        if hasattr(resp, 'error') and resp.error:
-            return jsonify({'success': False, 'message': f'更新失败: {resp.error}'}), 500
+        
+        # 检查更新是否成功
+        if hasattr(resp, 'data') and resp.data:
+            return jsonify({'success': True, 'message': '策略公告已更新'})
+        else:
+            # 分析可能的错误
+            error_message = '更新失败'
+            if hasattr(resp, 'error') and resp.error:
+                error_message += f": {resp.error.message}"
+            return jsonify({'success': False, 'message': error_message}), 500
             
-        return jsonify({'success': True, 'message': '策略公告已更新'})
     except Exception as e:
         return jsonify({'success': False, 'message': f'更新策略公告失败: {str(e)}'}), 500
 

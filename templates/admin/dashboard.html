@@ -1288,7 +1288,7 @@
                     loadVideos();
                     break;
                 case 'vip-announcements':
-                    loadVipAnnouncements();
+                    fetchAndRenderAnnouncements();
                     break;
                 case 'vip-trades':
                     loadVipTrades();
@@ -2329,6 +2329,115 @@
                         preview.style.display = 'block';
                     }
                     reader.readAsDataURL(file);
+                }
+            });
+        }
+
+        // 在全局作用域或者一个合适的闭包内，存储一份公告数据
+        let announcementsData = [];
+
+        // 获取并渲染VIP策略公告
+        async function fetchAndRenderAnnouncements() {
+            try {
+                const response = await fetch('/api/admin/vip-announcements');
+                const result = await response.json();
+                if (result.success) {
+                    announcementsData = result.announcements; // 存储数据
+                    const container = document.getElementById('vip-announcements-body');
+                    container.innerHTML = ''; // 清空现有内容
+
+                    if (!announcementsData || announcementsData.length === 0) {
+                        container.innerHTML = '<p class="text-center text-muted">No announcements yet.</p>';
+                        return;
+                    }
+                    
+                    const announcementsHtml = announcementsData.map(announcement => {
+                        return `
+                            <div class="card mb-3" style="background-color: #1a1c2e; border-color: rgba(255,215,0,0.1);">
+                                <div class="card-body">
+                                    <h5 class="card-title" style="color: #ffd700;">${announcement.title}</h5>
+                                    <p class="card-text">${announcement.content.replace(/\\n/g, '<br>')}</p>
+                                    <hr style="border-color: rgba(255,215,0,0.1);">
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <p class="mb-1"><strong>类型:</strong> ${announcement.type || '-'}</p>
+                                            <p class="mb-1"><strong>出版人:</strong> ${announcement.publisher || '-'}</p>
+                                            <p class="mb-1"><strong>优先级:</strong> ${announcement.priority || '-'}</p>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <p class="mb-1"><strong>发布日期:</strong> ${announcement.date ? announcement.date.split('T')[0] : '-'}</p>
+                                            <p class="mb-1"><strong>创建时间:</strong> ${formatDateTime(announcement.created_at)}</p>
+                                            <p class="mb-1"><strong>更新时间:</strong> ${formatDateTime(announcement.updated_at)}</p>
+                                        </div>
+                                    </div>
+                                    <div class="text-end mt-2">
+                                        <button class="btn btn-sm btn-primary" onclick="openEditAnnouncementModal(${announcement.id})">编辑</button>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    }).join('');
+
+                    container.innerHTML = announcementsHtml;
+
+                } else {
+                    document.getElementById('vip-announcements-body').innerHTML = `<p class="text-danger">Error: ${result.message}</p>`;
+                }
+            } catch (error) {
+                console.error('Error fetching VIP announcements:', error);
+                document.getElementById('vip-announcements-body').innerHTML = '<p class="text-danger">Failed to load announcements.</p>';
+            }
+        }
+
+        function openEditAnnouncementModal(announcementId) {
+            const announcement = announcementsData.find(a => a.id === announcementId);
+            if (!announcement) {
+                console.error('Announcement not found for ID:', announcementId);
+                return;
+            }
+
+            // 使用HTML中正确的ID
+            document.getElementById('editAnnouncementId').value = announcement.id;
+            document.getElementById('editAnnouncementTitle').value = announcement.title;
+            document.getElementById('editAnnouncementContent').value = announcement.content;
+            document.getElementById('editAnnouncementType').value = announcement.type || '';
+            document.getElementById('editAnnouncementPublisher').value = announcement.publisher || '';
+            document.getElementById('editAnnouncementPriority').value = announcement.priority || '';
+            document.getElementById('editAnnouncementDate').value = announcement.date ? announcement.date.split('T')[0] : '';
+            
+            // 使用正确的Modal ID来获取并显示弹窗
+            const modalElement = document.getElementById('editVipAnnouncementModal');
+            if (modalElement) {
+                const modal = new bootstrap.Modal(modalElement);
+                modal.show();
+            } else {
+                console.error('Modal element with ID "editVipAnnouncementModal" not found.');
+            }
+        }
+
+        function saveVipAnnouncementEdit() {
+            const id = document.getElementById('editAnnouncementId').value;
+            const data = {
+                title: document.getElementById('editAnnouncementTitle').value,
+                content: document.getElementById('editAnnouncementContent').value,
+                type: document.getElementById('editAnnouncementType').value,
+                publisher: document.getElementById('editAnnouncementPublisher').value,
+                date: document.getElementById('editAnnouncementDate').value,
+                priority: document.getElementById('editAnnouncementPriority').value
+            };
+            fetch(`/api/admin/vip-announcements/${id}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            })
+            .then(res => res.json())
+            .then(res => {
+                if (res.success) {
+                    alert('Save successful');
+                    bootstrap.Modal.getInstance(document.getElementById('editVipAnnouncementModal')).hide();
+                    loadVipAnnouncements();
+                } else {
+                    alert(res.message || 'Save failed');
                 }
             });
         }
