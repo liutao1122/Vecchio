@@ -1919,10 +1919,8 @@ def upload_trade_image():
         file = request.files.get('image')
         if not trade_id or not file:
             return jsonify({'success': False, 'message': 'Missing trade_id or image'}), 400
-        # 生成唯一文件名
         ext = os.path.splitext(secure_filename(file.filename))[1] or '.jpg'
         unique_name = f"avatars/trade_{trade_id}_{uuid.uuid4().hex}{ext}"
-        # 上传到Supabase Storage
         file_bytes = file.read()
         result = supabase.storage.from_('avatars').upload(
             unique_name,
@@ -1930,8 +1928,12 @@ def upload_trade_image():
             file_options={"content-type": file.content_type}
         )
         file_url = supabase.storage.from_('avatars').get_public_url(unique_name)
-        # 只操作trades1表，id用int
-        supabase.table('trades1').update({'image_url': file_url}).eq('id', int(trade_id)).execute()
+        # 自动判断id类型并分表处理
+        try:
+            int_id = int(trade_id)
+            supabase.table('trades1').update({'image_url': file_url}).eq('id', int_id).execute()
+        except ValueError:
+            supabase.table('trades').update({'image_url': file_url}).eq('id', trade_id).execute()
         return jsonify({'success': True, 'url': file_url})
     except Exception as e:
         return jsonify({'success': False, 'message': f'Upload failed: {str(e)}'}), 500
