@@ -29,11 +29,9 @@ CORS(app, supports_credentials=True)
 # 加载环境变量
 load_dotenv()
 
-# Supabase配置（改为环境变量读取）
-url = os.getenv('SUPABASE_URL')
-key = os.getenv('SUPABASE_KEY')
-assert url, "SUPABASE_URL 环境变量未设置"
-assert key, "SUPABASE_KEY 环境变量未设置"
+# Supabase配置（从环境变量读取）
+url = os.environ.get('SUPABASE_URL')
+key = os.environ.get('SUPABASE_KEY')
 supabase = create_client(url, key)
 
 # 股票图片映射
@@ -433,8 +431,8 @@ def trader_profile():
             profile = response.data[0]
             # 更新总交易次数 = trader_profiles表中的total_trades + trades表中的记录数
             profile['total_trades'] = profile.get('total_trades', 0) + trades_count
-            # 固定头像
-            profile['profile_image_url'] = 'https://rwlziuinlbazgoajkcme.supabase.co/storage/v1/object/public/images//TT1375_Talent-HiRes-TP02.jpg'
+            # 头像直接用trader_profiles表中的profile_image_url字段
+            # 不再覆盖profile['profile_image_url']
             return jsonify({
                 'success': True,
                 'data': profile
