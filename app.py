@@ -2618,5 +2618,6 @@ if __name__ == '__main__':
     init_membership_levels_db()
     init_user_membership_db()
     
-    # 启动应用
-    app.run(debug=True)
+    # 启动应用 - 使用环境变量中的端口，默认为 8000
+    port = int(os.environ.get('PORT', 8000))
+    app.run(host='0.0.0.0', port=port, debug=False)
