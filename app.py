@@ -15,8 +15,8 @@ from dotenv import load_dotenv
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers.interval import IntervalTrigger
 from flask_cors import CORS
-import mysql.connector
-from mysql.connector import Error
+# import mysql.connector
+# from mysql.connector import Error
 from werkzeug.utils import secure_filename
 import supabase_client  # 用 supabase_client.get_traders 代替
 from supabase import Client as SupabaseClient
@@ -48,21 +48,20 @@ STOCK_IMAGES = {
     'WMT': 'https://logo.clearbit.com/walmart.com'
 }
 
-# 数据库配置
-db_config = {
-    'host': 'localhost',
-    'user': 'root',
-    'password': 'root',
-    'database': 'trading_platform'
-}
+# 数据库配置 - 使用 Supabase 替代 MySQL
+# db_config = {
+#     'host': 'localhost',
+#     'user': 'root',
+#     'password': 'root',
+#     'database': 'trading_platform'
+# }
 
-# 数据库连接函数
+# 数据库连接函数 - 使用 Supabase
 def get_db_connection():
     try:
-        connection = mysql.connector.connect(**db_config)
-        return connection
-    except Error as e:
-        print(f"Error connecting to MySQL: {e}")
+        return supabase
+    except Exception as e:
+        print(f"Error connecting to Supabase: {e}")
         return None
 
 def format_datetime(dt_str):
