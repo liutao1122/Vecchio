@@ -6,7 +6,7 @@ httpx==0.23.3
 storage3==0.5.2
 postgrest==0.10.6
 gotrue==1.3.1
-pandas==1.3.3
+pandas==2.0.3
 yfinance==0.1.70
 pytz==2021.1
 python-dotenv==0.19.0
