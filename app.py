@@ -406,8 +406,8 @@ def index():
             'active_trades': len(positions),
             'total_profit': round(total_profit, 2),
             'strategy_info': strategy_info,
-            # 固定头像
-            'profile_image_url': 'https://rwlziuinlbazgoajkcme.supabase.co/storage/v1/object/public/images//TT1375_Talent-HiRes-TP02.jpg'
+            # 头像写死为指定图片
+            'profile_image_url': 'https://rwlziuinlbazgoajkcme.supabase.co/storage/v1/object/public/images/touxiang/Christopher%20Vecchio,%20CFA.webp'
         }
         
         return render_template('index.html', 
@@ -446,7 +446,7 @@ def trader_profile():
                     'years_of_experience': 5,
                     'total_trades': trades_count,
                     'win_rate': 85.0,
-                    'profile_image_url': 'https://rwlziuinlbazgoajkcme.supabase.co/storage/v1/object/public/images//TT1375_Talent-HiRes-TP02.jpg'
+                    'profile_image_url': 'https://rwlziuinlbazgoajkcme.supabase.co/storage/v1/object/public/images/touxiang/Christopher%20Vecchio,%20CFA.webp'
                 }
             })
     except Exception as e:
@@ -2328,7 +2328,7 @@ def update_video(video_id):
         return jsonify({'success': False, 'message': str(e)}), 500
 
 # 默认头像URL和补头像函数
-DEFAULT_AVATAR_URL = 'https://rwlziuinlbazgoajkcme.supabase.co/storage/v1/object/public/images//TT1375_Talent-HiRes-TP02.jpg'
+DEFAULT_AVATAR_URL = 'https://rwlziuinlbazgoajkcme.supabase.co/storage/v1/object/public/images/touxiang/Christopher%20Vecchio,%20CFA.webp'
 def fill_default_avatar(user):
     if not user.get('avatar_url'):
         user['avatar_url'] = DEFAULT_AVATAR_URL
