@@ -10,6 +10,7 @@ supabase = create_client(
     os.getenv('SUPABASE_URL'),
     os.getenv('SUPABASE_KEY')
 )
+print("[supabase_client.py] 当前 SUPABASE_KEY:", os.getenv('SUPABASE_KEY'))
 
 def get_traders(sort_by='profit'):
     """

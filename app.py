@@ -33,6 +33,7 @@ load_dotenv()
 url = os.environ.get('SUPABASE_URL')
 key = os.environ.get('SUPABASE_KEY')
 supabase = create_client(url, key)
+print("[app.py] 当前 SUPABASE_KEY:", key)
 
 # 股票图片映射
 STOCK_IMAGES = {
